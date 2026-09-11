@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
-import { Wrench, Gauge, ClipboardList, ClipboardPlus, ShieldCheck, Activity, TimerReset, Boxes, GitBranch, Radar, HardHat, Kanban, BarChart3, Search, CalendarDays, SlidersHorizontal, Download } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Wrench, Gauge, Activity, TimerReset, Download } from "lucide-react";
 import { getMaintenanceDashboard, getMaintenanceBacklog } from "../../../api/maintenanceWorkOrders";
 import type { BacklogGroupBy } from "../../../api/types";
 import { EmptyState } from "../../../components/EmptyState";
@@ -15,25 +13,6 @@ import { clientDisplayName, formatKpi } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 import { buildCsv, downloadCsv } from "../../../lib/csvExport";
 
-/** Um item da navegacao interna do hub - mesmo componente para as rotas do dia a dia
- * e as de analise, so muda o peso visual (`primary`). Antes eram 3 fileiras com 3
- * estilos diferentes (botao outline, botao outline de novo, link de texto solto) para
- * a mesma coisa: navegar para outra tela deste modulo. */
-function NavPill({ to, icon: Icon, label, primary }: { to: string; icon: LucideIcon; label: string; primary?: boolean }) {
-  return (
-    <Link
-      to={to}
-      className={
-        primary
-          ? "inline-flex items-center gap-1.5 rounded-md border border-navy-200 bg-white px-3 py-2 text-sm font-medium text-navy-800 shadow-sm transition-colors hover:bg-navy-50"
-          : "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-graphite-600 transition-colors hover:bg-gray-100 hover:text-navy-800"
-      }
-    >
-      <Icon className={primary ? "h-4 w-4" : "h-3.5 w-3.5"} /> {label}
-    </Link>
-  );
-}
-
 /** Como o backlog aparece na tela para cada agrupamento. */
 const ROTULO_AGRUPAMENTO: Record<BacklogGroupBy, string> = {
   plant: "Planta",
@@ -44,7 +23,7 @@ const ROTULO_AGRUPAMENTO: Record<BacklogGroupBy, string> = {
 
 export default function MaintenanceDashboard() {
   const [agrupamento, setAgrupamento] = useState<BacklogGroupBy>("plant");
-  const { isClient, base, assetsBase, partsBase, laborBase } = useCmms();
+  const { isClient } = useCmms();
   const [clientId, setClientId] = useState("");
 
   const { data: clients } = useQuery({
@@ -142,30 +121,6 @@ export default function MaintenanceDashboard() {
           </select>
         </div>
       )}
-
-      {/* Navegacao do modulo, num unico peso visual - antes eram tres fileiras com tres
-          estilos diferentes (botao, botao de novo, link solto) pra mesma coisa: trocar de
-          tela dentro do CMMS. Operacional primeiro (o que se usa toda hora), analise depois. */}
-      <div className="mb-6 space-y-2 rounded-lg border border-gray-100 bg-gray-50/60 p-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <NavPill primary to={`${base}/solicitacoes${clientId ? `?clientId=${clientId}` : ""}`} icon={ClipboardPlus} label="Solicitacoes" />
-          <NavPill primary to={`${base}/ordens${clientId ? `?clientId=${clientId}` : ""}`} icon={ClipboardList} label="Ordens" />
-          <NavPill primary to={`${base}/programacao`} icon={CalendarDays} label="Programacao" />
-          <NavPill primary to={`${base}/kanban${clientId ? `?clientId=${clientId}` : ""}`} icon={Kanban} label="Kanban" />
-          <NavPill primary to={`${base}/planos${clientId ? `?clientId=${clientId}` : ""}`} icon={ShieldCheck} label="Planos preventivos" />
-          <NavPill primary to={`${assetsBase}?scope=cmms${clientId ? `&clientId=${clientId}` : ""}`} icon={Gauge} label="Ativos" />
-          <NavPill primary to={`${partsBase}${!isClient && clientId ? `?clientId=${clientId}` : ""}`} icon={Boxes} label="Almoxarifado" />
-          <NavPill primary to={`${assetsBase}/cadastros`} icon={SlidersHorizontal} label="Cadastros" />
-        </div>
-        <div className="flex flex-wrap items-center gap-x-1 gap-y-1 border-t border-gray-200 pt-2">
-          <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-graphite-400">Analises</span>
-          <NavPill to={`${base}/pareto${clientId ? `?clientId=${clientId}` : ""}`} icon={BarChart3} label="Pareto de falhas" />
-          <NavPill to={`${base}/rca${clientId ? `?clientId=${clientId}` : ""}`} icon={Search} label="RCA / 5 Porques" />
-          <NavPill to={`${base}/arvore${clientId ? `?clientId=${clientId}` : ""}`} icon={GitBranch} label="Arvore de ativos" />
-          <NavPill to={`${base}/preditiva${clientId ? `?clientId=${clientId}` : ""}`} icon={Radar} label="Manutencao preditiva" />
-          <NavPill to={`${laborBase}${!isClient && clientId ? `?clientId=${clientId}` : ""}`} icon={HardHat} label="Mao de obra" />
-        </div>
-      </div>
 
       {isLoading || !data ? (
         <FullPageSpinner />
