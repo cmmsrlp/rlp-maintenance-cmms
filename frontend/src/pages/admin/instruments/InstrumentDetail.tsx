@@ -7,11 +7,11 @@ import { deleteInstrument, getInstrument, listAssetParts, addAssetPart, removeAs
 import { listMeters, addMeterReading } from "../../../api/meters";
 import { listMaintenancePlans } from "../../../api/maintenancePlans";
 import { listMaintenanceWorkOrders } from "../../../api/maintenanceWorkOrders";
-import { listSpareParts } from "../../../api/spareParts";
 import { listAuditLogs } from "../../../api/audit";
 import { PageHeader } from "../../../components/PageHeader";
 import { FullPageSpinner } from "../../../components/Spinner";
 import { StatusBadge } from "../../../components/StatusBadge";
+import { SparePartPicker } from "../../../components/SparePartPicker";
 import { Tabs } from "../../../components/Tabs";
 import { InstrumentFormModal } from "./InstrumentFormModal";
 import { MeterFormModal } from "./MeterFormModal";
@@ -87,11 +87,6 @@ export default function InstrumentDetail() {
     queryKey: ["instrument-cost-summary", id],
     queryFn: () => getInstrumentCostSummary(id),
     enabled: !!id,
-  });
-  const { data: spareParts } = useQuery({
-    queryKey: ["spare-parts-picker", instrument?.clientId],
-    queryFn: () => listSpareParts({ clientId: instrument!.clientId, active: true, pageSize: 200 }),
-    enabled: !!instrument?.clientId,
   });
   const { data: history } = useQuery({
     queryKey: ["instrument-history", id],
@@ -299,12 +294,13 @@ export default function InstrumentDetail() {
             <h2 className="mb-3 font-semibold text-navy-900">Pecas compativeis (BOM)</h2>
             {canManage && (
               <div className="mb-3 flex gap-2">
-                <select className="input flex-1" value={selectedSparePartId} onChange={(e) => setSelectedSparePartId(e.target.value)}>
-                  <option value="">Selecione uma peca do almoxarifado</option>
-                  {(spareParts?.items ?? []).map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}{p.code ? ` (${p.code})` : ""}</option>
-                  ))}
-                </select>
+                <SparePartPicker
+                  className="flex-1"
+                  name="selectedSparePartId"
+                  value={selectedSparePartId}
+                  onChange={(e) => setSelectedSparePartId(e.target.value)}
+                  clientId={instrument.clientId}
+                />
                 <button type="button" className="btn-outline" onClick={handleAddAssetPart} disabled={!selectedSparePartId}>
                   <Plus className="h-4 w-4" />
                 </button>

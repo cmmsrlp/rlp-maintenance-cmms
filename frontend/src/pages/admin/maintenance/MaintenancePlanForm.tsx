@@ -9,6 +9,7 @@ import { PageHeader } from "../../../components/PageHeader";
 import { TextInput, TextareaInput, SelectInput, CheckboxInput } from "../../../components/form/Field";
 import { ClientPicker } from "../../../components/ClientPicker";
 import { InstrumentPicker } from "../../../components/InstrumentPicker";
+import { SparePartPicker } from "../../../components/SparePartPicker";
 import { UserPicker } from "../../../components/UserPicker";
 import { EntityAttachments } from "../../../components/EntityAttachments";
 import { listMeters } from "../../../api/meters";
@@ -22,7 +23,6 @@ import {
   deleteMaintenancePlanAttachment,
   getMaintenancePlanAttachmentUrl,
 } from "../../../api/maintenancePlans";
-import { listSpareParts } from "../../../api/spareParts";
 import { listLaborTypes } from "../../../api/laborTypes";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
@@ -166,12 +166,6 @@ export default function MaintenancePlanForm() {
     enabled: !!instrumentId && (triggerType === "METER" || triggerType === "CONDITION"),
   });
 
-  const { data: spareParts } = useQuery({
-    queryKey: ["spare-parts-picker", clientId],
-    queryFn: () => listSpareParts({ clientId, active: true, pageSize: 200 }),
-    enabled: !!clientId,
-  });
-
   // Especialidade reaproveita o catalogo de tipos de mao de obra (Mecanica, Eletrica,
   // Instrumentacao...) em vez de criar mais uma lista solta de texto.
   const { data: specialties } = useQuery({
@@ -179,12 +173,6 @@ export default function MaintenancePlanForm() {
     queryFn: () => listLaborTypes({ active: true }),
     staleTime: 60_000,
   });
-
-  // Uma lista so de pecas, usada tanto no principal quanto no substituto.
-  const pecaOptions = (spareParts?.items ?? []).map((sp) => ({
-    value: sp.id,
-    label: `${sp.name}${sp.code ? ` (${sp.code})` : ""} - ${sp.stockQty - sp.reservedQty} ${sp.unit} disponivel`,
-  }));
 
   // Assistente em 3 etapas: cada etapa so libera a proxima quando os campos dela estao
   // validos, para o usuario nao descobrir erro da etapa 1 ao clicar em salvar na 3.
@@ -813,10 +801,11 @@ export default function MaintenancePlanForm() {
               {partFields.map((field, index) => (
                 <div key={field.id} className="rounded-lg border border-gray-200 p-3">
                   <div className="flex items-center gap-2">
-                    <SelectInput
+                    <SparePartPicker
+                      label=""
                       className="flex-1"
                       placeholder="Selecione a peca"
-                      options={pecaOptions}
+                      clientId={clientId}
                       error={errors.parts?.[index]?.sparePartId?.message}
                       {...register(`parts.${index}.sparePartId`)}
                     />
@@ -832,10 +821,11 @@ export default function MaintenancePlanForm() {
                     </button>
                   </div>
                   <div className="mt-2 grid gap-2 sm:grid-cols-3">
-                    <SelectInput
+                    <SparePartPicker
                       label="Substituto aceito"
                       placeholder="Nenhum"
-                      options={pecaOptions}
+                      clientId={clientId}
+                      excludeId={watch(`parts.${index}.sparePartId`)}
                       {...register(`parts.${index}.alternativeSparePartId`)}
                     />
                     <TextInput label="Fornecedor sugerido" placeholder="Opcional" {...register(`parts.${index}.suggestedSupplier`)} />

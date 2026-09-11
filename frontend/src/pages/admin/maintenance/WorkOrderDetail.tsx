@@ -28,7 +28,6 @@ import {
   definirResponsavel,
   liberarOrdem,
 } from "../../../api/maintenanceWorkOrders";
-import { listSpareParts } from "../../../api/spareParts";
 import { listAssetParts } from "../../../api/instruments";
 import { listLaborResources } from "../../../api/laborResources";
 import { listStoppageReasons } from "../../../api/stoppageReasons";
@@ -36,6 +35,7 @@ import type { ChecklistItemResult, MaintenanceOrderStatus, LaborHourType, Mainte
 import { PageHeader } from "../../../components/PageHeader";
 import { FullPageSpinner } from "../../../components/Spinner";
 import { StatusBadge } from "../../../components/StatusBadge";
+import { SparePartPicker } from "../../../components/SparePartPicker";
 import { Tabs } from "../../../components/Tabs";
 import { WorkOrderAttachments } from "./WorkOrderAttachments";
 import { useCmms } from "../../../lib/cmms";
@@ -82,11 +82,6 @@ export default function WorkOrderDetail() {
   const [stoppageNotes, setStoppageNotes] = useState("");
 
   const { data: workOrder, isLoading } = useQuery({ queryKey: ["maintenance-work-order", id], queryFn: () => getMaintenanceWorkOrder(id) });
-  const { data: spareParts } = useQuery({
-    queryKey: ["spare-parts-picker", workOrder?.clientId],
-    queryFn: () => listSpareParts({ clientId: workOrder!.clientId, active: true, pageSize: 200 }),
-    enabled: !!workOrder?.clientId,
-  });
   const { data: assetParts } = useQuery({
     queryKey: ["instrument-asset-parts", workOrder?.instrumentId],
     queryFn: () => listAssetParts(workOrder!.instrumentId),
@@ -112,10 +107,9 @@ export default function WorkOrderDetail() {
   const teamOptions = (laborResources?.items ?? []).filter((r) => teamIds.has(r.id));
   const otherLaborOptions = (laborResources?.items ?? []).filter((r) => !teamIds.has(r.id));
 
-  // Prioriza na lista as pecas ja cadastradas no BOM do ativo desta OS.
-  const bomIds = new Set((assetParts ?? []).map((a) => a.sparePartId));
-  const bomOptions = (spareParts?.items ?? []).filter((p) => bomIds.has(p.id));
-  const otherOptions = (spareParts?.items ?? []).filter((p) => !bomIds.has(p.id));
+  // Atalho com as pecas ja cadastradas no BOM do ativo desta OS - o proprio vinculo ja traz
+  // a peca embutida, entao nao depende de nenhuma lista paginada do almoxarifado inteiro.
+  const bomOptions = (assetParts ?? []).map((a) => a.sparePart).filter((p): p is NonNullable<typeof p> => !!p);
 
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: ["maintenance-work-order", id] });
@@ -1235,32 +1229,41 @@ O que sobrar volta para o estoque.`,
         <div className="card space-y-3 p-5">
           <h2 className="font-semibold text-navy-900">Pecas consumidas (almoxarifado)</h2>
           {canManage && !isCompleted && (
-            <div className="flex flex-wrap items-end gap-2">
-              <select className="input flex-1" value={partSparePartId} onChange={(e) => setPartSparePartId(e.target.value)}>
-                <option value="">Selecione a peca</option>
-                {bomOptions.length > 0 && (
-                  <optgroup label="Pecas deste ativo (BOM)">
-                    {bomOptions.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name} - estoque: {p.stockQty} {p.unit}</option>
-                    ))}
-                  </optgroup>
-                )}
-                <optgroup label="Todo o almoxarifado">
-                  {otherOptions.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name} - estoque: {p.stockQty} {p.unit}</option>
+            <div className="space-y-2">
+              {bomOptions.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-graphite-400">Pecas deste ativo:</span>
+                  {bomOptions.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className="rounded-full border border-gray-200 px-2 py-0.5 text-xs text-graphite-700 hover:border-navy-400 hover:text-navy-700"
+                      onClick={() => setPartSparePartId(p.id)}
+                    >
+                      {p.name}
+                    </button>
                   ))}
-                </optgroup>
-              </select>
-              <input
-                type="number"
-                min={1}
-                className="input w-24"
-                value={partQty}
-                onChange={(e) => setPartQty(Number(e.target.value))}
-              />
-              <button type="button" className="btn-outline" onClick={handleAddPart} disabled={busy || !partSparePartId}>
-                <Plus className="h-4 w-4" /> Adicionar
-              </button>
+                </div>
+              )}
+              <div className="flex flex-wrap items-end gap-2">
+                <SparePartPicker
+                  className="flex-1"
+                  name="partSparePartId"
+                  value={partSparePartId}
+                  onChange={(e) => setPartSparePartId(e.target.value)}
+                  clientId={workOrder.clientId}
+                />
+                <input
+                  type="number"
+                  min={1}
+                  className="input w-24"
+                  value={partQty}
+                  onChange={(e) => setPartQty(Number(e.target.value))}
+                />
+                <button type="button" className="btn-outline" onClick={handleAddPart} disabled={busy || !partSparePartId}>
+                  <Plus className="h-4 w-4" /> Adicionar
+                </button>
+              </div>
             </div>
           )}
           {!workOrder.partsUsed || workOrder.partsUsed.length === 0 ? (
@@ -1284,12 +1287,13 @@ O que sobrar volta para o estoque.`,
           <h2 className="font-semibold text-navy-900">Materiais reservados</h2>
           {canManage && !isCompleted && (
             <div className="flex flex-wrap items-end gap-2">
-              <select className="input flex-1" value={reservationSparePartId} onChange={(e) => setReservationSparePartId(e.target.value)}>
-                <option value="">Selecione a peca</option>
-                {(spareParts?.items ?? []).map((p) => (
-                  <option key={p.id} value={p.id}>{p.name} - disponivel: {p.stockQty - p.reservedQty} {p.unit}</option>
-                ))}
-              </select>
+              <SparePartPicker
+                className="flex-1"
+                name="reservationSparePartId"
+                value={reservationSparePartId}
+                onChange={(e) => setReservationSparePartId(e.target.value)}
+                clientId={workOrder.clientId}
+              />
               <input
                 type="number"
                 min={1}
