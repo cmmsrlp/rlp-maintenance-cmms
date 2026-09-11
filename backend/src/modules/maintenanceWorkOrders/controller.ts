@@ -1278,16 +1278,24 @@ export const getMaintenanceDashboard = asyncHandler(async (req: Request, res: Re
   const periodStart = dateFrom ? new Date(dateFrom) : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
   const periodEnd = dateTo ? new Date(dateTo) : new Date();
 
-  const where = {
+  const periodScopedWhere = {
     deletedAt: null,
     ...resolveClientScope(req, clientId),
     ...(instrumentId ? { instrumentId } : {}),
     createdAt: { gte: periodStart, lte: periodEnd },
   };
 
+  // OS cancelada nao executou nada: contar ela em volume, tipo, MTTR/MTBF, disponibilidade
+  // ou custos faz o painel parecer que houve trabalho que nao aconteceu. Ela some destas
+  // metricas e vira so uma contagem separada (totals.canceled), abaixo.
+  const where = { ...periodScopedWhere, status: { not: "CANCELED" as const } };
+
   const workOrders = await prisma.maintenanceWorkOrder.findMany({
     where,
     select: { id: true, type: true, status: true, startedAt: true, completedAt: true, instrumentId: true, triggeredByMeterId: true, failureStartedAt: true, failureEndedAt: true, createdAt: true },
+  });
+  const canceledCount = await prisma.maintenanceWorkOrder.count({
+    where: { ...periodScopedWhere, status: "CANCELED" },
   });
 
   /** Janela de reparo de uma OS, em minutos, pela melhor evidencia disponivel:
@@ -1400,7 +1408,7 @@ export const getMaintenanceDashboard = asyncHandler(async (req: Request, res: Re
       // "Aberta" aqui e' qualquer OS que ainda nao terminou (nao so o status literal
       // "OPEN") - senao o numero cai artificialmente assim que a OS avanca pra Planejada/
       // Programada/etc., escondendo trabalho que ainda esta pendente.
-      open: workOrders.filter((w) => !["COMPLETED", "CANCELED"].includes(w.status)).length,
+      open: workOrders.filter((w) => w.status !== "COMPLETED").length,
       inProgress: workOrders.filter((w) => w.status === "IN_PROGRESS").length,
       completed: workOrders.filter((w) => w.status === "COMPLETED").length,
       corrective: workOrders.filter((w) => w.type === "CORRECTIVE").length,
@@ -1409,6 +1417,9 @@ export const getMaintenanceDashboard = asyncHandler(async (req: Request, res: Re
       // Quantas dessas preditivas foram abertas sozinhas por uma leitura fora da faixa
       // (em vez de escolhidas a mao) - mede se a preditiva esta funcionando de verdade.
       predictiveAutoOpened: workOrders.filter((w) => w.type === "PREDICTIVE" && w.triggeredByMeterId).length,
+      // Indicador separado, nao somado ao volume executado: quem quiser acompanhar
+      // cancelamentos ve aqui, sem distorcer os totais de cima.
+      canceled: canceledCount,
     },
     kpis: {
       mttrHours: mttrMinutes == null ? null : Number((mttrMinutes / 60).toFixed(1)),

@@ -5,6 +5,9 @@ import type { AssetPart, AssetPartHistoryEntry, AttachmentCategory, CalibrationA
 export interface ListInstrumentsParams {
   /** "cmms" pede a arvore completa do cliente; sem isso a equipe interna ve so calibraveis. */
   scope?: string;
+  /** Pede a consulta inteira, sem o teto de paginacao - so a arvore de ativos usa isto,
+   * porque um galho cortado no meio parece planta nao importada. */
+  all?: boolean;
   page?: number;
   pageSize?: number;
   clientId?: string;

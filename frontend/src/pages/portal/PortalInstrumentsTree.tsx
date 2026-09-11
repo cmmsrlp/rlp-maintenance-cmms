@@ -8,7 +8,7 @@ import { FullPageSpinner } from "../../components/Spinner";
 export default function PortalInstrumentsTree() {
   const { data, isLoading } = useQuery({
     queryKey: ["portal-instruments-tree"],
-    queryFn: () => listInstruments({ pageSize: 500 }),
+    queryFn: () => listInstruments({ all: true }),
   });
 
   return (

@@ -25,7 +25,7 @@ export default function InstrumentsTree() {
     // scope=cmms: a arvore e' a estrutura do parque do cliente, nao a lista de itens que a
     // OptiProcess calibra. Sem isso a equipe interna via a arvore quase vazia, com so os
     // ativos calibraveis - e sem nenhuma pista de que faltava alguma coisa.
-    queryFn: () => listInstruments({ clientId, pageSize: 500, scope: "cmms" }),
+    queryFn: () => listInstruments({ clientId, all: true, scope: "cmms" }),
     enabled: !!clientId,
   });
 

@@ -145,6 +145,7 @@ export default function MaintenanceDashboard() {
               hint={data.totals.predictive > 0 ? `${data.totals.predictiveAutoOpened} abertas sozinhas por medidor` : undefined}
             />
             <MiniStat label="Total de OS (periodo)" value={data.totals.workOrders} />
+            <MiniStat label="Canceladas (periodo)" value={data.totals.canceled} />
           </div>
 
           <h2 className="mb-3 mt-8 font-semibold text-navy-900">PCM - planejamento e controle</h2>

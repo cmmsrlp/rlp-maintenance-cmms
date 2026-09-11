@@ -98,7 +98,7 @@ function ordenarPelaArvore<T extends { id: string; parentId: string | null; tag:
 export const listInstruments = asyncHandler(async (req: Request, res: Response) => {
   await assertServiceAccess(req, ["CMMS_MAINTENANCE"]);
   const pageParams = parsePageParams(req.query as Record<string, unknown>);
-  const { clientId, search, status, parentId, criticality, plantId, areaId, systemId, costCenterId, operationalStatus } = req.query as {
+  const { clientId, search, status, parentId, criticality, plantId, areaId, systemId, costCenterId, operationalStatus, all } = req.query as {
     clientId?: string;
     search?: string;
     status?: InstrumentStatus;
@@ -109,6 +109,11 @@ export const listInstruments = asyncHandler(async (req: Request, res: Response) 
     systemId?: string;
     costCenterId?: string;
     operationalStatus?: OperationalStatus;
+    // A arvore de ativos nao pode ser cortada no meio: um galho inteiro sumindo (o teto de
+    // 100 da paginacao normal batia antes do primeiro cliente com parque grande acabar de
+    // listar) fazia parecer que uma planta inteira nao tinha sido importada. "all" pede a
+    // lista completa da consulta, sem o teto de paginacao - so quem monta arvore usa isto.
+    all?: string;
   };
 
   const where = {
@@ -143,8 +148,9 @@ export const listInstruments = asyncHandler(async (req: Request, res: Response) 
     select: { id: true, parentId: true, tag: true },
   });
   const { ordenados: naOrdem, profundidadePorId } = ordenarPelaArvore(esqueleto);
+  const wantsAll = all === "true";
   const { skip, take } = toSkipTake(pageParams);
-  const idsDaPagina = naOrdem.slice(skip, skip + take).map((i) => i.id);
+  const idsDaPagina = (wantsAll ? naOrdem : naOrdem.slice(skip, skip + take)).map((i) => i.id);
   const posicao = new Map(idsDaPagina.map((id, i) => [id, i]));
 
   const [itemsFora, total] = await Promise.all([
@@ -169,7 +175,11 @@ export const listInstruments = asyncHandler(async (req: Request, res: Response) 
   // A tela recua cada linha pela profundidade real, e nao mais so "tem pai ou nao tem":
   // com tres niveis, filho e neto ficavam no mesmo recuo.
   const comProfundidade = withLevel.map((i) => ({ ...i, treeDepth: profundidadePorId.get(i.id) ?? 0 }));
-  res.json(buildPagedResult(comProfundidade, total, pageParams));
+  res.json(
+    wantsAll
+      ? { items: comProfundidade, page: 1, pageSize: comProfundidade.length, total, totalPages: 1 }
+      : buildPagedResult(comProfundidade, total, pageParams),
+  );
 });
 
 const instrumentRefSelect = { id: true, type: true, model: true, serialNumber: true, tag: true, description: true } as const;

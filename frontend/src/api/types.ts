@@ -1001,6 +1001,7 @@ export interface MaintenanceDashboardData {
     preventive: number;
     predictive: number;
     predictiveAutoOpened: number;
+    canceled: number;
   };
   kpis: {
     /** null quando nao ha base de calculo - a tela mostra "sem dados", nunca zero. */
