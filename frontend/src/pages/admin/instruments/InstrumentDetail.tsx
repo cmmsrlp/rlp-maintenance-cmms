@@ -142,7 +142,7 @@ export default function InstrumentDetail() {
     try {
       await deleteInstrument(id);
       notify("success", "Ativo removido.");
-      navigate("/gestao/instrumentos");
+      navigate("/gestao/ativos");
     } catch (error) {
       notify("error", getApiErrorMessage(error));
     } finally {
@@ -159,7 +159,7 @@ export default function InstrumentDetail() {
       <PageHeader
         title={`TAG ${instrument.tag ?? "sem TAG"}`}
         description={`${instrument.description || instrument.type} · Cliente: ${clientDisplayName(instrument.client)}`}
-        breadcrumbs={[{ label: "Ativos", to: "/gestao/instrumentos" }, { label: instrument.tag ?? instrument.type }]}
+        breadcrumbs={[{ label: "Ativos", to: "/gestao/ativos" }, { label: instrument.tag ?? instrument.type }]}
         actions={
           <>
             <button className="btn-outline" onClick={() => setQrOpen(true)}>
@@ -184,13 +184,13 @@ export default function InstrumentDetail() {
         onClose={() => setQrOpen(false)}
         tag={instrument.tag}
         description={instrument.description}
-        path={`/gestao/instrumentos/${instrument.id}`}
+        path={`/gestao/ativos/${instrument.id}`}
       />
 
       {instrument.parent && (
         <p className="-mt-3 mb-2 text-sm text-graphite-500">
           Componente de:{" "}
-          <Link to={`/gestao/instrumentos/${instrument.parent.id}`} className="font-medium text-navy-700 hover:underline">
+          <Link to={`/gestao/ativos/${instrument.parent.id}`} className="font-medium text-navy-700 hover:underline">
             TAG {instrument.parent.tag ?? instrument.parent.type}
           </Link>
         </p>
@@ -285,7 +285,7 @@ export default function InstrumentDetail() {
               <ul className="divide-y divide-gray-100">
                 {instrument.children.map((c) => (
                   <li key={c.id}>
-                    <Link to={`/gestao/instrumentos/${c.id}`} className="flex items-center justify-between py-2.5 text-sm hover:text-navy-700">
+                    <Link to={`/gestao/ativos/${c.id}`} className="flex items-center justify-between py-2.5 text-sm hover:text-navy-700">
                       <span className="font-medium text-graphite-800">TAG {c.tag ?? c.type}</span>
                       <span className="text-xs text-graphite-400">{c.type}</span>
                     </Link>

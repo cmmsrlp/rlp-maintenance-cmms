@@ -32,7 +32,7 @@ export default function AssetTypesList() {
   const { user } = useAuth();
   const isClient = user?.role === "CLIENT";
   const canManage = isClient || user?.role === "ADMIN" || user?.role === "TECHNICIAN";
-  const base = isClient ? "/portal/instrumentos" : "/gestao/instrumentos";
+  const base = isClient ? "/portal/ativos" : "/gestao/ativos";
   const [createOpen, setCreateOpen] = useState(false);
   const [editingType, setEditingType] = useState<AssetType | null>(null);
 

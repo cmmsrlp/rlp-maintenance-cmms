@@ -143,7 +143,7 @@ export default function ClientDetail() {
           <div className="card p-5">
             <h2 className="mb-3 font-semibold text-navy-900">Resumo</h2>
             <div className="space-y-2 text-sm">
-              <SummaryRow icon={Gauge} label="Ativos" value={client._count?.instruments ?? 0} to={`/gestao/instrumentos?clientId=${id}`} />
+              <SummaryRow icon={Gauge} label="Ativos" value={client._count?.instruments ?? 0} to={`/gestao/ativos?clientId=${id}`} />
               <SummaryRow icon={ShieldCheck} label="Planos preventivos" value={plansPage?.total ?? 0} to={`/gestao/manutencao/planos?clientId=${id}`} />
               <SummaryRow icon={ClipboardList} label="Ordens de manutencao" value={workOrdersPage?.total ?? 0} to={`/gestao/manutencao/ordens?clientId=${id}`} />
             </div>

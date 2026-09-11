@@ -14,7 +14,7 @@ export default function PortalInstrumentsTree() {
   return (
     <div>
       <PageHeader title="Arvore de ativos" description="Estrutura pai/filho dos seus ativos - clique no + para expandir os componentes" />
-      {isLoading ? <FullPageSpinner /> : <AssetTree instruments={data?.items ?? []} linkBase="/portal/instrumentos" />}
+      {isLoading ? <FullPageSpinner /> : <AssetTree instruments={data?.items ?? []} linkBase="/portal/ativos" />}
     </div>
   );
 }

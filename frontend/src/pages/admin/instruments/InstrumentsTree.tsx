@@ -57,7 +57,7 @@ export default function InstrumentsTree() {
       ) : isLoading ? (
         <FullPageSpinner />
       ) : (
-        <AssetTree instruments={data?.items ?? []} linkBase="/gestao/instrumentos" rootLabel={client ? clientDisplayName(client) : undefined} />
+        <AssetTree instruments={data?.items ?? []} linkBase="/gestao/ativos" rootLabel={client ? clientDisplayName(client) : undefined} />
       )}
     </div>
   );

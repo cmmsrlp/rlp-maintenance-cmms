@@ -32,7 +32,7 @@ export default function PortalInstruments() {
             <button className="btn-outline" onClick={() => navigate("/portal/manutencao/arvore")}>
               <GitBranch className="h-4 w-4" /> Ver arvore
             </button>
-            <button className="btn-outline" onClick={() => navigate("/portal/instrumentos/cadastros")}>
+            <button className="btn-outline" onClick={() => navigate("/portal/ativos/cadastros")}>
               <Tags className="h-4 w-4" /> Cadastros tecnicos
             </button>
             <button className="btn-primary" onClick={() => setCreateOpen(true)}>
@@ -60,7 +60,7 @@ export default function PortalInstruments() {
         loading={isLoading}
         rows={data?.items ?? []}
         keyField={(i) => i.id}
-        onRowClick={(i) => navigate(`/portal/instrumentos/${i.id}`)}
+        onRowClick={(i) => navigate(`/portal/ativos/${i.id}`)}
         pagination={data}
         onPageChange={setPage}
         emptyTitle="Nenhum ativo cadastrado"
@@ -95,7 +95,7 @@ export default function PortalInstruments() {
         onSaved={(instrument) => {
           setCreateOpen(false);
           queryClient.invalidateQueries({ queryKey: ["portal-instruments"] });
-          navigate(`/portal/instrumentos/${instrument.id}`);
+          navigate(`/portal/ativos/${instrument.id}`);
         }}
       />
     </div>

@@ -92,7 +92,7 @@ export function AdminTopbar({ onOpenMobileMenu }: { onOpenMobileMenu: () => void
                 key={i.id}
                 className="block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-navy-50"
                 onClick={() => {
-                  navigate(`/gestao/instrumentos/${i.id}`);
+                  navigate(`/gestao/ativos/${i.id}`);
                   setSearchOpen(false);
                 }}
               >

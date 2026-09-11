@@ -29,7 +29,7 @@ function buildTree(items: Instrument[]): TreeNode[] {
 
 interface AssetTreeProps {
   instruments: Instrument[];
-  /** Prefixo de rota para onde a ficha de cada ativo abre ("/gestao/instrumentos" ou "/portal/instrumentos"). */
+  /** Prefixo de rota para onde a ficha de cada ativo abre ("/gestao/ativos" ou "/portal/ativos"). */
   linkBase: string;
   /** Rotulo do no raiz da arvore (nome da empresa) - so faz sentido na gestao, que ve varios clientes. */
   rootLabel?: string;

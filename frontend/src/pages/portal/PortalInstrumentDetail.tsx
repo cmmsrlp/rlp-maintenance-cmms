@@ -149,7 +149,7 @@ export default function PortalInstrumentDetail() {
       await deleteInstrument(id);
       notify("success", "Ativo removido.");
       queryClient.invalidateQueries({ queryKey: ["portal-instruments"] });
-      navigate("/portal/instrumentos");
+      navigate("/portal/ativos");
     } catch (error) {
       notify("error", getApiErrorMessage(error));
     } finally {
@@ -181,7 +181,7 @@ export default function PortalInstrumentDetail() {
       <PageHeader
         title={`TAG ${instrument.tag ?? "sem TAG"}`}
         description={instrument.description || instrument.type}
-        breadcrumbs={[{ label: "Meus ativos", to: "/portal/instrumentos" }, { label: instrument.tag ?? instrument.type }]}
+        breadcrumbs={[{ label: "Meus ativos", to: "/portal/ativos" }, { label: instrument.tag ?? instrument.type }]}
         actions={
           <>
             <button className="btn-outline" onClick={() => setQrOpen(true)}>
@@ -202,12 +202,12 @@ export default function PortalInstrumentDetail() {
         onClose={() => setQrOpen(false)}
         tag={instrument.tag}
         description={instrument.description}
-        path={`/portal/instrumentos/${instrument.id}`}
+        path={`/portal/ativos/${instrument.id}`}
       />
 
       {instrument.parent && (
         <Link
-          to={`/portal/instrumentos/${instrument.parent.id}`}
+          to={`/portal/ativos/${instrument.parent.id}`}
           className="mb-2 inline-flex items-center gap-1.5 text-sm text-navy-700 hover:underline"
         >
           <CornerLeftUp className="h-4 w-4" /> Componente de: TAG {instrument.parent.tag ?? instrument.parent.type}
@@ -289,7 +289,7 @@ export default function PortalInstrumentDetail() {
               <ul className="divide-y divide-gray-100">
                 {instrument.children.map((c) => (
                   <li key={c.id}>
-                    <Link to={`/portal/instrumentos/${c.id}`} className="flex items-center justify-between py-2.5 text-sm hover:text-navy-700">
+                    <Link to={`/portal/ativos/${c.id}`} className="flex items-center justify-between py-2.5 text-sm hover:text-navy-700">
                       <span className="font-medium text-graphite-800">TAG {c.tag ?? c.type}</span>
                       <span className="text-xs text-graphite-400">{c.type}</span>
                     </Link>

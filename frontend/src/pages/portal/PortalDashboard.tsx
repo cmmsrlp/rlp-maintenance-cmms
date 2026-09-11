@@ -41,7 +41,7 @@ export default function PortalDashboard() {
         <p className="mt-1 text-graphite-500">Gestao de manutencao de {clientDisplayName(user?.client)}</p>
 
         <div className="mt-4 flex flex-wrap gap-3">
-          <Link to="/portal/instrumentos" className="btn-outline">
+          <Link to="/portal/ativos" className="btn-outline">
             <Gauge className="h-4 w-4" /> Meus ativos
           </Link>
           <Link to="/portal/manutencao/arvore" className="btn-outline">

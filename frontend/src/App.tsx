@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { lazyPagina } from "./lib/lazyPagina";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import { ToastProvider } from "./components/Toast";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { FullPageSpinner } from "./components/Spinner";
@@ -17,6 +17,13 @@ import ClientPortal from "./pages/public/ClientPortal";
 import Pricing from "./pages/public/Pricing";
 import Login from "./pages/auth/Login";
 import NotFound from "./pages/NotFound";
+
+/** Redireciona um link antigo de "instrumentos/:id" (ex.: QR code ja impresso) para o
+ * mesmo ativo em "/ativos/:id", preservando o id. */
+function RedirectAtivoAntigo({ base }: { base: string }) {
+  const { id } = useParams();
+  return <Navigate to={`${base}/ativos/${id}`} replace />;
+}
 
 // Gestao interna e portal do cliente ficam fora do bundle inicial: so quem faz
 // login (nunca um visitante anonimo) paga o custo de baixa-los.
@@ -107,13 +114,16 @@ export default function App() {
               <Route path="clientes" element={<ClientsList />} />
               <Route path="clientes/:id" element={<ClientDetail />} />
 
-              <Route path="instrumentos" element={<InstrumentsList />} />
-              <Route path="instrumentos/tipos" element={<AssetTypesList />} />
-              <Route path="instrumentos/cadastros" element={<TechnicalCatalogsHub />} />
-              <Route path="instrumentos/plantas" element={<PlantsList />} />
-              <Route path="instrumentos/areas" element={<AreasList />} />
-              <Route path="instrumentos/sistemas" element={<AssetSystemsList />} />
-              <Route path="instrumentos/:id" element={<InstrumentDetail />} />
+              <Route path="ativos" element={<InstrumentsList />} />
+              <Route path="ativos/tipos" element={<AssetTypesList />} />
+              <Route path="ativos/cadastros" element={<TechnicalCatalogsHub />} />
+              <Route path="ativos/plantas" element={<PlantsList />} />
+              <Route path="ativos/areas" element={<AreasList />} />
+              <Route path="ativos/sistemas" element={<AssetSystemsList />} />
+              <Route path="ativos/:id" element={<InstrumentDetail />} />
+              {/* Compatibilidade com links/QR codes gerados antes do rename "instrumentos" -> "ativos". */}
+              <Route path="instrumentos" element={<Navigate to="/gestao/ativos" replace />} />
+              <Route path="instrumentos/:id" element={<RedirectAtivoAntigo base="/gestao" />} />
               <Route path="manutencao/arvore" element={<InstrumentsTree />} />
 
               <Route path="manutencao" element={<MaintenanceDashboard />} />
@@ -173,8 +183,11 @@ export default function App() {
               {/* Equipe de manutencao: consulta o parque e trabalha nas ordens. */}
               <Route element={<ProtectedRoute roles={["CLIENT", "CLIENT_PLANNER", "CLIENT_TECHNICIAN"]} />}>
                 <Route index element={<PortalDashboard />} />
-                <Route path="instrumentos" element={<PortalInstruments />} />
-                <Route path="instrumentos/:id" element={<PortalInstrumentDetail />} />
+                <Route path="ativos" element={<PortalInstruments />} />
+                <Route path="ativos/:id" element={<PortalInstrumentDetail />} />
+                {/* Compatibilidade com links/QR codes gerados antes do rename "instrumentos" -> "ativos". */}
+                <Route path="instrumentos" element={<Navigate to="/portal/ativos" replace />} />
+                <Route path="instrumentos/:id" element={<RedirectAtivoAntigo base="/portal" />} />
                 <Route path="manutencao/arvore" element={<PortalInstrumentsTree />} />
                 <Route path="manutencao" element={<MaintenanceDashboard />} />
                 <Route path="manutencao/ordens" element={<WorkOrdersList />} />
@@ -190,11 +203,11 @@ export default function App() {
               {/* Planejamento: monta plano, programa, aprova e olha custo. O Tecnico
                   executa o que foi programado, entao nao reestrutura nada disto. */}
               <Route element={<ProtectedRoute roles={["CLIENT", "CLIENT_PLANNER"]} />}>
-                <Route path="instrumentos/cadastros" element={<TechnicalCatalogsHub />} />
-                <Route path="instrumentos/tipos" element={<AssetTypesList />} />
-                <Route path="instrumentos/plantas" element={<PlantsList />} />
-                <Route path="instrumentos/areas" element={<AreasList />} />
-                <Route path="instrumentos/sistemas" element={<AssetSystemsList />} />
+                <Route path="ativos/cadastros" element={<TechnicalCatalogsHub />} />
+                <Route path="ativos/tipos" element={<AssetTypesList />} />
+                <Route path="ativos/plantas" element={<PlantsList />} />
+                <Route path="ativos/areas" element={<AreasList />} />
+                <Route path="ativos/sistemas" element={<AssetSystemsList />} />
                 <Route path="manutencao/planos" element={<MaintenancePlansList />} />
                 <Route path="manutencao/planos/novo" element={<MaintenancePlanForm />} />
                 <Route path="manutencao/planos/:id/editar" element={<MaintenancePlanForm />} />

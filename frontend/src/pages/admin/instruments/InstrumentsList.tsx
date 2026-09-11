@@ -43,7 +43,7 @@ export default function InstrumentsList() {
                 <GitBranch className="h-4 w-4" /> Ver arvore
               </button>
             )}
-            <button className="btn-outline" onClick={() => navigate("/gestao/instrumentos/cadastros")}>
+            <button className="btn-outline" onClick={() => navigate("/gestao/ativos/cadastros")}>
               <Tags className="h-4 w-4" /> Cadastros tecnicos
             </button>
             {canManage && (
@@ -96,7 +96,7 @@ export default function InstrumentsList() {
         loading={isLoading}
         rows={data?.items ?? []}
         keyField={(i) => i.id}
-        onRowClick={(i) => navigate(`/gestao/instrumentos/${i.id}`)}
+        onRowClick={(i) => navigate(`/gestao/ativos/${i.id}`)}
         pagination={data}
         onPageChange={setPage}
         emptyTitle="Nenhum ativo cadastrado"
@@ -155,7 +155,7 @@ export default function InstrumentsList() {
         onSaved={(instrument) => {
           setCreateOpen(false);
           queryClient.invalidateQueries({ queryKey: ["instruments"] });
-          navigate(`/gestao/instrumentos/${instrument.id}`);
+          navigate(`/gestao/ativos/${instrument.id}`);
         }}
       />
     </div>

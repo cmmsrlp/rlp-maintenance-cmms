@@ -26,7 +26,7 @@ export function useCmms() {
     isCompanyAdmin: ehAdministradorDaEmpresa(user?.role),
     ownClientId: user?.clientId ?? undefined,
     base: isClient ? "/portal/manutencao" : "/gestao/manutencao",
-    assetsBase: isClient ? "/portal/instrumentos" : "/gestao/instrumentos",
+    assetsBase: isClient ? "/portal/ativos" : "/gestao/ativos",
     partsBase: isClient ? "/portal/almoxarifado" : "/gestao/manutencao/almoxarifado",
     laborBase: isClient ? "/portal/manutencao/mao-de-obra" : "/gestao/manutencao/mao-de-obra",
   };
