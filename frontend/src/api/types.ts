@@ -150,6 +150,9 @@ export interface Instrument {
   calibratable: boolean;
   /** Profundidade na arvore (0 = raiz) - so vem na listagem, para o recuo de cada linha. */
   treeDepth?: number;
+  /** Quantos filhos (nao removidos) este ativo tem - decide se a arvore sob demanda mostra
+   * o "+" de expandir antes mesmo de buscar os filhos. */
+  childrenCount?: number;
   /** Tem ponto de lubrificacao - irmao de calibratable. */
   lubricatable?: boolean;
   /** O que falta depois de marcar o ativo (so vem na ficha, nao na listagem). */

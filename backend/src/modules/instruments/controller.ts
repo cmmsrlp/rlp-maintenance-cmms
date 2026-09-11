@@ -98,7 +98,7 @@ function ordenarPelaArvore<T extends { id: string; parentId: string | null; tag:
 export const listInstruments = asyncHandler(async (req: Request, res: Response) => {
   await assertServiceAccess(req, ["CMMS_MAINTENANCE"]);
   const pageParams = parsePageParams(req.query as Record<string, unknown>);
-  const { clientId, search, status, parentId, criticality, plantId, areaId, systemId, costCenterId, operationalStatus, all } = req.query as {
+  const { clientId, search, status, parentId, criticality, plantId, areaId, systemId, costCenterId, operationalStatus, all, rootOnly } = req.query as {
     clientId?: string;
     search?: string;
     status?: InstrumentStatus;
@@ -114,13 +114,17 @@ export const listInstruments = asyncHandler(async (req: Request, res: Response) 
     // listar) fazia parecer que uma planta inteira nao tinha sido importada. "all" pede a
     // lista completa da consulta, sem o teto de paginacao - so quem monta arvore usa isto.
     all?: string;
+    // So os ativos sem pai (raiz da arvore do cliente) - primeiro passo do carregamento
+    // sob demanda: um parque de 10 mil ativos nao pode vir inteiro numa unica resposta so
+    // porque a tela mostra 2 ou 3 plantas fechadas de cara.
+    rootOnly?: string;
   };
 
   const where = {
     deletedAt: null,
     ...resolveClientScope(req, clientId),
     ...(status ? { status } : {}),
-    ...(parentId ? { parentId } : {}),
+    ...(rootOnly === "true" ? { parentId: null } : parentId ? { parentId } : {}),
     ...(criticality ? { criticality } : {}),
     ...(plantId ? { plantId } : {}),
     ...(areaId ? { areaId } : {}),
@@ -163,6 +167,9 @@ export const listInstruments = asyncHandler(async (req: Request, res: Response) 
         area: { select: { id: true, name: true } },
         system: { select: { id: true, name: true } },
         costCenter: { select: { id: true, name: true, code: true } },
+        // A arvore sob demanda decide se mostra o "+" de expandir sem precisar buscar os
+        // filhos primeiro - so a contagem, nao a lista inteira.
+        _count: { select: { children: { where: { deletedAt: null } } } },
       },
     }),
     Promise.resolve(esqueleto.length),
@@ -174,7 +181,11 @@ export const listInstruments = asyncHandler(async (req: Request, res: Response) 
   const withLevel = await attachPhotoUrl(attachAssetTypeLevel(items.map(withDerivedStatus)));
   // A tela recua cada linha pela profundidade real, e nao mais so "tem pai ou nao tem":
   // com tres niveis, filho e neto ficavam no mesmo recuo.
-  const comProfundidade = withLevel.map((i) => ({ ...i, treeDepth: profundidadePorId.get(i.id) ?? 0 }));
+  const comProfundidade = withLevel.map(({ _count, ...i }) => ({
+    ...i,
+    treeDepth: profundidadePorId.get(i.id) ?? 0,
+    childrenCount: _count.children,
+  }));
   res.json(
     wantsAll
       ? { items: comProfundidade, page: 1, pageSize: comProfundidade.length, total, totalPages: 1 }

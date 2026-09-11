@@ -1,46 +1,44 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Minus, Building2, Box, AlertTriangle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Plus, Minus, Building2, Box, AlertTriangle, Loader2 } from "lucide-react";
 import type { Instrument } from "../api/types";
+import { listInstruments } from "../api/instruments";
 import { ASSET_LEVEL_ICONS } from "../lib/assetHierarchy";
 import { StatusBadge } from "./StatusBadge";
 import { EmptyState } from "./EmptyState";
-
-interface TreeNode {
-  instrument: Instrument;
-  children: TreeNode[];
-}
-
-/** Monta a arvore a partir da lista plana (parentId) - a mesma logica de qualquer
- * arvore de categorias: agrupa por pai, raizes sao quem nao tem parentId. */
-function buildTree(items: Instrument[]): TreeNode[] {
-  const byId = new Map<string, TreeNode>(items.map((i) => [i.id, { instrument: i, children: [] }]));
-  const roots: TreeNode[] = [];
-  for (const node of byId.values()) {
-    const parentId = node.instrument.parentId;
-    if (parentId && byId.has(parentId)) {
-      byId.get(parentId)!.children.push(node);
-    } else {
-      roots.push(node);
-    }
-  }
-  return roots;
-}
+import { FullPageSpinner } from "./Spinner";
 
 interface AssetTreeProps {
-  instruments: Instrument[];
+  /** Empresa dona da arvore. Pode vir vazio no portal do cliente - o backend forca a
+   * propria empresa do usuario de qualquer forma, o valor aqui so entra na chave da
+   * consulta e no filtro quando quem pergunta e' a equipe interna. */
+  clientId: string;
   /** Prefixo de rota para onde a ficha de cada ativo abre ("/gestao/ativos" ou "/portal/ativos"). */
   linkBase: string;
   /** Rotulo do no raiz da arvore (nome da empresa) - so faz sentido na gestao, que ve varios clientes. */
   rootLabel?: string;
 }
 
-/** Arvore de ativos com expandir/recolher em cada no que tem filhos - clique no +/-
- * (ou na linha) para ir abrindo compressor -> motor -> rolamento e assim por diante. */
-export function AssetTree({ instruments, linkBase, rootLabel }: AssetTreeProps) {
-  const tree = useMemo(() => buildTree(instruments), [instruments]);
+/**
+ * Arvore de ativos com carregamento sob demanda: busca so os ativos-raiz da empresa de
+ * cara, e os filhos de cada no so quando o "+" e' clicado.
+ *
+ * Antes a tela buscava o parque inteiro do cliente numa unica chamada (ate' com o teto de
+ * paginacao contornado) e montava a arvore inteira no navegador. Isso quebra num cliente
+ * de 5 a 10 mil ativos: a resposta fica pesada e a maior parte da arvore nem aparece
+ * aberta. Cada nivel agora e' uma consulta pequena, e so os galhos que o usuario abre
+ * chegam a ser buscados.
+ */
+export function AssetTree({ clientId, linkBase, rootLabel }: AssetTreeProps) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["asset-tree-roots", clientId],
+    queryFn: () => listInstruments({ clientId: clientId || undefined, rootOnly: true, all: true }),
+  });
+  const roots = data?.items ?? [];
 
-  if (instruments.length === 0) {
+  if (isLoading) return <FullPageSpinner />;
+  if (roots.length === 0) {
     return <EmptyState title="Nenhum ativo cadastrado" description="Cadastre o primeiro ativo para comecar a montar a arvore." />;
   }
 
@@ -52,21 +50,41 @@ export function AssetTree({ instruments, linkBase, rootLabel }: AssetTreeProps) 
         </div>
       )}
       <ul>
-        {tree.map((node) => (
-          <TreeRow key={node.instrument.id} node={node} linkBase={linkBase} depth={0} defaultOpen />
+        {roots.map((instrument) => (
+          <TreeRow key={instrument.id} instrument={instrument} clientId={clientId} linkBase={linkBase} depth={0} defaultOpen />
         ))}
       </ul>
     </div>
   );
 }
 
-function TreeRow({ node, linkBase, depth, defaultOpen = false }: { node: TreeNode; linkBase: string; depth: number; defaultOpen?: boolean }) {
+function TreeRow({
+  instrument,
+  clientId,
+  linkBase,
+  depth,
+  defaultOpen = false,
+}: {
+  instrument: Instrument;
+  clientId: string;
+  linkBase: string;
+  depth: number;
+  defaultOpen?: boolean;
+}) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(defaultOpen);
-  const { instrument, children } = node;
-  const hasChildren = children.length > 0;
+  const hasChildren = (instrument.childrenCount ?? 0) > 0;
   const LevelIcon = (instrument.assetTypeLevel && ASSET_LEVEL_ICONS[instrument.assetTypeLevel]) || Box;
   const alert = instrument.criticality === "CRITICAL" || (instrument.derivedStatus ?? instrument.status) === "EXPIRED";
+
+  // So busca os filhos quando o galho e' aberto - e fica em cache do react-query dali pra
+  // frente, entao fechar e abrir de novo nao repete a consulta.
+  const { data: childrenData, isLoading: loadingChildren } = useQuery({
+    queryKey: ["asset-tree-children", instrument.id],
+    queryFn: () => listInstruments({ clientId: clientId || undefined, parentId: instrument.id, all: true }),
+    enabled: open && hasChildren,
+  });
+  const children = childrenData?.items ?? [];
 
   return (
     <li className={depth > 0 ? "border-l border-gray-200" : ""}>
@@ -119,15 +137,21 @@ function TreeRow({ node, linkBase, depth, defaultOpen = false }: { node: TreeNod
         </span>
         {hasChildren && (
           <span className="shrink-0 text-xs text-graphite-400">
-            {children.length} {children.length === 1 ? "componente" : "componentes"}
+            {instrument.childrenCount} {instrument.childrenCount === 1 ? "componente" : "componentes"}
           </span>
         )}
       </div>
       {hasChildren && open && (
         <ul>
-          {children.map((child) => (
-            <TreeRow key={child.instrument.id} node={child} linkBase={linkBase} depth={depth + 1} />
-          ))}
+          {loadingChildren ? (
+            <li className="flex items-center gap-2 py-2 pl-8 text-xs text-graphite-400">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Carregando...
+            </li>
+          ) : (
+            children.map((child) => (
+              <TreeRow key={child.id} instrument={child} clientId={clientId} linkBase={linkBase} depth={depth + 1} />
+            ))
+          )}
         </ul>
       )}
     </li>

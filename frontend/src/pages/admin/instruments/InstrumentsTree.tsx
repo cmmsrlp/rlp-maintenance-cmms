@@ -1,11 +1,9 @@
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { listInstruments } from "../../../api/instruments";
 import { listClients } from "../../../api/clients";
 import { PageHeader } from "../../../components/PageHeader";
 import { AssetTree } from "../../../components/AssetTree";
 import { EmptyState } from "../../../components/EmptyState";
-import { FullPageSpinner } from "../../../components/Spinner";
 import { clientDisplayName } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 
@@ -19,14 +17,6 @@ export default function InstrumentsTree() {
   const { data: clients } = useQuery({
     queryKey: ["clients-picker-cmms"],
     queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
-  });
-  const { data, isLoading } = useQuery({
-    queryKey: ["instruments-tree", clientId],
-    // scope=cmms: a arvore e' a estrutura do parque do cliente, nao a lista de itens que a
-    // OptiProcess calibra. Sem isso a equipe interna via a arvore quase vazia, com so os
-    // ativos calibraveis - e sem nenhuma pista de que faltava alguma coisa.
-    queryFn: () => listInstruments({ clientId, all: true, scope: "cmms" }),
-    enabled: !!clientId,
   });
 
   const client = clients?.items.find((c) => c.id === clientId);
@@ -54,10 +44,8 @@ export default function InstrumentsTree() {
 
       {!clientId ? (
         <EmptyState title="Selecione um cliente" description="Escolha a empresa para ver a arvore de ativos dela." />
-      ) : isLoading ? (
-        <FullPageSpinner />
       ) : (
-        <AssetTree instruments={data?.items ?? []} linkBase="/gestao/ativos" rootLabel={client ? clientDisplayName(client) : undefined} />
+        <AssetTree clientId={clientId} linkBase="/gestao/ativos" rootLabel={client ? clientDisplayName(client) : undefined} />
       )}
     </div>
   );
