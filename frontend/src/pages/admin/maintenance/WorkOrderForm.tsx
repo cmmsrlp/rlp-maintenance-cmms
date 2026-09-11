@@ -10,9 +10,9 @@ import { TextInput, TextareaInput, SelectInput } from "../../../components/form/
 import { ClientPicker } from "../../../components/ClientPicker";
 import { InstrumentPicker } from "../../../components/InstrumentPicker";
 import { UserPicker } from "../../../components/UserPicker";
+import { LaborResourcePicker } from "../../../components/LaborResourcePicker";
 import { SecaoRecolhivel } from "../../../components/SecaoRecolhivel";
 import { listFailureCodes } from "../../../api/failureCodes";
-import { listLaborResources } from "../../../api/laborResources";
 import { getInstrument } from "../../../api/instruments";
 import { createMaintenanceWorkOrder, getMaintenanceWorkOrder, updateMaintenanceWorkOrder } from "../../../api/maintenanceWorkOrders";
 import { useToast } from "../../../components/Toast";
@@ -111,13 +111,6 @@ export default function WorkOrderForm() {
   const temTipo = temAtivo && !!tipoSelecionado;
   const temOQueFazer = temTipo && (titulo ?? "").trim().length > 1 && (descricao ?? "").trim().length > 1;
   const mostrar = (etapa: boolean) => !porPartes || etapa;
-
-  // Equipe da propria empresa - e' quem de fato executa a OS no CMMS do cliente.
-  const { data: laborResources } = useQuery({
-    queryKey: ["labor-resources-picker", clientId],
-    queryFn: () => listLaborResources({ clientId, active: true, pageSize: 200 }),
-    enabled: !!clientId,
-  });
 
   // Sugere a prioridade a partir da criticidade do ativo escolhido - o tecnico ainda
   // pode trocar (por isso so sobrescreve enquanto o campo nao foi tocado a mao).
@@ -355,12 +348,12 @@ export default function WorkOrderForm() {
                 {!isClient && (
                   <UserPicker label="Tecnico responsavel" roles={["ADMIN", "TECHNICIAN"]} error={errors.technicianId?.message} {...register("technicianId")} />
                 )}
-                <SelectInput
+                <LaborResourcePicker
                   label="Quem vai executar"
-                  placeholder={clientId ? "A definir na programacao" : "Selecione o cliente primeiro"}
+                  placeholder={clientId ? "Buscar por nome, funcao ou matricula" : "Selecione o cliente primeiro"}
                   disabled={!clientId}
+                  clientId={clientId}
                   hint="Tambem da para definir arrastando no quadro de programacao ou no planejamento."
-                  options={(laborResources?.items ?? []).map((r) => ({ value: r.id, label: `${r.name} (${r.type})` }))}
                   error={errors.assignedResourceId?.message}
                   {...register("assignedResourceId")}
                 />

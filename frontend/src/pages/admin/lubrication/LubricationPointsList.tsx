@@ -12,10 +12,10 @@ import { EmptyState } from "../../../components/EmptyState";
 import { Modal } from "../../../components/Modal";
 import { TextInput, TextareaInput, SelectInput } from "../../../components/form/Field";
 import { InstrumentPicker } from "../../../components/InstrumentPicker";
+import { LaborResourcePicker } from "../../../components/LaborResourcePicker";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
 import { listClients } from "../../../api/clients";
-import { listLaborResources } from "../../../api/laborResources";
 import {
   listLubricants,
   listLubricationPoints,
@@ -111,12 +111,6 @@ export default function LubricationPointsList() {
     queryKey: ["pontos-pendentes", clientId, page, busca],
     queryFn: () => listPendingLubricationPoints({ clientId, search: busca || undefined, page, pageSize: 20 }),
     enabled: !!clientId,
-  });
-
-  const { data: equipe } = useQuery({
-    queryKey: ["labor-resources-picker", clientId],
-    queryFn: () => listLaborResources({ clientId, active: true, pageSize: 200 }),
-    enabled: !!clientId && !!registrando,
   });
 
   const pointForm = useForm<PointForm>({
@@ -646,10 +640,10 @@ export default function LubricationPointsList() {
               <TextInput label="Data e hora" type="datetime-local" {...recordForm.register("executedAt")} />
             </div>
 
-            <SelectInput
+            <LaborResourcePicker
               label="Quem executou"
               placeholder="Nao informado"
-              options={(equipe?.items ?? []).map((r) => ({ value: r.id, label: r.name }))}
+              clientId={clientId}
               {...recordForm.register("laborResourceId")}
             />
 

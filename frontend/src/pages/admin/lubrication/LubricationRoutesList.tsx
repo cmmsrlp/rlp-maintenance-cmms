@@ -12,18 +12,18 @@ import { TextInput, TextareaInput, SelectInput } from "../../../components/form/
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
 import { listClients } from "../../../api/clients";
-import { listLaborResources } from "../../../api/laborResources";
 import { listAreas } from "../../../api/areas";
 import {
   listLubricationRoutes,
   createLubricationRoute,
   updateLubricationRoute,
   deleteLubricationRoute,
-  listLubricationPoints,
   sugerirPontosDeLubrificacao,
   gerarOrdensDaRota,
 } from "../../../api/lubrication";
-import type { LubricationRoute } from "../../../api/types";
+import type { LubricationRoute, LubricationPoint } from "../../../api/types";
+import { LubricationPointPicker } from "../../../components/LubricationPointPicker";
+import { LaborResourcePicker } from "../../../components/LaborResourcePicker";
 import { clientDisplayName } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 
@@ -54,6 +54,11 @@ export default function LubricationRoutesList() {
   const [formOpen, setFormOpen] = useState(false);
   const [editando, setEditando] = useState<LubricationRoute | null>(null);
   const [pontosDaRota, setPontosDaRota] = useState<string[]>([]);
+  // Guarda os dados de cada ponto ja envolvido na rota (editando, sugerido ou escolhido na
+  // busca) - so' assim a lista ordenada mostra codigo/nome/TAG sem depender de uma consulta
+  // paginada de todos os pontos do cliente, que num parque grande nao teria como trazer
+  // tudo de uma vez.
+  const [pontosInfo, setPontosInfo] = useState<Map<string, LubricationPoint>>(new Map());
   const [gerandoOsDe, setGerandoOsDe] = useState<string | null>(null);
 
   // Montagem automatica: a segunda opcao, ao lado de escolher ponto a ponto. So sugere -
@@ -74,16 +79,6 @@ export default function LubricationRoutesList() {
     queryFn: () => listLubricationRoutes({ clientId }),
     enabled: !!clientId,
   });
-  const { data: pontos } = useQuery({
-    queryKey: ["pontos-lubrificacao-todos", clientId],
-    queryFn: () => listLubricationPoints({ clientId, pageSize: 500 }),
-    enabled: !!clientId && formOpen,
-  });
-  const { data: equipe } = useQuery({
-    queryKey: ["labor-resources-picker", clientId],
-    queryFn: () => listLaborResources({ clientId, active: true, pageSize: 200 }),
-    enabled: !!clientId && formOpen,
-  });
   const { data: areas } = useQuery({
     queryKey: ["areas-picker-rota-lubrificacao", clientId],
     queryFn: () => listAreas({ clientId, active: true }),
@@ -92,13 +87,12 @@ export default function LubricationRoutesList() {
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
-  const todosOsPontos = pontos?.items ?? [];
-  const porId = new Map(todosOsPontos.map((p) => [p.id, p]));
-  const disponiveis = todosOsPontos.filter((p) => !pontosDaRota.includes(p.id));
+  const porId = pontosInfo;
 
   function abrirNova() {
     setEditando(null);
     setPontosDaRota([]);
+    setPontosInfo(new Map());
     setSugestoes(null);
     setAreaIdAuto("");
     reset({ name: "", code: "", responsibleId: "", notes: "" });
@@ -108,6 +102,7 @@ export default function LubricationRoutesList() {
   function abrirEdicao(r: LubricationRoute) {
     setEditando(r);
     setPontosDaRota((r.items ?? []).map((i) => i.point.id));
+    setPontosInfo(new Map((r.items ?? []).map((i) => [i.point.id, i.point])));
     setSugestoes(null);
     setAreaIdAuto(r.areaId ?? "");
     reset({ name: r.name, code: r.code ?? "", responsibleId: r.responsibleId ?? "", notes: r.notes ?? "" });
@@ -129,6 +124,11 @@ export default function LubricationRoutesList() {
         ...(criterioAuto === "AREA" ? { areaId: areaIdAuto } : {}),
       });
       setSugestoes(pontos.map((p) => p.id));
+      setPontosInfo((atual) => {
+        const novo = new Map(atual);
+        pontos.forEach((p) => novo.set(p.id, p));
+        return novo;
+      });
       if (pontos.length === 0) notify("error", "Nenhum ponto encontrado para esse criterio.");
     } catch (error) {
       notify("error", getApiErrorMessage(error));
@@ -325,10 +325,10 @@ export default function LubricationRoutesList() {
             <TextInput label="Nome da rota" required placeholder="Ex.: Rota semanal - Linha 4" error={errors.name?.message} {...register("name")} />
             <TextInput label="Codigo" placeholder="Ex.: ROT-L4-SEM" {...register("code")} />
           </div>
-          <SelectInput
+          <LaborResourcePicker
             label="Responsavel"
             placeholder="A definir"
-            options={(equipe?.items ?? []).map((r) => ({ value: r.id, label: `${r.name} (${r.type})` }))}
+            clientId={clientId}
             {...register("responsibleId")}
           />
           <TextareaInput label="Observacoes" rows={2} {...register("notes")} />
@@ -433,20 +433,17 @@ export default function LubricationRoutesList() {
               </ol>
             )}
 
-            <select
-              className="input mt-2"
-              value=""
-              onChange={(e) => {
-                if (e.target.value) setPontosDaRota((atual) => [...atual, e.target.value]);
-              }}
-            >
-              <option value="">{disponiveis.length ? "Adicionar ponto..." : "Todos os pontos ja estao na rota"}</option>
-              {disponiveis.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.code} - {p.name} ({p.instrument?.tag ?? "sem TAG"})
-                </option>
-              ))}
-            </select>
+            <div className="mt-2">
+              <LubricationPointPicker
+                clientId={clientId}
+                placeholder="Adicionar ponto..."
+                excludeIds={pontosDaRota}
+                onSelect={(p) => {
+                  setPontosDaRota((atual) => [...atual, p.id]);
+                  setPontosInfo((atual) => new Map(atual).set(p.id, p));
+                }}
+              />
+            </div>
           </div>
         </form>
       </Modal>

@@ -9,9 +9,9 @@ import {
   completeMaintenanceWorkOrder,
   updateMaintenanceWorkOrder,
 } from "../../../api/maintenanceWorkOrders";
-import { listLaborResources } from "../../../api/laborResources";
 import { Modal } from "../../../components/Modal";
-import { SelectInput, TextInput } from "../../../components/form/Field";
+import { TextInput } from "../../../components/form/Field";
+import { LaborResourcePicker } from "../../../components/LaborResourcePicker";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
 import type { MaintenanceWorkOrder } from "../../../api/types";
@@ -53,12 +53,6 @@ export function MoverOrdemModal({ ordem, destino, base, onClose, onMovida }: Pro
   const { data: ficha } = useQuery({
     queryKey: ["maintenance-work-order", ordem.id],
     queryFn: () => getMaintenanceWorkOrder(ordem.id),
-  });
-
-  const { data: equipe } = useQuery({
-    queryKey: ["labor-resources-picker", ordem.clientId],
-    queryFn: () => listLaborResources({ clientId: ordem.clientId, active: true, pageSize: 200 }),
-    enabled: destino === "pendente" || destino === "liberada",
   });
 
   useEffect(() => setResponsavelId(ordem.assignedResourceId ?? ""), [ordem.assignedResourceId]);
@@ -156,7 +150,7 @@ export function MoverOrdemModal({ ordem, destino, base, onClose, onMovida }: Pro
         ) : (
           <>
             {precisaDeResponsavel && (
-              <SelectInput
+              <LaborResourcePicker
                 label="Responsavel"
                 required
                 placeholder="Escolha quem vai executar"
@@ -165,7 +159,8 @@ export function MoverOrdemModal({ ordem, destino, base, onClose, onMovida }: Pro
                     ? "Liberar sem dono deixaria a OS pronta e parada - alguem precisa pegar."
                     : "E' o que tira a OS da fila dos sem responsavel."
                 }
-                options={(equipe?.items ?? []).map((r) => ({ value: r.id, label: `${r.name} - ${r.type}` }))}
+                name="responsavelId"
+                clientId={ordem.clientId}
                 value={responsavelId}
                 onChange={(e) => setResponsavelId(e.target.value)}
               />

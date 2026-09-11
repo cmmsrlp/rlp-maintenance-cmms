@@ -29,13 +29,13 @@ import {
   liberarOrdem,
 } from "../../../api/maintenanceWorkOrders";
 import { listAssetParts } from "../../../api/instruments";
-import { listLaborResources } from "../../../api/laborResources";
 import { listStoppageReasons } from "../../../api/stoppageReasons";
 import type { ChecklistItemResult, MaintenanceOrderStatus, LaborHourType, MaintenanceWorkOrder, FailureSeverity } from "../../../api/types";
 import { PageHeader } from "../../../components/PageHeader";
 import { FullPageSpinner } from "../../../components/Spinner";
 import { StatusBadge } from "../../../components/StatusBadge";
 import { SparePartPicker } from "../../../components/SparePartPicker";
+import { LaborResourcePicker } from "../../../components/LaborResourcePicker";
 import { Tabs } from "../../../components/Tabs";
 import { WorkOrderAttachments } from "./WorkOrderAttachments";
 import { useCmms } from "../../../lib/cmms";
@@ -87,25 +87,18 @@ export default function WorkOrderDetail() {
     queryFn: () => listAssetParts(workOrder!.instrumentId),
     enabled: !!workOrder?.instrumentId,
   });
-  const { data: laborResources } = useQuery({
-    queryKey: ["labor-resources-picker", workOrder?.clientId],
-    queryFn: () => listLaborResources({ clientId: workOrder!.clientId, active: true, pageSize: 200 }),
-    enabled: !!workOrder?.clientId,
-  });
   const { data: stoppageReasons } = useQuery({
     queryKey: ["stoppage-reasons-picker"],
     queryFn: () => listStoppageReasons({ active: true }),
   });
 
-  // No apontamento de horas, quem esta na OS (responsavel + apoio) vem primeiro - mas a
-  // lista completa continua disponivel, porque quem entrou para ajudar no dia tambem
-  // precisa conseguir lancar as horas dele.
-  const teamIds = new Set([
-    ...(workOrder?.assignedResourceId ? [workOrder.assignedResourceId] : []),
-    ...(workOrder?.assignees ?? []).map((a) => a.laborResourceId),
-  ]);
-  const teamOptions = (laborResources?.items ?? []).filter((r) => teamIds.has(r.id));
-  const otherLaborOptions = (laborResources?.items ?? []).filter((r) => !teamIds.has(r.id));
+  // Atalho no apontamento de horas: equipe desta OS (responsavel + apoio) primeiro. Vem
+  // direto do proprio workOrder (que ja embute nome/funcao de cada um) em vez de uma lista
+  // paginada da equipe inteira do cliente, que poderia nao conter estes nomes.
+  const teamOptions = [
+    ...(workOrder?.assignedResource ? [workOrder.assignedResource] : []),
+    ...(workOrder?.assignees ?? []).map((a) => a.laborResource).filter((r): r is NonNullable<typeof r> => !!r),
+  ];
 
   // Atalho com as pecas ja cadastradas no BOM do ativo desta OS - o proprio vinculo ja traz
   // a peca embutida, entao nao depende de nenhuma lista paginada do almoxarifado inteiro.
@@ -117,13 +110,6 @@ export default function WorkOrderDetail() {
 
   const [ocupadoResp, setOcupadoResp] = useState(false);
   const encerrada = workOrder?.status === "COMPLETED" || workOrder?.status === "CANCELED";
-
-  // A lista de quem pode executar so faz sentido para quem atribui.
-  const { data: equipe } = useQuery({
-    queryKey: ["labor-resources-picker", workOrder?.clientId],
-    queryFn: () => listLaborResources({ clientId: workOrder?.clientId, active: true, pageSize: 200 }),
-    enabled: canManage && !!workOrder && !encerrada,
-  });
 
   async function assumir() {
     setOcupadoResp(true);
@@ -660,17 +646,16 @@ O que sobrar volta para o estoque.`,
                     </button>
                   )}
                   {canManage && (
-                    <select
-                      className="input h-9 py-0 text-sm sm:w-64"
-                      value={workOrder.assignedResourceId ?? ""}
+                    <LaborResourcePicker
+                      label=""
+                      className="sm:w-64"
+                      placeholder="Sem responsavel"
                       disabled={ocupadoResp}
+                      clientId={workOrder.clientId}
+                      name="assignedResourceId"
+                      value={workOrder.assignedResourceId ?? ""}
                       onChange={(e) => void atribuir(e.target.value || null)}
-                    >
-                      <option value="">Sem responsavel</option>
-                      {(equipe?.items ?? []).map((r) => (
-                        <option key={r.id} value={r.id}>{r.name} - {r.type}</option>
-                      ))}
-                    </select>
+                    />
                   )}
                 </div>
               )}
@@ -1064,26 +1049,30 @@ O que sobrar volta para o estoque.`,
           <h2 className="font-semibold text-navy-900">Mao de obra</h2>
           {canManage && !isCompleted && (
             <div className="space-y-2">
+              {teamOptions.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-graphite-400">Equipe desta OS:</span>
+                  {teamOptions.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      className="rounded-full border border-gray-200 px-2 py-0.5 text-xs text-graphite-700 hover:border-navy-400 hover:text-navy-700"
+                      onClick={() => setLaborResourceId(r.id)}
+                    >
+                      {r.name}
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="flex flex-wrap items-end gap-2">
-                <select className="input flex-1" value={laborResourceId} onChange={(e) => setLaborResourceId(e.target.value)}>
-                  <option value="">Selecione quem trabalhou</option>
-                  {teamOptions.length > 0 && (
-                    <optgroup label="Equipe desta OS">
-                      {teamOptions.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.name} - {r.type}{r.hourlyRate != null ? ` (${formatCurrency(r.hourlyRate)}/h)` : ""}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  <optgroup label="Demais da equipe de manutencao">
-                    {otherLaborOptions.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.name} - {r.type}{r.hourlyRate != null ? ` (${formatCurrency(r.hourlyRate)}/h)` : ""}
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
+                <LaborResourcePicker
+                  className="flex-1"
+                  placeholder="Buscar quem trabalhou"
+                  name="laborResourceId"
+                  value={laborResourceId}
+                  onChange={(e) => setLaborResourceId(e.target.value)}
+                  clientId={workOrder.clientId}
+                />
                 <input
                   type="number"
                   min={0.5}
@@ -1422,16 +1411,10 @@ function WorkOrderTeam({
   const [resourceId, setResourceId] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const { data: laborResources } = useQuery({
-    queryKey: ["labor-resources-picker", workOrder.clientId],
-    queryFn: () => listLaborResources({ clientId: workOrder.clientId, active: true, pageSize: 200 }),
-  });
-
-  const jaNaEquipe = new Set([
+  const jaNaEquipe = [
     ...(workOrder.assignees ?? []).map((a) => a.laborResourceId),
     ...(workOrder.assignedResourceId ? [workOrder.assignedResourceId] : []),
-  ]);
-  const disponiveis = (laborResources?.items ?? []).filter((r) => !jaNaEquipe.has(r.id));
+  ];
   const isCompleted = workOrder.status === "COMPLETED";
 
   async function handleAdd() {
@@ -1502,12 +1485,15 @@ function WorkOrderTeam({
 
       {canManage && !isCompleted && (
         <div className="flex flex-wrap items-end gap-2">
-          <select className="input flex-1" value={resourceId} onChange={(e) => setResourceId(e.target.value)}>
-            <option value="">Adicionar a equipe...</option>
-            {disponiveis.map((r) => (
-              <option key={r.id} value={r.id}>{r.name} - {r.type}</option>
-            ))}
-          </select>
+          <LaborResourcePicker
+            className="flex-1"
+            placeholder="Adicionar a equipe..."
+            name="resourceId"
+            value={resourceId}
+            onChange={(e) => setResourceId(e.target.value)}
+            clientId={workOrder.clientId}
+            excludeIds={jaNaEquipe}
+          />
           <button type="button" className="btn-outline" onClick={handleAdd} disabled={busy || !resourceId}>
             <Plus className="h-4 w-4" /> Adicionar
           </button>
