@@ -56,7 +56,7 @@ const PERGUNTAS = [
   },
   {
     pergunta: "Preciso recadastrar o parque que já tenho numa planilha?",
-    resposta: "Não. O CMMS importa a planilha de ativos existente - você começa a usar sem digitar tudo de novo.",
+    resposta: "Não do zero. Você baixa o modelo de planilha do CMMS, copia os dados que já tem pra ele e sobe de uma vez só - o sistema confere tudo antes de gravar, então dá pra corrigir antes de qualquer coisa entrar.",
   },
 ];
 

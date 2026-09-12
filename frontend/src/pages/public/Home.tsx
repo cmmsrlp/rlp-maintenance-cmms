@@ -359,9 +359,10 @@ export default function Home() {
           <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-navy-900">
             <FileSpreadsheet className="h-7 w-7 text-brand-lime" />
           </span>
-          <h2 className="text-2xl font-extrabold text-navy-900">Já tem uma planilha de ativos? Importe em minutos.</h2>
+          <h2 className="text-2xl font-extrabold text-navy-900">Já tem uma planilha de ativos? Importe de uma vez.</h2>
           <p className="max-w-2xl text-graphite-500">
-            Suba a planilha do seu parque atual e comece a usar o CMMS sem precisar recadastrar tudo do zero.
+            Baixe o modelo do CMMS, copie os dados do seu parque atual pra ele e suba de uma vez - o sistema confere
+            tudo antes de gravar, sem precisar digitar ativo por ativo de novo.
           </p>
         </div>
       </section>
