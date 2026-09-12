@@ -24,8 +24,8 @@ export class ForbiddenError extends AppError {
 }
 
 export class UnauthorizedError extends AppError {
-  constructor(message = "Sessao invalida ou expirada. Faca login novamente.") {
-    super(401, message, "UNAUTHORIZED");
+  constructor(message = "Sessao invalida ou expirada. Faca login novamente.", code = "UNAUTHORIZED") {
+    super(401, message, code);
   }
 }
 

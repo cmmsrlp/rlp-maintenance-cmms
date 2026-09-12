@@ -350,6 +350,11 @@ model User {
   client       Client?   @relation(fields: [clientId], references: [id])
   active       Boolean   @default(true)
   lastLoginAt  DateTime?
+  // Identifica a sessao (login) em uso agora - cada novo login gera uma nova e substitui
+  // esta. O token carrega o mesmo valor; quando nao bate mais (outro login aconteceu, ou
+  // logout foi chamado), a sessao antiga para de valer mesmo sem ter expirado - e' o que
+  // impede duas pessoas usando a mesma conta ao mesmo tempo.
+  currentSessionId String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?

@@ -20,6 +20,9 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const [serverError, setServerError] = useState<string | null>(null);
+  // A API derruba a sessao anterior quando a mesma conta loga em outro lugar - o navegador
+  // atingido cai aqui sozinho (interceptor em api/client.ts), e precisa entender por que.
+  const sessaoEncerradaAlhures = new URLSearchParams(location.search).get("motivo") === "outro-local";
 
   const {
     register,
@@ -45,6 +48,12 @@ export default function Login() {
           <CmmsLogo variant="dark" size="xl" />
           <p className="mt-3 text-sm text-graphite-500">Acesse a gestão interna ou o portal do cliente</p>
         </div>
+
+        {sessaoEncerradaAlhures && (
+          <p className="mb-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            Sua sessão foi encerrada porque esta conta foi acessada em outro local. Só um acesso por vez é permitido.
+          </p>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <TextInput

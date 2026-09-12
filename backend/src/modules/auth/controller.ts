@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma";
 import { comparePassword, hashPassword } from "../../lib/password";
@@ -59,21 +60,34 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     throw new UnauthorizedError("E-mail ou senha invalidos.");
   }
 
+  // Sessao nova substitui qualquer outra que esta conta tinha aberta em outro lugar - so
+  // uma pessoa por vez usando o mesmo login. O token velho para de valer na hora (conferido
+  // em requireAuth), mesmo que ainda nao tenha expirado.
+  const sessionId = randomUUID();
   const token = signAuthToken({
     sub: user.id,
     role: user.role,
     clientId: user.clientId,
     mustChangePassword: user.mustChangePassword,
+    sid: sessionId,
   });
   res.cookie(AUTH_COOKIE_NAME, token, cookieOptions);
 
-  await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+  await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date(), currentSessionId: sessionId } });
   await writeAuditLog({ userId: user.id, action: "LOGIN", entityType: "User", entityId: user.id });
 
   res.json({ user: serializeUser(user), token });
 });
 
-export const logout = asyncHandler(async (_req: Request, res: Response) => {
+export const logout = asyncHandler(async (req: Request, res: Response) => {
+  // Derruba a sessao no servidor, e nao so o cookie deste navegador - sem isso, um token
+  // que tenha vazado (ou uma aba que nao recebeu o clearCookie) continuaria valendo.
+  if (req.user?.sub) {
+    await prisma.user.updateMany({
+      where: { id: req.user.sub, currentSessionId: req.user.sid },
+      data: { currentSessionId: null },
+    });
+  }
   res.clearCookie(AUTH_COOKIE_NAME, { path: "/" });
   res.status(204).send();
 });
@@ -106,10 +120,11 @@ export const changeOwnPassword = asyncHandler(async (req: Request, res: Response
   });
 
   // O token carrega a marca da senha provisoria: sem reemitir, a pessoa trocaria a senha e
-  // continuaria bloqueada ate a sessao expirar.
+  // continuaria bloqueada ate a sessao expirar. Mantem o mesmo sid - trocar a senha e' a
+  // sessao atual continuando, nao um login novo, entao nao deve derrubar a si mesma.
   res.cookie(
     AUTH_COOKIE_NAME,
-    signAuthToken({ sub: user.id, role: user.role, clientId: user.clientId, mustChangePassword: false }),
+    signAuthToken({ sub: user.id, role: user.role, clientId: user.clientId, mustChangePassword: false, sid: req.user.sid }),
     cookieOptions,
   );
 
