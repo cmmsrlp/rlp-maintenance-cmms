@@ -18,6 +18,8 @@ import {
   MessageCircle,
   CircleCheck,
   Circle,
+  RefreshCw,
+  TrendingUp,
 } from "lucide-react";
 import { buildWhatsAppLink } from "../../lib/publicContact";
 
@@ -65,6 +67,30 @@ const PASSOS = [
   { numero: "02", titulo: "Monte os planos", descricao: "Defina a periodicidade e vincule a um ou vários ativos de uma vez." },
   { numero: "03", titulo: "Deixe rodar sozinho", descricao: "A ordem de serviço nasce na hora certa, direto para quem vai executar." },
   { numero: "04", titulo: "Acompanhe os números", descricao: "MTTR, MTBF, disponibilidade e cumprimento do plano, calculados sozinhos." },
+];
+
+const PILARES_RLP = [
+  {
+    letra: "R",
+    icon: ShieldCheck,
+    titulo: "Reliability",
+    subtitulo: "Confiabilidade",
+    descricao: "Planos preventivos, checklists e histórico de falhas para que o ativo pare de quebrar por surpresa.",
+  },
+  {
+    letra: "L",
+    icon: RefreshCw,
+    titulo: "Lifecycle",
+    subtitulo: "Ciclo de vida",
+    descricao: "Do cadastro do ativo à baixa, com todo o histórico de manutenção, custo e condição num só lugar.",
+  },
+  {
+    letra: "P",
+    icon: TrendingUp,
+    titulo: "Performance",
+    subtitulo: "Performance",
+    descricao: "MTTR, MTBF e disponibilidade calculados sozinhos, para decidir com número e não com achismo.",
+  },
 ];
 
 const INDICADORES = [
@@ -161,6 +187,47 @@ export default function Home() {
             Planilha desatualiza, WhatsApp perde histórico e ninguém sabe se a preventiva do mês saiu.{" "}
             <span className="font-semibold text-navy-900">O CMMS resolve isso automaticamente.</span>
           </p>
+        </div>
+      </section>
+
+      {/* Quem somos */}
+      <section id="quem-somos" className="border-t border-gray-100 py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-lime-dark">Quem somos</span>
+              <h2 className="mt-3 text-3xl font-extrabold leading-tight tracking-tight text-navy-900 sm:text-4xl">
+                Um CMMS feito para quem vive a manutenção industrial
+              </h2>
+              <p className="mt-5 leading-relaxed text-graphite-600">
+                A RLP Maintenance nasceu para tirar a manutenção da planilha solta e do grupo de WhatsApp. Construímos
+                um sistema único para cadastrar o parque de ativos, planejar a preventiva, programar as ordens de
+                serviço e acompanhar o almoxarifado - com os indicadores que a fábrica realmente usa para decidir onde
+                investir.
+              </p>
+              <p className="mt-4 leading-relaxed text-graphite-600">
+                O nome carrega o compromisso do produto: <span className="font-semibold text-navy-900">RLP</span> vem de{" "}
+                <span className="font-semibold text-navy-900">Reliability, Lifecycle &amp; Performance</span> -
+                Confiabilidade, Ciclo de Vida e Performance, em português. É o que guia cada tela do sistema.
+              </p>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-3">
+              {PILARES_RLP.map((p) => (
+                <div key={p.letra} className="rounded-xl border border-gray-200 bg-white p-6 shadow-card">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-navy-900 text-lg font-extrabold text-brand-lime">
+                      {p.letra}
+                    </span>
+                    <p.icon className="h-5 w-5 text-navy-700" />
+                  </div>
+                  <h3 className="mt-4 font-bold text-navy-900">{p.titulo}</h3>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-graphite-400">{p.subtitulo}</p>
+                  <p className="mt-2.5 text-sm leading-relaxed text-graphite-500">{p.descricao}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 

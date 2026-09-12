@@ -5,6 +5,7 @@ import { CmmsLogo } from "../components/CmmsLogo";
 import { buildWhatsAppLink } from "../lib/publicContact";
 
 const NAV_LINKS = [
+  { href: "#quem-somos", label: "Quem somos" },
   { href: "#como-funciona", label: "Como funciona" },
   { href: "#indicadores", label: "Indicadores" },
 ];
