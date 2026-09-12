@@ -3,14 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, CalendarDays, HardHat, Inbox, AlertTriangle, Search, X } from "lucide-react";
 import { getMaintenanceSchedule, scheduleMaintenanceWorkOrder } from "../../../api/maintenanceWorkOrders";
-import { listClients } from "../../../api/clients";
 import type { MaintenanceScheduleData, ScheduleCard } from "../../../api/types";
 import { PageHeader } from "../../../components/PageHeader";
 import { FullPageSpinner } from "../../../components/Spinner";
 import { EmptyState } from "../../../components/EmptyState";
+import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
-import { clientDisplayName } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 import { iniciaisDe } from "../../../lib/pessoas";
 
@@ -93,12 +92,6 @@ export default function SchedulingBoard() {
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const from = dayToIso(weekStart);
   const to = dayToIso(addDays(weekStart, 6));
-
-  const { data: clients } = useQuery({
-    queryKey: ["clients-picker-cmms"],
-    queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
-    enabled: !isClient,
-  });
 
   const queryKey = ["maintenance-schedule", clientId, from];
   const { data, isLoading } = useQuery({
@@ -202,19 +195,16 @@ export default function SchedulingBoard() {
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         {!isClient && (
-          <select
-            className="input sm:w-72"
+          <ClientFilterSelect
+            className="sm:w-72"
             value={clientId}
-            onChange={(e) => {
-              setClientId(e.target.value);
+            onChange={(id) => {
+              setClientId(id);
               setResourceId(""); // a equipe e' outra quando muda a empresa
             }}
-          >
-            <option value="">Selecione a empresa...</option>
-            {(clients?.items ?? []).map((c) => (
-              <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>
-            ))}
-          </select>
+            service="CMMS_MAINTENANCE"
+            allLabel="Selecione a empresa..."
+          />
         )}
         {(data?.resources.length ?? 0) > 0 && (
           <select className="input sm:w-64" value={resourceId} onChange={(e) => setResourceId(e.target.value)}>

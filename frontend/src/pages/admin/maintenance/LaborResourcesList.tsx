@@ -10,7 +10,7 @@ import {
   uploadLaborResourcePhoto,
   deleteLaborResourcePhoto,
 } from "../../../api/laborResources";
-import { listClients } from "../../../api/clients";
+import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import type { LaborResource } from "../../../api/types";
 import { PageHeader } from "../../../components/PageHeader";
 import { DataTable } from "../../../components/DataTable";
@@ -24,7 +24,7 @@ import { LaborTypeInput } from "../../../components/LaborTypeInput";
 import { listUsers } from "../../../api/users";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
-import { clientDisplayName, formatCurrency } from "../../../lib/format";
+import { formatCurrency } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 import { FORMATOS_DE_IMAGEM, problemaNaImagem } from "../../../lib/imagens";
 import { useForm } from "react-hook-form";
@@ -56,11 +56,6 @@ export default function LaborResourcesList() {
   const [fotoNova, setFotoNova] = useState<File | null>(null);
   const [tirarFoto, setTirarFoto] = useState(false);
 
-  const { data: clients } = useQuery({
-    queryKey: ["clients-picker-cmms"],
-    queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
-    enabled: !isClient,
-  });
   const { data, isLoading } = useQuery({
     queryKey: ["labor-resources", clientId, search, page],
     queryFn: () => listLaborResources({ clientId: clientId || undefined, search: search || undefined, page, pageSize: 15 }),
@@ -175,12 +170,13 @@ export default function LaborResourcesList() {
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         {!isClient && (
-          <select className="input sm:w-72" value={clientId} onChange={(e) => setSearchParams(e.target.value ? { clientId: e.target.value } : {})}>
-            <option value="">Selecione o cliente</option>
-            {(clients?.items ?? []).map((c) => (
-              <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>
-            ))}
-          </select>
+          <ClientFilterSelect
+            className="sm:w-72"
+            value={clientId}
+            onChange={(id) => setSearchParams(id ? { clientId: id } : {})}
+            service="CMMS_MAINTENANCE"
+            allLabel="Selecione o cliente"
+          />
         )}
         {(isClient || clientId) && (
           <div className="relative flex-1">

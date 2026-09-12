@@ -5,16 +5,15 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { listClients } from "../api/clients";
 import { PageHeader } from "./PageHeader";
 import { DataTable } from "./DataTable";
 import { StatusBadge } from "./StatusBadge";
 import { Modal } from "./Modal";
 import { TextInput } from "./form/Field";
+import { ClientFilterSelect } from "./ClientFilterSelect";
 import { useToast } from "./Toast";
 import { getApiErrorMessage } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
-import { clientDisplayName } from "../lib/format";
 
 /** Alguns catalogos sao identificados pelo NOME (planta, tipo de ativo) e outros pelo
  * NUMERO (centro de custo). O schema muda conforme isso, para a obrigatoriedade cair no
@@ -74,11 +73,6 @@ export function SimpleCatalogList<T extends CatalogItem>({
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<T | null>(null);
 
-  const { data: clients } = useQuery({
-    queryKey: ["clients-picker-cmms"],
-    queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
-    enabled: !isClient,
-  });
   const { data, isLoading } = useQuery({
     queryKey: [queryKey, clientId],
     queryFn: () => list({ clientId }),
@@ -156,16 +150,13 @@ export function SimpleCatalogList<T extends CatalogItem>({
 
       {!isClient && (
         <div className="mb-4">
-          <select
-            className="input sm:w-72"
+          <ClientFilterSelect
+            className="sm:w-72"
             value={clientId}
-            onChange={(e) => setSearchParams(e.target.value ? { clientId: e.target.value } : {})}
-          >
-            <option value="">Selecione um cliente</option>
-            {(clients?.items ?? []).map((c) => (
-              <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>
-            ))}
-          </select>
+            onChange={(id) => setSearchParams(id ? { clientId: id } : {})}
+            service="CMMS_MAINTENANCE"
+            allLabel="Selecione um cliente"
+          />
         </div>
       )}
 

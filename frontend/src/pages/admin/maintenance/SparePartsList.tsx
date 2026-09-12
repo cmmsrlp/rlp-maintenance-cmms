@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, ArrowDownCircle, ArrowUpCircle, AlertTriangle } from "lucide-react";
 import { listSpareParts, createSparePart, addSparePartMovement, getSparePartAlerts, getSparePartHistory } from "../../../api/spareParts";
-import { listClients } from "../../../api/clients";
+import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import type { SparePart } from "../../../api/types";
 import { PageHeader } from "../../../components/PageHeader";
 import { DataTable } from "../../../components/DataTable";
@@ -12,7 +12,7 @@ import { Modal } from "../../../components/Modal";
 import { TextInput } from "../../../components/form/Field";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
-import { clientDisplayName, formatCurrency, formatDate, formatDateTime } from "../../../lib/format";
+import { formatCurrency, formatDate, formatDateTime } from "../../../lib/format";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -37,10 +37,6 @@ export default function SparePartsList() {
   const [createOpen, setCreateOpen] = useState(false);
   const [historicoDe, setHistoricoDe] = useState<SparePart | null>(null);
 
-  const { data: clients } = useQuery({
-    queryKey: ["clients-picker-cmms"],
-    queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
-  });
   const { data, isLoading } = useQuery({
     queryKey: ["spare-parts", clientId, search, page],
     queryFn: () => listSpareParts({ clientId, search: search || undefined, page, pageSize: 15 }),
@@ -109,16 +105,13 @@ export default function SparePartsList() {
       />
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
-        <select
-          className="input sm:w-72"
+        <ClientFilterSelect
+          className="sm:w-72"
           value={clientId}
-          onChange={(e) => setSearchParams(e.target.value ? { clientId: e.target.value } : {})}
-        >
-          <option value="">Selecione o cliente</option>
-          {(clients?.items ?? []).map((c) => (
-            <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>
-          ))}
-        </select>
+          onChange={(id) => setSearchParams(id ? { clientId: id } : {})}
+          service="CMMS_MAINTENANCE"
+          allLabel="Selecione o cliente"
+        />
         {clientId && (
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-graphite-400" />

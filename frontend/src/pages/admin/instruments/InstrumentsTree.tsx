@@ -1,8 +1,9 @@
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { listClients } from "../../../api/clients";
+import { getClient } from "../../../api/clients";
 import { PageHeader } from "../../../components/PageHeader";
 import { AssetTree } from "../../../components/AssetTree";
+import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import { EmptyState } from "../../../components/EmptyState";
 import { clientDisplayName } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
@@ -14,12 +15,11 @@ export default function InstrumentsTree() {
   const [searchParams, setSearchParams] = useSearchParams();
   const clientId = searchParams.get("clientId") ?? "";
 
-  const { data: clients } = useQuery({
-    queryKey: ["clients-picker-cmms"],
-    queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
+  const { data: client } = useQuery({
+    queryKey: ["client", clientId],
+    queryFn: () => getClient(clientId),
+    enabled: !!clientId,
   });
-
-  const client = clients?.items.find((c) => c.id === clientId);
 
   return (
     <div>
@@ -30,16 +30,13 @@ export default function InstrumentsTree() {
       />
 
       <div className="mb-6">
-        <select
-          className="input sm:w-72"
+        <ClientFilterSelect
+          className="sm:w-72"
           value={clientId}
-          onChange={(e) => setSearchParams(e.target.value ? { clientId: e.target.value } : {})}
-        >
-          <option value="">Selecione um cliente</option>
-          {(clients?.items ?? []).map((c) => (
-            <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>
-          ))}
-        </select>
+          onChange={(id) => setSearchParams(id ? { clientId: id } : {})}
+          service="CMMS_MAINTENANCE"
+          allLabel="Selecione um cliente"
+        />
       </div>
 
       {!clientId ? (

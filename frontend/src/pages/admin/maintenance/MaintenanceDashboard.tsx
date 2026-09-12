@@ -5,11 +5,12 @@ import { getMaintenanceDashboard, getMaintenanceBacklog } from "../../../api/mai
 import type { BacklogGroupBy } from "../../../api/types";
 import { EmptyState } from "../../../components/EmptyState";
 import { PageHeader } from "../../../components/PageHeader";
-import { listClients, getOwnClient } from "../../../api/clients";
+import { getClient, getOwnClient } from "../../../api/clients";
+import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 
 import { StatCard, MiniStat } from "../../../components/StatCard";
 import { FullPageSpinner } from "../../../components/Spinner";
-import { clientDisplayName, formatKpi } from "../../../lib/format";
+import { formatKpi } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 import { buildCsv, downloadCsv } from "../../../lib/csvExport";
 
@@ -26,11 +27,6 @@ export default function MaintenanceDashboard() {
   const { isClient } = useCmms();
   const [clientId, setClientId] = useState("");
 
-  const { data: clients } = useQuery({
-    queryKey: ["clients-picker-cmms"],
-    queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
-    enabled: !isClient,
-  });
   // Marca do topo do painel: a da propria empresa, quando ela tem uma cadastrada - o logo
   // pequeno da barra lateral do portal continua sendo sempre o do produto, so este aqui
   // (o grande, de boas-vindas) e' que vira a marca do cliente.
@@ -40,7 +36,12 @@ export default function MaintenanceDashboard() {
     enabled: isClient,
     staleTime: 300_000,
   });
-  const logoDoCliente = isClient ? ownClient?.logoUrl : (clients?.items ?? []).find((c) => c.id === clientId)?.logoUrl;
+  const { data: clienteSelecionado } = useQuery({
+    queryKey: ["client", clientId],
+    queryFn: () => getClient(clientId),
+    enabled: !isClient && !!clientId,
+  });
+  const logoDoCliente = isClient ? ownClient?.logoUrl : clienteSelecionado?.logoUrl;
   const { data, isLoading } = useQuery({
     queryKey: ["maintenance-dashboard", clientId],
     queryFn: () => getMaintenanceDashboard({ clientId: clientId || undefined }),
@@ -113,12 +114,7 @@ export default function MaintenanceDashboard() {
 
       {!isClient && (
         <div className="mb-4">
-          <select className="input sm:w-72" value={clientId} onChange={(e) => setClientId(e.target.value)}>
-            <option value="">Todos os clientes</option>
-            {(clients?.items ?? []).map((c) => (
-              <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>
-            ))}
-          </select>
+          <ClientFilterSelect className="sm:w-72" value={clientId} onChange={setClientId} service="CMMS_MAINTENANCE" />
         </div>
       )}
 

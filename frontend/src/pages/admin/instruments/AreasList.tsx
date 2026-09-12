@@ -6,7 +6,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { listClients } from "../../../api/clients";
+import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import { listPlants } from "../../../api/plants";
 import { listAreas, createArea, updateArea, deleteArea } from "../../../api/areas";
 import type { Area } from "../../../api/types";
@@ -20,7 +20,6 @@ import { listCostCenters } from "../../../api/costCenters";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
 import { useAuth } from "../../../auth/AuthContext";
-import { clientDisplayName } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 
 const schema = z.object({
@@ -47,11 +46,6 @@ export default function AreasList() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<Area | null>(null);
 
-  const { data: clients } = useQuery({
-    queryKey: ["clients-picker-cmms"],
-    queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
-    enabled: !isClient,
-  });
   const { data: plants } = useQuery({
     queryKey: ["plants-picker", clientId],
     queryFn: () => listPlants({ clientId, active: true }),
@@ -139,16 +133,13 @@ export default function AreasList() {
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         {!isClient && (
-          <select
-            className="input sm:w-64"
+          <ClientFilterSelect
+            className="sm:w-64"
             value={clientId}
-            onChange={(e) => setSearchParams(e.target.value ? { clientId: e.target.value } : {})}
-          >
-            <option value="">Selecione um cliente</option>
-            {(clients?.items ?? []).map((c) => (
-              <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>
-            ))}
-          </select>
+            onChange={(id) => setSearchParams(id ? { clientId: id } : {})}
+            service="CMMS_MAINTENANCE"
+            allLabel="Selecione um cliente"
+          />
         )}
         {clientId && (
           <select

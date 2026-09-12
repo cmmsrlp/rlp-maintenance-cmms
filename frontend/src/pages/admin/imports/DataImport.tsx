@@ -1,14 +1,12 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Download, Upload, CheckCircle2, AlertTriangle, FileSpreadsheet } from "lucide-react";
 import { PageHeader } from "../../../components/PageHeader";
 import { EmptyState } from "../../../components/EmptyState";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
-import { listClients } from "../../../api/clients";
+import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import { baixarModeloDeImportacao, simularImportacao, confirmarImportacao } from "../../../api/imports";
 import type { ModoDeImportacao, ResultadoDaImportacao } from "../../../api/types";
-import { clientDisplayName } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 
 /**
@@ -30,12 +28,6 @@ export default function DataImport() {
   // O que fazer com quem ja esta cadastrado. Ignorar e' o padrao de proposito: uma
   // importacao repetida por engano nao pode encostar no que a equipe ajustou a mao.
   const [modo, setModo] = useState<ModoDeImportacao>("ignorar");
-
-  const { data: clients } = useQuery({
-    queryKey: ["clients-picker-cmms"],
-    queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
-    enabled: !isClient,
-  });
 
   const pronto = isClient || !!clientId;
 
@@ -105,16 +97,13 @@ export default function DataImport() {
 
       {!isClient && (
         <div className="mb-6">
-          <select
-            className="input sm:w-80"
+          <ClientFilterSelect
+            className="sm:w-80"
             value={clientId}
-            onChange={(e) => { setClientId(e.target.value); setArquivo(null); setConferencia(null); setConcluida(null); }}
-          >
-            <option value="">Selecione a empresa</option>
-            {(clients?.items ?? []).map((c) => (
-              <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>
-            ))}
-          </select>
+            onChange={(id) => { setClientId(id); setArquivo(null); setConferencia(null); setConcluida(null); }}
+            service="CMMS_MAINTENANCE"
+            allLabel="Selecione a empresa"
+          />
         </div>
       )}
 

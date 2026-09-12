@@ -3,10 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { PageHeader } from "../../../components/PageHeader";
 import { DataTable } from "../../../components/DataTable";
 import { EmptyState } from "../../../components/EmptyState";
-import { listClients } from "../../../api/clients";
+import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import { listLubricationRecords, listLubricants } from "../../../api/lubrication";
 import type { LubricationRecord } from "../../../api/types";
-import { clientDisplayName, formatDateTime } from "../../../lib/format";
+import { formatDateTime } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 import { CONDICOES_DO_PONTO } from "../../../lib/lubricationLabels";
 
@@ -20,11 +20,6 @@ export default function LubricationHistory() {
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
 
-  const { data: clients } = useQuery({
-    queryKey: ["clients-picker-cmms"],
-    queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
-    enabled: !isClient,
-  });
   const { data: lubricants } = useQuery({
     queryKey: ["lubrificantes", clientId],
     queryFn: () => listLubricants({ clientId: clientId || undefined }),
@@ -66,12 +61,13 @@ export default function LubricationHistory() {
         {!isClient && (
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-graphite-700">Cliente</span>
-            <select className="input sm:w-56" value={clientId} onChange={(e) => { setClientId(e.target.value); setPage(1); }}>
-              <option value="">Todos</option>
-              {(clients?.items ?? []).map((c) => (
-                <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>
-              ))}
-            </select>
+            <ClientFilterSelect
+              className="sm:w-56"
+              value={clientId}
+              onChange={(id) => { setClientId(id); setPage(1); }}
+              service="CMMS_MAINTENANCE"
+              allLabel="Todos"
+            />
           </label>
         )}
         <label className="block">

@@ -2,11 +2,11 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle } from "lucide-react";
 import { listMaintenanceWorkOrders, updateMaintenanceWorkOrder } from "../../../api/maintenanceWorkOrders";
-import { listClients } from "../../../api/clients";
 import type { MaintenanceOrderStatus, MaintenanceWorkOrder } from "../../../api/types";
 import { PageHeader } from "../../../components/PageHeader";
 import { FullPageSpinner } from "../../../components/Spinner";
 import { StatusBadge } from "../../../components/StatusBadge";
+import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import { clientDisplayName } from "../../../lib/format";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
@@ -50,11 +50,6 @@ export default function KanbanBoard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const clientId = searchParams.get("clientId") ?? "";
 
-  const { data: clients } = useQuery({
-    queryKey: ["clients-picker-cmms"],
-    queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
-    enabled: !isClient,
-  });
   const { data, isLoading } = useQuery({
     queryKey: ["kanban-work-orders", clientId],
     queryFn: () => listMaintenanceWorkOrders({ clientId: clientId || undefined, pageSize: 300 }),
@@ -82,16 +77,12 @@ export default function KanbanBoard() {
 
       {!isClient && (
         <div className="mb-4">
-          <select
-            className="input sm:w-72"
+          <ClientFilterSelect
+            className="sm:w-72"
             value={clientId}
-            onChange={(e) => setSearchParams(e.target.value ? { clientId: e.target.value } : {})}
-          >
-            <option value="">Todos os clientes</option>
-            {(clients?.items ?? []).map((c) => (
-              <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>
-            ))}
-          </select>
+            onChange={(id) => setSearchParams(id ? { clientId: id } : {})}
+            service="CMMS_MAINTENANCE"
+          />
         </div>
       )}
 

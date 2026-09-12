@@ -3,13 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { UserPlus, Clock, PlayCircle, CheckCircle2, Search } from "lucide-react";
 import { listMaintenanceWorkOrders } from "../../../api/maintenanceWorkOrders";
-import { listClients } from "../../../api/clients";
+import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import type { MaintenanceWorkOrder } from "../../../api/types";
 import { PageHeader } from "../../../components/PageHeader";
 import { StatusBadge } from "../../../components/StatusBadge";
 import { EmptyState } from "../../../components/EmptyState";
 import { FullPageSpinner } from "../../../components/Spinner";
-import { clientDisplayName, formatDate } from "../../../lib/format";
+import { formatDate } from "../../../lib/format";
 import { TIPOS_DE_OS } from "../../../lib/maintenanceLabels";
 import { useCmms } from "../../../lib/cmms";
 import { useToast } from "../../../components/Toast";
@@ -124,12 +124,6 @@ export default function PlanningBoard() {
   const [sobre, setSobre] = useState<FaixaId | null>(null);
   const [movendo, setMovendo] = useState<{ ordem: MaintenanceWorkOrder; destino: FaixaId } | null>(null);
 
-  const { data: clients } = useQuery({
-    queryKey: ["clients-picker-cmms"],
-    queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
-    enabled: !isClient,
-  });
-
   const { data, isLoading } = useQuery({
     queryKey: ["planejamento", clientId],
     // pageSize alto de proposito: o painel so faz sentido com a fila inteira a vista -
@@ -179,12 +173,13 @@ export default function PlanningBoard() {
 
       <div className="mb-6 flex flex-col gap-3 sm:flex-row">
         {!isClient && (
-          <select className="input sm:w-72" value={clientId} onChange={(e) => setClientId(e.target.value)}>
-            <option value="">Selecione o cliente</option>
-            {(clients?.items ?? []).map((c) => (
-              <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>
-            ))}
-          </select>
+          <ClientFilterSelect
+            className="sm:w-72"
+            value={clientId}
+            onChange={setClientId}
+            service="CMMS_MAINTENANCE"
+            allLabel="Selecione o cliente"
+          />
         )}
         {(isClient || clientId) && (
           <div className="relative flex-1">

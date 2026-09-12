@@ -6,9 +6,9 @@ import { PageHeader } from "../../../components/PageHeader";
 import { StatCard } from "../../../components/StatCard";
 import { FullPageSpinner } from "../../../components/Spinner";
 import { EmptyState } from "../../../components/EmptyState";
-import { listClients } from "../../../api/clients";
+import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import { getLubricationDashboard } from "../../../api/lubrication";
-import { clientDisplayName, formatDate } from "../../../lib/format";
+import { formatDate } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 
 /** Painel da lubrificacao: o que esta vencido, o que vence na semana e por onde comecar.
@@ -16,12 +16,6 @@ import { useCmms } from "../../../lib/cmms";
 export default function LubricationDashboard() {
   const { isClient, base } = useCmms();
   const [clientId, setClientId] = useState("");
-
-  const { data: clients } = useQuery({
-    queryKey: ["clients-picker-cmms"],
-    queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
-    enabled: !isClient,
-  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["lubrificacao-dashboard", clientId],
@@ -44,12 +38,7 @@ export default function LubricationDashboard() {
 
       {!isClient && (
         <div className="mb-6">
-          <select className="input sm:w-72" value={clientId} onChange={(e) => setClientId(e.target.value)}>
-            <option value="">Todos os clientes</option>
-            {(clients?.items ?? []).map((c) => (
-              <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>
-            ))}
-          </select>
+          <ClientFilterSelect className="sm:w-72" value={clientId} onChange={setClientId} service="CMMS_MAINTENANCE" />
         </div>
       )}
 

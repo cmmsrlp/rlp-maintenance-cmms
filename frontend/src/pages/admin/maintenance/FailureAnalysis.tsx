@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getFailureAnalysis, listFailureRecords } from "../../../api/maintenanceWorkOrders";
-import { listClients } from "../../../api/clients";
+import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import type { FailureAnalysisBucket, FailureSeverity } from "../../../api/types";
 import { PageHeader } from "../../../components/PageHeader";
 import { StatCard } from "../../../components/StatCard";
 import { FullPageSpinner } from "../../../components/Spinner";
 import { EmptyState } from "../../../components/EmptyState";
-import { clientDisplayName, formatCurrency, formatDateTime } from "../../../lib/format";
+import { formatCurrency, formatDateTime } from "../../../lib/format";
 import { Link } from "react-router-dom";
 import { useCmms } from "../../../lib/cmms";
 import { AlertTriangle, Siren, HelpCircle, Repeat } from "lucide-react";
@@ -19,11 +19,6 @@ export default function FailureAnalysis() {
   const { isClient, base } = useCmms();
   const [clientId, setClientId] = useState("");
 
-  const { data: clients } = useQuery({
-    queryKey: ["clients-picker-cmms"],
-    queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
-    enabled: !isClient,
-  });
   const { data, isLoading } = useQuery({
     queryKey: ["failure-analysis", clientId],
     queryFn: () => getFailureAnalysis({ clientId: clientId || undefined }),
@@ -51,12 +46,7 @@ export default function FailureAnalysis() {
 
       {!isClient && (
         <div className="mb-6">
-          <select className="input sm:w-72" value={clientId} onChange={(e) => setClientId(e.target.value)}>
-            <option value="">Todos os clientes</option>
-            {(clients?.items ?? []).map((c) => (
-              <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>
-            ))}
-          </select>
+          <ClientFilterSelect className="sm:w-72" value={clientId} onChange={setClientId} service="CMMS_MAINTENANCE" />
         </div>
       )}
 

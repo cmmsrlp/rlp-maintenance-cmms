@@ -12,11 +12,10 @@ import { Modal } from "../../../components/Modal";
 import { TextInput, SelectInput } from "../../../components/form/Field";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
-import { listClients } from "../../../api/clients";
+import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import { listSpareParts } from "../../../api/spareParts";
 import { listLubricants, createLubricant } from "../../../api/lubrication";
 import type { Lubricant } from "../../../api/types";
-import { clientDisplayName } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 import { TIPOS_DE_LUBRIFICANTE, BASES_DE_LUBRIFICANTE } from "../../../lib/lubricationLabels";
 
@@ -39,12 +38,6 @@ export default function LubricantsList() {
   const [searchParams, setSearchParams] = useSearchParams();
   const clientId = isClient ? ownClientId ?? "" : searchParams.get("clientId") ?? "";
   const [createOpen, setCreateOpen] = useState(false);
-
-  const { data: clients } = useQuery({
-    queryKey: ["clients-picker-cmms"],
-    queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
-    enabled: !isClient,
-  });
 
   const { data: lubricants, isLoading } = useQuery({
     queryKey: ["lubrificantes", clientId],
@@ -104,16 +97,13 @@ export default function LubricantsList() {
 
       {!isClient && (
         <div className="mb-6">
-          <select
-            className="input sm:w-72"
+          <ClientFilterSelect
+            className="sm:w-72"
             value={clientId}
-            onChange={(e) => setSearchParams(e.target.value ? { clientId: e.target.value } : {})}
-          >
-            <option value="">Selecione o cliente</option>
-            {(clients?.items ?? []).map((c) => (
-              <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>
-            ))}
-          </select>
+            onChange={(id) => setSearchParams(id ? { clientId: id } : {})}
+            service="CMMS_MAINTENANCE"
+            allLabel="Selecione o cliente"
+          />
         </div>
       )}
 

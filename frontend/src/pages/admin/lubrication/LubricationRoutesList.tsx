@@ -11,7 +11,7 @@ import { Modal } from "../../../components/Modal";
 import { TextInput, TextareaInput, SelectInput } from "../../../components/form/Field";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
-import { listClients } from "../../../api/clients";
+import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import { listAreas } from "../../../api/areas";
 import {
   listLubricationRoutes,
@@ -24,7 +24,6 @@ import {
 import type { LubricationRoute, LubricationPoint } from "../../../api/types";
 import { LubricationPointPicker } from "../../../components/LubricationPointPicker";
 import { LaborResourcePicker } from "../../../components/LaborResourcePicker";
-import { clientDisplayName } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 
 const CRITERIOS_AUTO = [
@@ -69,11 +68,6 @@ export default function LubricationRoutesList() {
   const [buscandoSugestoes, setBuscandoSugestoes] = useState(false);
   const [sugestoes, setSugestoes] = useState<string[] | null>(null);
 
-  const { data: clients } = useQuery({
-    queryKey: ["clients-picker-cmms"],
-    queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
-    enabled: !isClient,
-  });
   const { data: routes, isLoading } = useQuery({
     queryKey: ["rotas-lubrificacao", clientId],
     queryFn: () => listLubricationRoutes({ clientId }),
@@ -220,16 +214,13 @@ export default function LubricationRoutesList() {
 
       {!isClient && (
         <div className="mb-6">
-          <select
-            className="input sm:w-72"
+          <ClientFilterSelect
+            className="sm:w-72"
             value={clientId}
-            onChange={(e) => setSearchParams(e.target.value ? { clientId: e.target.value } : {})}
-          >
-            <option value="">Selecione o cliente</option>
-            {(clients?.items ?? []).map((c) => (
-              <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>
-            ))}
-          </select>
+            onChange={(id) => setSearchParams(id ? { clientId: id } : {})}
+            service="CMMS_MAINTENANCE"
+            allLabel="Selecione o cliente"
+          />
         </div>
       )}
 

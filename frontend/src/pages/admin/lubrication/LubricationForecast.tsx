@@ -5,9 +5,9 @@ import { PageHeader } from "../../../components/PageHeader";
 import { StatCard } from "../../../components/StatCard";
 import { FullPageSpinner } from "../../../components/Spinner";
 import { EmptyState } from "../../../components/EmptyState";
-import { listClients } from "../../../api/clients";
+import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import { getLubricationForecast } from "../../../api/lubrication";
-import { clientDisplayName, formatDate } from "../../../lib/format";
+import { formatDate } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 
 function emIso(d: Date): string {
@@ -26,12 +26,6 @@ export default function LubricationForecast() {
   const [dateFrom, setDateFrom] = useState(emIso(hoje));
   const [dateTo, setDateTo] = useState(emIso(new Date(hoje.getTime() + 90 * 24 * 60 * 60 * 1000)));
   const [verDetalhe, setVerDetalhe] = useState(false);
-
-  const { data: clients } = useQuery({
-    queryKey: ["clients-picker-cmms"],
-    queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
-    enabled: !isClient,
-  });
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["lubrificacao-previsao", clientId, dateFrom, dateTo],
@@ -54,12 +48,7 @@ export default function LubricationForecast() {
         {!isClient && (
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-graphite-700">Cliente</span>
-            <select className="input sm:w-64" value={clientId} onChange={(e) => setClientId(e.target.value)}>
-              <option value="">Todos</option>
-              {(clients?.items ?? []).map((c) => (
-                <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>
-              ))}
-            </select>
+            <ClientFilterSelect className="sm:w-64" value={clientId} onChange={setClientId} service="CMMS_MAINTENANCE" allLabel="Todos" />
           </label>
         )}
         <label className="block">

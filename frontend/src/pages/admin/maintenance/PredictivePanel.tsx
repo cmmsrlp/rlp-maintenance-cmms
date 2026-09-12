@@ -3,13 +3,13 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, AlertTriangle, CalendarClock, Radar, Waves, Thermometer, Droplets, Volume2, Zap, Eye, Gauge } from "lucide-react";
 import { getPredictivePanel } from "../../../api/meters";
-import { listClients } from "../../../api/clients";
+import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import type { ConditionSeverity, PredictivePoint, PredictiveTechnique } from "../../../api/types";
 import { PageHeader } from "../../../components/PageHeader";
 import { StatCard } from "../../../components/StatCard";
 import { FullPageSpinner } from "../../../components/Spinner";
 import { EmptyState } from "../../../components/EmptyState";
-import { clientDisplayName, formatDate } from "../../../lib/format";
+import { formatDate } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 
 const TECHNIQUE: Record<PredictiveTechnique, { label: string; icon: typeof Waves }> = {
@@ -55,12 +55,6 @@ export default function PredictivePanel() {
   const { isClient, base, assetsBase } = useCmms();
   const [clientId, setClientId] = useState("");
 
-  const { data: clients } = useQuery({
-    queryKey: ["clients-picker-cmms"],
-    queryFn: () => listClients({ pageSize: 200, service: "CMMS_MAINTENANCE" }),
-    enabled: !isClient,
-  });
-
   const { data, isLoading } = useQuery({
     queryKey: ["predictive-panel", clientId],
     queryFn: () => getPredictivePanel({ clientId: clientId || undefined }),
@@ -76,12 +70,13 @@ export default function PredictivePanel() {
 
       {!isClient && (
         <div className="mb-4">
-          <select className="input sm:w-80" value={clientId} onChange={(e) => setClientId(e.target.value)}>
-            <option value="">Todas as empresas</option>
-            {(clients?.items ?? []).map((c) => (
-              <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>
-            ))}
-          </select>
+          <ClientFilterSelect
+            className="sm:w-80"
+            value={clientId}
+            onChange={setClientId}
+            service="CMMS_MAINTENANCE"
+            allLabel="Todas as empresas"
+          />
         </div>
       )}
 
