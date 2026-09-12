@@ -2,16 +2,21 @@ import type { Request, Response } from "express";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma";
-import { comparePassword, hashPassword } from "../../lib/password";
+import { comparePassword, hashPassword, generateTemporaryPassword } from "../../lib/password";
 import { AUTH_COOKIE_NAME, signAuthToken } from "../../lib/jwt";
 import { env } from "../../config/env";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { UnauthorizedError } from "../../utils/errors";
 import { writeAuditLog } from "../../utils/audit";
+import { sendTemporaryPasswordEmail } from "../../lib/email";
 
 const loginSchema = z.object({
   email: z.string().email("Informe um e-mail valido."),
   password: z.string().min(1, "Informe a senha."),
+});
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Informe um e-mail valido."),
 });
 
 const cookieOptions = {
@@ -135,6 +140,33 @@ export const changeOwnPassword = asyncHandler(async (req: Request, res: Response
     entityId: user.id,
     description: "Senha alterada pelo proprio usuario",
   });
+
+  res.status(204).send();
+});
+
+/** Publica (sem login) - gera senha temporaria e manda por e-mail. Resposta sempre generica,
+ * mesmo se o e-mail nao existir, para nao dar pra descobrir quais e-mails estao cadastrados
+ * so tentando essa rota (enumeracao de contas). */
+export const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+  const { email } = forgotPasswordSchema.parse(req.body);
+
+  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+
+  if (user && user.active && !user.deletedAt) {
+    const temporaryPassword = generateTemporaryPassword();
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: await hashPassword(temporaryPassword), mustChangePassword: true, currentSessionId: null },
+    });
+    await writeAuditLog({
+      userId: user.id,
+      action: "UPDATE",
+      entityType: "User",
+      entityId: user.id,
+      description: "Senha redefinida via 'esqueci a senha' (autoatendimento)",
+    });
+    await sendTemporaryPasswordEmail(user.email, user.name, temporaryPassword);
+  }
 
   res.status(204).send();
 });

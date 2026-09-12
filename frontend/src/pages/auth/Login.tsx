@@ -8,6 +8,8 @@ import { homeForRole } from "../../auth/ProtectedRoute";
 import { TextInput } from "../../components/form/Field";
 import { getApiErrorMessage } from "../../api/client";
 import { CmmsLogo } from "../../components/CmmsLogo";
+import { Modal } from "../../components/Modal";
+import * as authApi from "../../api/auth";
 
 const schema = z.object({
   email: z.string().email("Informe um e-mail válido."),
@@ -15,11 +17,73 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
+const forgotSchema = z.object({
+  email: z.string().email("Informe um e-mail válido."),
+});
+type ForgotFormValues = z.infer<typeof forgotSchema>;
+
+function ForgotPasswordModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [sent, setSent] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ForgotFormValues>({ resolver: zodResolver(forgotSchema) });
+
+  function handleClose() {
+    setSent(false);
+    reset();
+    onClose();
+  }
+
+  async function onSubmit(values: ForgotFormValues) {
+    // Sempre mostra a mesma confirmacao, exista ou nao o e-mail - o backend faz o mesmo
+    // (204 generico), pra nao dar pra descobrir contas cadastradas so tentando aqui.
+    await authApi.forgotPassword(values.email);
+    setSent(true);
+  }
+
+  return (
+    <Modal open={open} onClose={handleClose} title="Esqueci a senha" size="sm">
+      {sent ? (
+        <div className="space-y-4">
+          <p className="text-sm text-graphite-600">
+            Se houver uma conta com esse e-mail, enviamos uma senha temporária para ela agora. Confira sua caixa de
+            entrada (e o spam) e use-a para entrar - o sistema vai pedir para você escolher uma senha nova em seguida.
+          </p>
+          <button type="button" className="btn-primary w-full" onClick={handleClose}>
+            Entendi
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          <p className="text-sm text-graphite-500">
+            Informe o e-mail da sua conta. Se ele existir, enviaremos uma senha temporária.
+          </p>
+          <TextInput
+            label="E-mail"
+            type="email"
+            autoComplete="username"
+            required
+            error={errors.email?.message}
+            {...register("email")}
+          />
+          <button type="submit" className="btn-primary w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Enviando..." : "Enviar senha temporária"}
+          </button>
+        </form>
+      )}
+    </Modal>
+  );
+}
+
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [forgotOpen, setForgotOpen] = useState(false);
   // A API derruba a sessao anterior quando a mesma conta loga em outro lugar - o navegador
   // atingido cai aqui sozinho (interceptor em api/client.ts), e precisa entender por que.
   const sessaoEncerradaAlhures = new URLSearchParams(location.search).get("motivo") === "outro-local";
@@ -80,12 +144,20 @@ export default function Login() {
           </button>
         </form>
 
+        <p className="mt-4 text-center text-sm">
+          <button type="button" onClick={() => setForgotOpen(true)} className="text-navy-700 hover:underline">
+            Esqueci a senha
+          </button>
+        </p>
+
         <p className="mt-6 text-center text-sm text-graphite-500">
           <Link to="/" className="hover:text-navy-700">
             Voltar ao site
           </Link>
         </p>
       </div>
+
+      <ForgotPasswordModal open={forgotOpen} onClose={() => setForgotOpen(false)} />
     </div>
   );
 }

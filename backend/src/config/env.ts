@@ -36,4 +36,9 @@ export const env = {
   },
 
   whatsappNumber: process.env.WHATSAPP_NUMBER ?? "",
+
+  // Sem chave configurada, o "esqueci a senha" fica desligado (ver lib/email.ts) - nao
+  // quebra o resto do sistema, so essa funcionalidade especifica nao envia nada.
+  resendApiKey: process.env.RESEND_API_KEY ?? "",
+  emailFrom: process.env.EMAIL_FROM ?? "RLP Maintenance <naoresponda@rlpmaintenance.com.br>",
 };

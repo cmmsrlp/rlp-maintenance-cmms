@@ -19,3 +19,8 @@ export async function fetchMe(): Promise<AuthUser> {
 export async function changeOwnPassword(currentPassword: string, newPassword: string): Promise<void> {
   await api.post("/auth/change-password", { currentPassword, newPassword });
 }
+
+/** Publica (sem login) - pede senha temporaria por e-mail. */
+export async function forgotPassword(email: string): Promise<void> {
+  await api.post("/auth/forgot-password", { email });
+}
