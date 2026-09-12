@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { prisma } from "../../lib/prisma";
 import { asyncHandler } from "../../utils/asyncHandler";
-import { ValidationError } from "../../utils/errors";
+import { ForbiddenError, ValidationError } from "../../utils/errors";
 import { writeAuditLog } from "../../utils/audit";
 import { gerarInsightsDeClientes, type DadosClienteParaInsight } from "../../lib/ai";
 
@@ -25,23 +25,11 @@ const ORDENS_ABERTAS = [
   "AWAITING_STOPPAGE",
 ] as const;
 
-/** Gera (ou atualiza) a sugestao de IA de cada cliente ativo, a partir de dados reais do
- * CMMS - sempre sob demanda (botao "Gerar insights"), nunca automatico, dado o baixo volume
- * tipico de clientes por conta. */
-export const generateInsights = asyncHandler(async (req: Request, res: Response) => {
-  const clients = await prisma.client.findMany({
-    where: { deletedAt: null, status: "ACTIVE" },
-    select: { id: true, companyName: true, tradeName: true, plan: { select: { maxUsers: true, maxInstruments: true } } },
-  });
-
-  if (clients.length === 0) {
-    res.json([]);
-    return;
-  }
-
+/** Numeros reais do CMMS que alimentam o prompt da IA - os mesmos para o lote (equipe RLP)
+ * e para a geracao individual (autoatendimento do cliente no portal). */
+async function coletarDadosParaInsight(clients: { id: string; companyName: string; tradeName: string | null; plan: { maxUsers: number | null; maxInstruments: number | null } | null }[]): Promise<DadosClienteParaInsight[]> {
   const now = new Date();
-
-  const dados: DadosClienteParaInsight[] = await Promise.all(
+  return Promise.all(
     clients.map(async (c) => {
       const [planosAtrasados, ordensAbertas, pecasEmFalta, users, instruments] = await Promise.all([
         prisma.maintenancePlan.count({ where: { clientId: c.id, deletedAt: null, active: true, nextDueDate: { lt: now } } }),
@@ -66,7 +54,9 @@ export const generateInsights = asyncHandler(async (req: Request, res: Response)
       };
     }),
   );
+}
 
+async function gerarESalvar(dados: DadosClienteParaInsight[]) {
   let gerados;
   try {
     gerados = await gerarInsightsDeClientes(dados);
@@ -88,6 +78,26 @@ export const generateInsights = asyncHandler(async (req: Request, res: Response)
     ),
   );
 
+  return gerados;
+}
+
+/** Gera (ou atualiza) a sugestao de IA de cada cliente ativo, a partir de dados reais do
+ * CMMS - sempre sob demanda (botao "Gerar insights"), nunca automatico, dado o baixo volume
+ * tipico de clientes por conta. Uso interno (equipe RLP), ve' todos os clientes de uma vez. */
+export const generateInsights = asyncHandler(async (req: Request, res: Response) => {
+  const clients = await prisma.client.findMany({
+    where: { deletedAt: null, status: "ACTIVE" },
+    select: { id: true, companyName: true, tradeName: true, plan: { select: { maxUsers: true, maxInstruments: true } } },
+  });
+
+  if (clients.length === 0) {
+    res.json([]);
+    return;
+  }
+
+  const dados = await coletarDadosParaInsight(clients);
+  const gerados = await gerarESalvar(dados);
+
   await writeAuditLog({
     userId: req.user?.sub,
     action: "CREATE",
@@ -101,4 +111,37 @@ export const generateInsights = asyncHandler(async (req: Request, res: Response)
     include: { client: { select: { id: true, companyName: true, tradeName: true } } },
   });
   res.json(insights);
+});
+
+/** Autoatendimento do portal: o proprio cliente pede a analise da propria operacao,
+ * sem depender da equipe RLP gerar por ele. */
+export const getOwnInsight = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user?.clientId) throw new ForbiddenError();
+
+  const insight = await prisma.clientInsight.findUnique({ where: { clientId: req.user.clientId } });
+  res.json(insight);
+});
+
+export const generateOwnInsight = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user?.clientId) throw new ForbiddenError();
+
+  const client = await prisma.client.findUnique({
+    where: { id: req.user.clientId, deletedAt: null },
+    select: { id: true, companyName: true, tradeName: true, plan: { select: { maxUsers: true, maxInstruments: true } } },
+  });
+  if (!client) throw new ForbiddenError();
+
+  const dados = await coletarDadosParaInsight([client]);
+  await gerarESalvar(dados);
+
+  await writeAuditLog({
+    userId: req.user.sub,
+    action: "CREATE",
+    entityType: "ClientInsight",
+    entityId: client.id,
+    description: "Insight gerado pelo proprio cliente no portal",
+  });
+
+  const insight = await prisma.clientInsight.findUnique({ where: { clientId: client.id } });
+  res.json(insight);
 });

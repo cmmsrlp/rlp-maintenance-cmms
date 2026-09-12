@@ -25,6 +25,7 @@ import {
   LayoutGrid,
   Settings,
   FileSpreadsheet,
+  Sparkles,
 } from "lucide-react";
 import type { Role, ServiceCategory } from "../api/types";
 
@@ -67,6 +68,7 @@ const PORTAL_NAV_SECTIONS: PortalNavSection[] = [
     // E' a pagina inicial.
     items: [
       { to: "/portal/manutencao", label: "Painel do CMMS", icon: Wrench, requires: ["CMMS_MAINTENANCE"], exact: true },
+      { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/insights", label: "Insights", icon: Sparkles, requires: ["CMMS_MAINTENANCE"] },
       { to: "/portal", label: "Dashboard", icon: LayoutDashboard, semCmms: true },
     ],
   },

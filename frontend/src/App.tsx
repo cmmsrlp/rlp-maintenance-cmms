@@ -69,6 +69,7 @@ const LubricantsList = lazyPagina(() => import("./pages/admin/lubrication/Lubric
 const LubricationForecast = lazyPagina(() => import("./pages/admin/lubrication/LubricationForecast"));
 const DataImport = lazyPagina(() => import("./pages/admin/imports/DataImport"));
 const PortalContract = lazyPagina(() => import("./pages/portal/PortalContract"));
+const PortalInsights = lazyPagina(() => import("./pages/portal/PortalInsights"));
 const LubricationHistory = lazyPagina(() => import("./pages/admin/lubrication/LubricationHistory"));
 const FailureAnalysis = lazyPagina(() => import("./pages/admin/maintenance/FailureAnalysis"));
 const WorkOrderForm = lazyPagina(() => import("./pages/admin/maintenance/WorkOrderForm"));
@@ -207,6 +208,7 @@ export default function App() {
               {/* Planejamento: monta plano, programa, aprova e olha custo. O Tecnico
                   executa o que foi programado, entao nao reestrutura nada disto. */}
               <Route element={<ProtectedRoute roles={["CLIENT", "CLIENT_PLANNER"]} />}>
+                <Route path="insights" element={<PortalInsights />} />
                 <Route path="ativos/cadastros" element={<TechnicalCatalogsHub />} />
                 <Route path="ativos/tipos" element={<AssetTypesList />} />
                 <Route path="ativos/plantas" element={<PlantsList />} />
