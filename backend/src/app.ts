@@ -38,6 +38,7 @@ import { stoppageReasonsRouter } from "./modules/stoppageReasons/routes";
 import { rootCauseAnalysesRouter } from "./modules/rootCauseAnalyses/routes";
 import { plansRouter } from "./modules/plans/routes";
 import { insightsRouter } from "./modules/insights/routes";
+import { documentAnalysisRouter } from "./modules/documentAnalysis/routes";
 
 export function createApp() {
   const app = express();
@@ -111,6 +112,7 @@ export function createApp() {
   app.use("/api/root-cause-analyses", rootCauseAnalysesRouter);
   app.use("/api/plans", plansRouter);
   app.use("/api/insights", insightsRouter);
+  app.use("/api/document-analyses", documentAnalysisRouter);
 
   if (env.isProduction) {
     const frontendDist = path.resolve(__dirname, "../../frontend/dist");

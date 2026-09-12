@@ -475,6 +475,7 @@ model Client {
   maintenancePlanTemplates  MaintenancePlanTemplate[]
   automationSettings        AutomationSettings?
   insight                   ClientInsight?
+  documentAnalyses          DocumentAnalysis[]
 
   @@index([status])
   @@index([planId])
@@ -1726,6 +1727,28 @@ model ClientInsight {
   generatedAt DateTime          @default(now())
 
   @@map("client_insights")
+}
+
+// Analise de IA de um laudo enviado pelo cliente (vibracao, oleo, termografia, etc.) -
+// guarda o arquivo original (mesmo storage dos outros anexos) e o resultado da IA, para
+// formar um historico das analises daquele cliente ao longo do tempo. Diferente do
+// ClientInsight (uma linha por cliente, sempre sobrescrita), aqui e' historico: um laudo
+// novo nao apaga a analise dos anteriores.
+model DocumentAnalysis {
+  id          String          @id @default(uuid())
+  clientId    String
+  client      Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  fileName    String
+  fileKey     String
+  mimeType    String
+  sizeBytes   Int
+  severity    InsightSeverity
+  summary     String
+  createdById String?
+  createdAt   DateTime        @default(now())
+
+  @@index([clientId])
+  @@map("document_analyses")
 }
 
 enum InsightSeverity {

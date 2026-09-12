@@ -26,6 +26,7 @@ import {
   Settings,
   FileSpreadsheet,
   Sparkles,
+  FileSearch,
 } from "lucide-react";
 import type { Role, ServiceCategory } from "../api/types";
 
@@ -69,6 +70,7 @@ const PORTAL_NAV_SECTIONS: PortalNavSection[] = [
     items: [
       { to: "/portal/manutencao", label: "Painel do CMMS", icon: Wrench, requires: ["CMMS_MAINTENANCE"], exact: true },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/insights", label: "Insights", icon: Sparkles, requires: ["CMMS_MAINTENANCE"] },
+      { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/analise-laudos", label: "Analise de laudos", icon: FileSearch, requires: ["CMMS_MAINTENANCE"] },
       { to: "/portal", label: "Dashboard", icon: LayoutDashboard, semCmms: true },
     ],
   },
