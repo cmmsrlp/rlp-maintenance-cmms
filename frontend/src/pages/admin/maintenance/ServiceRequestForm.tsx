@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import type { FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { PageHeader } from "../../../components/PageHeader";
@@ -30,6 +32,12 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
+const ROTULO_DO_CAMPO: Partial<Record<keyof FormValues, string>> = {
+  clientId: "Cliente",
+  areaId: "Area",
+  description: "Descricao do problema",
+};
+
 /** Porta de entrada simples do CMMS: qualquer um (operador, solicitante, cliente)
  * relata uma necessidade de manutencao, sem precisar montar uma OS completa - isso
  * fica com a equipe na triagem. */
@@ -45,6 +53,13 @@ export default function ServiceRequestForm() {
   const clientId = watch("clientId");
   // Trocar a area troca a lista de ativos - o ativo escolhido antes pode nao ser mais dela.
   const areaId = watch("areaId");
+
+  // Mesmo motivo do formulario de OS: ownClientId chega assincrono (AuthContext), e o
+  // campo aqui e' um <input hidden> sem erro visivel do lado - sem isso, a solicitacao
+  // falharia calada se o valor inicial nao tivesse pego a tempo.
+  useEffect(() => {
+    if (isClient && ownClientId) setValue("clientId", ownClientId);
+  }, [isClient, ownClientId, setValue]);
 
   const { data: areas } = useQuery({
     queryKey: ["areas-picker", clientId],
@@ -72,6 +87,13 @@ export default function ServiceRequestForm() {
     }
   }
 
+  function onInvalid(erros: FieldErrors<FormValues>) {
+    const campos = Object.keys(erros)
+      .map((campo) => ROTULO_DO_CAMPO[campo as keyof FormValues] ?? campo)
+      .filter((v, i, arr) => arr.indexOf(v) === i);
+    notify("error", campos.length ? `Falta preencher: ${campos.join(", ")}.` : "Ha campos obrigatorios nao preenchidos.");
+  }
+
   return (
     <div>
       <PageHeader
@@ -84,11 +106,14 @@ export default function ServiceRequestForm() {
         ]}
       />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6" noValidate>
         <div className="card space-y-4 p-5">
           <div className="grid gap-4 sm:grid-cols-2">
             {isClient ? (
-              <input type="hidden" {...register("clientId")} />
+              <div>
+                <input type="hidden" {...register("clientId")} />
+                {errors.clientId && <p className="text-xs text-safety-red">{errors.clientId.message}</p>}
+              </div>
             ) : (
               <ClientPicker required error={errors.clientId?.message} {...register("clientId")} />
             )}

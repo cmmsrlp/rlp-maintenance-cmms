@@ -21,6 +21,7 @@ import { FullPageSpinner } from "../../../components/Spinner";
 import { useCmms } from "../../../lib/cmms";
 import { OPCOES_DE_TIPO, GRAVIDADES_DE_FALHA, valorDoTipo, SITUACOES_DE_ABERTURA } from "../../../lib/maintenanceLabels";
 import type { FailureSeverity, MaintenanceOrderStatus } from "../../../api/types";
+import type { FieldErrors } from "react-hook-form";
 
 const schema = z.object({
   clientId: z.string().uuid("Selecione o cliente."),
@@ -49,14 +50,30 @@ const schema = z.object({
   failureRootCause: z.string().optional(),
   failureCorrectiveAction: z.string().optional(),
   productionLoss: z.coerce.number().nonnegative().optional(),
+  // Item em branco e' normal: a lista nasce com uma linha vazia (nada pra apagar se a OS
+  // nao tiver passo a passo) e o envio ja filtra as vazias - exigir descricao aqui bloquearia
+  // salvar por causa de um campo que a propria tela chama de "opcional".
   checklist: z.array(
     z.object({
-      description: z.string().min(1, "Descreva o item."),
+      description: z.string(),
       estimatedMinutes: z.coerce.number().int().nonnegative().optional().or(z.literal("")),
     }),
   ),
 });
 type FormValues = z.infer<typeof schema>;
+
+/** Nome amigavel de cada campo, para o aviso de "faltou preencher" dizer o que falta em
+ * vez de so recusar em silencio - inclui clientId, que no portal e' um campo escondido
+ * (o cliente nao escolhe empresa) e por isso nao tem onde mostrar o erro pertinho dele. */
+const ROTULO_DO_CAMPO: Partial<Record<keyof FormValues, string>> = {
+  clientId: "Cliente",
+  instrumentId: "Ativo",
+  tipoSelecionado: "Tipo de servico",
+  title: "Titulo",
+  description: "Descricao",
+  breakdownSituation: "Situacao da quebra",
+  failureCodeId: "Categoria da falha",
+};
 
 export default function WorkOrderForm() {
   const { id } = useParams<{ id: string }>();
@@ -124,6 +141,15 @@ export default function WorkOrderForm() {
       setValue("priority", selectedInstrument.criticality);
     }
   }, [selectedInstrument, dirtyFields.priority, setValue]);
+
+  // No portal o cliente nao escolhe empresa - o campo nasce com ownClientId. Mas o usuario
+  // logado chega de forma assincrona (AuthContext busca /auth/me), entao se este formulario
+  // por algum motivo montar antes disso resolver, o valor inicial ficaria "" para sempre
+  // (defaultValues so' e' lido uma vez). Sem isso, a OS falhava calada: o campo e' um
+  // <input hidden>, entao o erro de validacao nunca aparecia em lugar nenhum.
+  useEffect(() => {
+    if (isClient && ownClientId && !isEdit) setValue("clientId", ownClientId);
+  }, [isClient, ownClientId, isEdit, setValue]);
 
   useEffect(() => {
     if (existing) {
@@ -215,6 +241,20 @@ export default function WorkOrderForm() {
     }
   }
 
+  /** O botao "Salvar" nao fazer nada, sem explicar por que, e' o pior caso: alguns campos
+   * exigidos (o cliente no portal, por exemplo) sao um <input hidden> sem erro visivel do
+   * lado. Este aviso garante que SEMPRE aparece o que falta, mesmo quando o campo em si
+   * nao tem onde mostrar. */
+  function onInvalid(erros: FieldErrors<FormValues>) {
+    const campos = Object.keys(erros)
+      .map((campo) => ROTULO_DO_CAMPO[campo as keyof FormValues] ?? campo)
+      .filter((v, i, arr) => arr.indexOf(v) === i);
+    notify(
+      "error",
+      campos.length ? `Falta preencher: ${campos.join(", ")}.` : "Ha campos obrigatorios nao preenchidos.",
+    );
+  }
+
   if (isEdit && isLoading) return <FullPageSpinner />;
 
   return (
@@ -228,12 +268,17 @@ export default function WorkOrderForm() {
         ]}
       />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6" noValidate>
         <div className="card space-y-4 p-5">
           <h2 className="font-semibold text-navy-900">Identificacao</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {isClient ? (
-              <input type="hidden" {...register("clientId")} />
+              <div>
+                <input type="hidden" {...register("clientId")} />
+                {/* So aparece se algo der errado (ex.: sessao carregou sem empresa vinculada) -
+                    normalmente este campo nem existe na tela, o cliente e' implicito. */}
+                {errors.clientId && <p className="text-xs text-safety-red">{errors.clientId.message}</p>}
+              </div>
             ) : (
               <ClientPicker required error={errors.clientId?.message} {...register("clientId")} />
             )}

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import type { FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Trash2 } from "lucide-react";
@@ -40,6 +41,11 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
+const ROTULO_DO_CAMPO: Partial<Record<keyof FormValues, string>> = {
+  clientId: "Cliente",
+  problem: "Problema",
+};
+
 /** RCA / 5 Porques: falha critica ou recorrente dispara a analise -> plano de acao ->
  * execucao -> verificacao de eficacia -> encerramento. Uma pagina so, editavel a
  * qualquer momento (e' um documento vivo, nao algo que se preenche de uma vez). */
@@ -67,6 +73,12 @@ export default function RcaForm() {
     },
   });
   const clientId = watch("clientId");
+
+  // Mesmo motivo do formulario de OS: ownClientId chega assincrono, e o campo aqui e' um
+  // <input hidden> sem erro visivel do lado.
+  useEffect(() => {
+    if (isClient && ownClientId && !isEdit) setValue("clientId", ownClientId);
+  }, [isClient, ownClientId, isEdit, setValue]);
 
   useEffect(() => {
     if (existing) {
@@ -128,6 +140,13 @@ export default function RcaForm() {
     }
   }
 
+  function onInvalid(erros: FieldErrors<FormValues>) {
+    const campos = Object.keys(erros)
+      .map((campo) => ROTULO_DO_CAMPO[campo as keyof FormValues] ?? campo)
+      .filter((v, i, arr) => arr.indexOf(v) === i);
+    notify("error", campos.length ? `Falta preencher: ${campos.join(", ")}.` : "Ha campos obrigatorios nao preenchidos.");
+  }
+
   async function handleDelete() {
     if (!id) return;
     try {
@@ -159,12 +178,15 @@ export default function RcaForm() {
         }
       />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6" noValidate>
         <div className="card space-y-4 p-5">
           <h2 className="font-semibold text-navy-900">Identificacao</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {isClient ? (
-              <input type="hidden" {...register("clientId")} />
+              <div>
+                <input type="hidden" {...register("clientId")} />
+                {errors.clientId && <p className="text-xs text-safety-red">{errors.clientId.message}</p>}
+              </div>
             ) : (
               <ClientPicker required error={errors.clientId?.message} {...register("clientId")} />
             )}

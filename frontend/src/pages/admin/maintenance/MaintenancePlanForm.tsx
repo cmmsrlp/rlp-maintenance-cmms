@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
+import type { FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus, Trash2, Check, X } from "lucide-react";
@@ -78,9 +79,12 @@ const schema = z.object({
   scope: z.enum(["SINGLE_ASSET", "ASSET_FAMILY"]),
   defaultPriority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
   specialtyId: z.string().uuid().optional().or(z.literal("")),
+  // Item em branco e' normal: a lista nasce com uma linha vazia e o envio ja filtra as
+  // vazias - exigir descricao aqui bloqueava salvar/avancar de etapa por causa da linha
+  // que ninguem preencheu porque o plano nao tem checklist.
   checklistTemplate: z.array(
     z.object({
-      description: z.string().min(1, "Descreva o item."),
+      description: z.string(),
       section: z.string().optional(),
       required: z.boolean().optional(),
       responseType: z.enum(["YES_NO_NA", "TEXT", "NUMBER", "PHOTO", "SIGNATURE"]).optional(),
@@ -109,6 +113,12 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
+const ROTULO_DO_CAMPO: Partial<Record<keyof FormValues, string>> = {
+  clientId: "Cliente",
+  name: "Nome do plano",
+  planType: "Tipo de plano",
+};
+
 export default function MaintenancePlanForm() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
@@ -123,7 +133,7 @@ export default function MaintenancePlanForm() {
     enabled: isEdit,
   });
 
-  const { register, control, handleSubmit, watch, reset, trigger, formState: { errors, isSubmitting } } = useForm<FormValues>({
+  const { register, control, handleSubmit, watch, reset, trigger, setValue, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       clientId: ownClientId ?? searchParams.get("clientId") ?? "",
@@ -151,6 +161,13 @@ export default function MaintenancePlanForm() {
   const triggerType = watch("triggerType");
   const planType = watch("planType");
   const lubricationRouteId = watch("lubricationRouteId");
+
+  // Mesmo motivo do formulario de OS: ownClientId chega assincrono, e o campo aqui e' um
+  // <input hidden> sem erro visivel do lado - sem isso, o assistente ficava travado na
+  // etapa 1 sem dizer por que.
+  useEffect(() => {
+    if (isClient && ownClientId && !isEdit) setValue("clientId", ownClientId);
+  }, [isClient, ownClientId, isEdit, setValue]);
 
   const { data: rotasDeLubrificacao } = useQuery({
     queryKey: ["rotas-lubrificacao-plano", clientId],
@@ -189,7 +206,13 @@ export default function MaintenancePlanForm() {
   async function goToStep(next: number) {
     if (next > step) {
       const ok = await trigger(STEP_FIELDS[step]);
-      if (!ok) return;
+      if (!ok) {
+        // trigger() so' atualiza o estado interno do RHF - "errors" aqui ainda e' o
+        // instantaneo de antes da validacao rodar, entao a mensagem fica generica (o
+        // campo em si, quando tem onde aparecer, ja mostra o motivo especifico do lado).
+        notify("error", "Preencha os campos obrigatorios desta etapa antes de avancar.");
+        return;
+      }
     }
     setStep(next);
   }
@@ -327,6 +350,16 @@ export default function MaintenancePlanForm() {
     }
   }
 
+  /** No envio final o RHF entrega os erros atualizados como parametro (diferente do
+   * trigger() acima) - da para nomear exatamente o que falta, incluindo o Cliente, que
+   * no portal e' um <input hidden> sem onde mostrar o proprio erro do lado. */
+  function onInvalid(erros: FieldErrors<FormValues>) {
+    const campos = Object.keys(erros)
+      .map((campo) => ROTULO_DO_CAMPO[campo as keyof FormValues] ?? campo)
+      .filter((v, i, arr) => arr.indexOf(v) === i);
+    notify("error", campos.length ? `Falta preencher: ${campos.join(", ")}.` : "Ha campos obrigatorios nao preenchidos.");
+  }
+
   if (isEdit && isLoading) return <FullPageSpinner />;
 
   return (
@@ -368,13 +401,16 @@ export default function MaintenancePlanForm() {
         })}
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6" noValidate>
         <div className={step === 0 ? "space-y-6" : "hidden"}>
         <div className="card space-y-4 p-5">
           <h2 className="font-semibold text-navy-900">Identificacao</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {isClient ? (
-              <input type="hidden" {...register("clientId")} />
+              <div>
+                <input type="hidden" {...register("clientId")} />
+                {errors.clientId && <p className="text-xs text-safety-red">{errors.clientId.message}</p>}
+              </div>
             ) : (
               <ClientPicker required error={errors.clientId?.message} {...register("clientId")} />
             )}
