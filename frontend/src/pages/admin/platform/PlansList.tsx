@@ -15,12 +15,18 @@ import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
 import { formatCurrency } from "../../../lib/format";
 
+// z.coerce.number() sozinho nao trata campo vazio como "sem limite": Number("") e' 0, nao
+// NaN, entao "" passava no coerce e so' quebrava depois no .positive() - com o campo
+// silenciosamente virando erro em vez de "sem limite" (foi exatamente o que aconteceu
+// tentando reverter um limite de volta pra vazio depois de editado). O preprocess trata
+// "" como undefined antes do coerce, pra .optional() de fato liberar o campo em branco.
+const semLimite = (v: unknown) => (v === "" ? undefined : v);
 const schema = z.object({
   name: z.string().min(2, "Informe o nome do plano."),
   description: z.string().optional(),
-  priceMonthly: z.coerce.number().nonnegative().optional(),
-  maxUsers: z.coerce.number().int().positive().optional(),
-  maxInstruments: z.coerce.number().int().positive().optional(),
+  priceMonthly: z.preprocess(semLimite, z.coerce.number().nonnegative().optional()),
+  maxUsers: z.preprocess(semLimite, z.coerce.number().int().positive().optional()),
+  maxInstruments: z.preprocess(semLimite, z.coerce.number().int().positive().optional()),
   features: z.array(z.object({ value: z.string().min(1, "Descreva o item.") })),
 });
 type FormValues = z.infer<typeof schema>;
