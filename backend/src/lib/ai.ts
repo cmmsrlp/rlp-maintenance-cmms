@@ -16,7 +16,7 @@ export interface InsightGerado {
   summary: string;
 }
 
-const MODEL = "gemini-2.0-flash";
+const MODEL = "gemini-3.6-flash";
 
 function montarPrompt(clientes: DadosClienteParaInsight[]): string {
   const linhas = clientes.map((c) =>
