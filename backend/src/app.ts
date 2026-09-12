@@ -37,6 +37,7 @@ import { serviceRequestCategoriesRouter } from "./modules/serviceRequestCategori
 import { stoppageReasonsRouter } from "./modules/stoppageReasons/routes";
 import { rootCauseAnalysesRouter } from "./modules/rootCauseAnalyses/routes";
 import { plansRouter } from "./modules/plans/routes";
+import { insightsRouter } from "./modules/insights/routes";
 
 export function createApp() {
   const app = express();
@@ -109,6 +110,7 @@ export function createApp() {
   app.use("/api/stoppage-reasons", stoppageReasonsRouter);
   app.use("/api/root-cause-analyses", rootCauseAnalysesRouter);
   app.use("/api/plans", plansRouter);
+  app.use("/api/insights", insightsRouter);
 
   if (env.isProduction) {
     const frontendDist = path.resolve(__dirname, "../../frontend/dist");

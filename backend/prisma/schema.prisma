@@ -474,6 +474,7 @@ model Client {
   rootCauseAnalyses         RootCauseAnalysis[]
   maintenancePlanTemplates  MaintenancePlanTemplate[]
   automationSettings        AutomationSettings?
+  insight                   ClientInsight?
 
   @@index([status])
   @@index([planId])
@@ -1711,6 +1712,26 @@ model AutomationSettings {
   updatedAt             DateTime  @updatedAt
 
   @@map("automation_settings")
+}
+
+// Sugestao gerada por IA a partir dos dados do cliente (planos atrasados, OS abertas,
+// estoque baixo, uso do plano) - sempre revisada por uma pessoa, nunca dispara acao sozinha.
+// Uma linha por cliente: cada geracao nova sobrescreve a anterior (nao e' historico).
+model ClientInsight {
+  id          String            @id @default(uuid())
+  clientId    String            @unique
+  client      Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  severity    InsightSeverity
+  summary     String
+  generatedAt DateTime          @default(now())
+
+  @@map("client_insights")
+}
+
+enum InsightSeverity {
+  OK
+  ATTENTION
+  CRITICAL
 }
 
 model Notification {

@@ -35,6 +35,7 @@ const ClientPortalLayout = lazyPagina(() =>
 const Dashboard = lazyPagina(() => import("./pages/admin/Dashboard"));
 const AdminProfile = lazyPagina(() => import("./pages/admin/Profile"));
 const ClientsList = lazyPagina(() => import("./pages/admin/clients/ClientsList"));
+const InsightsList = lazyPagina(() => import("./pages/admin/InsightsList"));
 const ClientDetail = lazyPagina(() => import("./pages/admin/clients/ClientDetail"));
 const InstrumentsList = lazyPagina(() => import("./pages/admin/instruments/InstrumentsList"));
 const InstrumentDetail = lazyPagina(() => import("./pages/admin/instruments/InstrumentDetail"));
@@ -162,6 +163,7 @@ export default function App() {
               <Route path="manutencao/tipos-mao-de-obra" element={<LaborTypesList />} />
 
               <Route element={<ProtectedRoute roles={["ADMIN"]} />}>
+                <Route path="insights" element={<InsightsList />} />
                 <Route path="usuarios" element={<UsersList />} />
                 <Route path="auditoria" element={<AuditLog />} />
                 <Route path="plataforma" element={<PlatformDashboard />} />

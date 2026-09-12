@@ -41,4 +41,8 @@ export const env = {
   // quebra o resto do sistema, so essa funcionalidade especifica nao envia nada.
   resendApiKey: process.env.RESEND_API_KEY ?? "",
   emailFrom: process.env.EMAIL_FROM ?? "RLP Maintenance <naoresponda@rlpmaintenance.com.br>",
+
+  // Sem chave configurada, "Insights" fica desligado (ver lib/ai.ts) - mesmo padrao do
+  // Resend acima: funcionalidade opcional, nao quebra o resto do sistema se faltar.
+  geminiApiKey: process.env.GEMINI_API_KEY ?? "",
 };

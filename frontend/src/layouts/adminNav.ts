@@ -7,6 +7,7 @@ import {
   History,
   Wrench,
   Layers3,
+  Sparkles,
 } from "lucide-react";
 import type { Role } from "../api/types";
 
@@ -20,6 +21,7 @@ export interface NavItem {
 export const ADMIN_NAV: NavItem[] = [
   { to: "/gestao", label: "Dashboard", icon: LayoutDashboard, roles: ["ADMIN", "TECHNICIAN", "COMMERCIAL"] },
   { to: "/gestao/clientes", label: "Clientes", icon: Building2, roles: ["ADMIN", "TECHNICIAN", "COMMERCIAL"] },
+  { to: "/gestao/insights", label: "Insights", icon: Sparkles, roles: ["ADMIN"] },
   { to: "/gestao/ativos", label: "Ativos", icon: Gauge, roles: ["ADMIN", "TECHNICIAN", "COMMERCIAL"] },
   { to: "/gestao/manutencao", label: "CMMS", icon: Wrench, roles: ["ADMIN"] },
   { to: "/gestao/usuarios", label: "Usuarios e perfis", icon: Users, roles: ["ADMIN"] },
