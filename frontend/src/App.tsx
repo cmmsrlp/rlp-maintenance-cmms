@@ -48,6 +48,7 @@ const UsersList = lazyPagina(() => import("./pages/admin/users/UsersList"));
 const AuditLog = lazyPagina(() => import("./pages/admin/audit/AuditLog"));
 const PlatformDashboard = lazyPagina(() => import("./pages/admin/platform/PlatformDashboard"));
 const PlansList = lazyPagina(() => import("./pages/admin/platform/PlansList"));
+const PlanosArte = lazyPagina(() => import("./pages/admin/platform/PlanosArte"));
 const MaintenanceDashboard = lazyPagina(() => import("./pages/admin/maintenance/MaintenanceDashboard"));
 const MaintenancePlansList = lazyPagina(() => import("./pages/admin/maintenance/MaintenancePlansList"));
 const MaintenancePlanForm = lazyPagina(() => import("./pages/admin/maintenance/MaintenancePlanForm"));
@@ -165,6 +166,7 @@ export default function App() {
                 <Route path="auditoria" element={<AuditLog />} />
                 <Route path="plataforma" element={<PlatformDashboard />} />
                 <Route path="plataforma/planos" element={<PlansList />} />
+                <Route path="plataforma/planos/arte" element={<PlanosArte />} />
               </Route>
             </Route>
           </Route>

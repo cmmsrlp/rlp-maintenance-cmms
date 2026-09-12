@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Image } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -120,9 +121,14 @@ export default function PlansList() {
         description="Planos comerciais oferecidos aos clientes - definem limites de usuarios e ativos"
         breadcrumbs={[{ label: "Administracao da plataforma", to: "/gestao/plataforma" }, { label: "Planos" }]}
         actions={
-          <button className="btn-primary" onClick={openCreate}>
-            <Plus className="h-4 w-4" /> Novo plano
-          </button>
+          <>
+            <Link to="/gestao/plataforma/planos/arte" className="btn-outline">
+              <Image className="h-4 w-4" /> Gerar arte para compartilhar
+            </Link>
+            <button className="btn-primary" onClick={openCreate}>
+              <Plus className="h-4 w-4" /> Novo plano
+            </button>
+          </>
         }
       />
 
