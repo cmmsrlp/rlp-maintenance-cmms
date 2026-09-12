@@ -127,7 +127,7 @@ export default function PlansList() {
         emptyTitle="Nenhum plano cadastrado"
         columns={[
           { header: "Plano", accessor: (p) => <span className="font-medium text-navy-900">{p.name}</span> },
-          { header: "Preco mensal", accessor: (p) => (p.priceMonthly != null ? formatCurrency(p.priceMonthly) : "-") },
+          { header: "Preco mensal", accessor: (p) => (p.priceMonthly != null ? formatCurrency(p.priceMonthly) : "Sob consulta") },
           { header: "Limite de usuarios", accessor: (p) => p.maxUsers ?? "Sem limite" },
           { header: "Limite de ativos", accessor: (p) => p.maxInstruments ?? "Sem limite" },
           { header: "Clientes", accessor: (p) => p._count?.clients ?? 0 },
@@ -172,7 +172,7 @@ export default function PlansList() {
           <TextInput label="Nome do plano" required placeholder="Ex.: Plus, Pro, Advanced" error={errors.name?.message} {...register("name")} />
           <TextareaInput label="Descricao (opcional)" rows={2} {...register("description")} />
           <div className="grid gap-4 sm:grid-cols-3">
-            <TextInput label="Preco mensal (opcional)" type="number" step="any" hint="Usado so no MRR estimado - sem cobranca automatica." error={errors.priceMonthly?.message} {...register("priceMonthly")} />
+            <TextInput label="Preco mensal (opcional)" type="number" step="any" hint="Vazio = Sob consulta (ex.: Enterprise). Sem cobranca automatica." error={errors.priceMonthly?.message} {...register("priceMonthly")} />
             <TextInput label="Limite de usuarios (opcional)" type="number" hint="Vazio = sem limite." error={errors.maxUsers?.message} {...register("maxUsers")} />
             <TextInput label="Limite de ativos (opcional)" type="number" hint="Vazio = sem limite." error={errors.maxInstruments?.message} {...register("maxInstruments")} />
           </div>

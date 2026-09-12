@@ -6,6 +6,7 @@ const PLANOS = [
   {
     nome: "Starter",
     resumo: "Para começar a organizar um parque pequeno.",
+    preco: "R$ 890",
     destaque: false,
     itens: [
       "Até 5 usuários",
@@ -18,6 +19,7 @@ const PLANOS = [
   {
     nome: "Profissional",
     resumo: "Para quem já lubrifica, controla estoque e mede indicador.",
+    preco: "R$ 2.990",
     destaque: true,
     itens: [
       "Até 20 usuários",
@@ -31,6 +33,7 @@ const PLANOS = [
   {
     nome: "Enterprise",
     resumo: "Para operações grandes, com várias plantas e times.",
+    preco: "Sob consulta",
     destaque: false,
     itens: [
       "Usuários e ativos sob medida",
