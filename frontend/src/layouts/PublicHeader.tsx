@@ -4,8 +4,9 @@ import { Menu, X, ChevronDown } from "lucide-react";
 import { CmmsLogo } from "../components/CmmsLogo";
 import { buildWhatsAppLink } from "../lib/publicContact";
 
+const QUEM_SOMOS_LINK = { href: "#quem-somos", label: "Quem somos" };
+
 const NAV_LINKS = [
-  { href: "#quem-somos", label: "Quem somos" },
   { href: "#como-funciona", label: "Como funciona" },
   { href: "#indicadores", label: "Indicadores" },
 ];
@@ -33,6 +34,12 @@ export function PublicHeader() {
         </Link>
 
         <nav className="hidden items-center gap-9 md:flex">
+          <a
+            href={emHome ? QUEM_SOMOS_LINK.href : `/${QUEM_SOMOS_LINK.href}`}
+            className="text-sm font-semibold text-graphite-700 transition-colors hover:text-navy-900"
+          >
+            {QUEM_SOMOS_LINK.label}
+          </a>
           <div
             className="relative"
             onMouseEnter={() => setRecursosOpen(true)}
@@ -107,6 +114,13 @@ export function PublicHeader() {
       {open && (
         <div className="border-t border-gray-200 bg-white px-4 py-4 md:hidden">
           <nav className="flex flex-col gap-4">
+            <a
+              href={emHome ? QUEM_SOMOS_LINK.href : `/${QUEM_SOMOS_LINK.href}`}
+              className="text-sm font-semibold text-graphite-700"
+              onClick={() => setOpen(false)}
+            >
+              {QUEM_SOMOS_LINK.label}
+            </a>
             <span className="text-xs font-bold uppercase tracking-wider text-graphite-400">Funcionalidades</span>
             {RECURSOS_LINKS.map((l) => (
               <Link key={l.to} to={l.to} className="pl-2 text-sm font-semibold text-graphite-700" onClick={() => setOpen(false)}>
