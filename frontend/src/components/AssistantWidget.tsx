@@ -48,10 +48,13 @@ export function AssistantWidget() {
 
   return (
     <>
+      {/* No celular o topo-esquerdo ja e' o botao de abrir o menu (hamburguer) - o
+          assistente ali em cima ficava exatamente por cima dele, tampando os dois. So no
+          desktop (lg+) o canto superior esquerdo esta livre de verdade. */}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="fixed left-4 top-4 z-40 flex items-center gap-2 rounded-full bg-navy-900 py-2 pl-2.5 pr-4 text-sm font-semibold text-white shadow-lg ring-2 ring-white transition-transform hover:scale-105"
+        className="fixed bottom-4 left-4 z-40 flex items-center gap-2 rounded-full bg-navy-900 py-2 pl-2.5 pr-4 text-sm font-semibold text-white shadow-lg ring-2 ring-white transition-transform hover:scale-105 lg:bottom-auto lg:top-4"
         aria-label={open ? "Fechar Assistente RLP" : "Abrir Assistente RLP"}
       >
         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-lime text-navy-950">
@@ -61,7 +64,7 @@ export function AssistantWidget() {
       </button>
 
       {open && (
-        <div className="fixed left-4 top-16 z-40 flex h-[min(32rem,calc(100vh-6rem))] w-[22rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
+        <div className="fixed bottom-20 left-4 z-40 flex h-[min(32rem,calc(100vh-8rem))] w-[22rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl lg:bottom-auto lg:top-16 lg:h-[min(32rem,calc(100vh-6rem))]">
           <div className="flex items-center justify-between bg-navy-900 px-4 py-3">
             <div className="flex items-center gap-2 text-white">
               <Bot className="h-4.5 w-4.5" />
