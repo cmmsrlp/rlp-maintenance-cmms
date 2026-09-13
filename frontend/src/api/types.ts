@@ -1018,6 +1018,7 @@ export interface MaintenanceDashboardData {
     mtbfHours: number | null;
     availabilityPct: number | null;
     planComplianceRatePct: number | null;
+    mtbfByCriticality: Record<"LOW" | "MEDIUM" | "HIGH" | "CRITICAL", number | null>;
   };
   pcm: {
     backlogHours: number;
@@ -1031,7 +1032,16 @@ export interface MaintenanceDashboardData {
     actualHoursCompleted: number;
     scheduleAdherencePct: number | null;
     scheduledCompletedCount: number;
+    completedWithoutSchedule: number;
   };
+  criticalLowStock: {
+    id: string;
+    name: string;
+    code: string | null;
+    stockQty: number;
+    minStock: number;
+    assets: { tag: string | null; criticality: string }[];
+  }[];
 }
 
 // ── Lubrificacao ─────────────────────────────────────────────────────────────

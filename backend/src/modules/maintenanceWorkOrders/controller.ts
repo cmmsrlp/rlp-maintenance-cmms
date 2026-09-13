@@ -1361,16 +1361,32 @@ export const getMaintenanceDashboard = asyncHandler(async (req: Request, res: Re
     list.push(w.completedAt!);
     byInstrument.set(w.instrumentId, list);
   }
+  // Criticidade de cada ativo com corretiva no periodo - MTBF por criticidade mostra onde
+  // investir primeiro (um MTBF baixo num ativo critico pesa muito mais que num de baixa
+  // criticidade, e o numero unico da empresa toda escondia essa diferenca).
+  const instrumentosComCorretiva = await prisma.instrument.findMany({
+    where: { id: { in: [...byInstrument.keys()] } },
+    select: { id: true, criticality: true },
+  });
+  const criticidadePorAtivo = new Map(instrumentosComCorretiva.map((i) => [i.id, i.criticality]));
+
   const gapsHours: number[] = [];
-  for (const dates of byInstrument.values()) {
+  const gapsPorCriticidade: Record<string, number[]> = { LOW: [], MEDIUM: [], HIGH: [], CRITICAL: [] };
+  for (const [instrumentId, dates] of byInstrument.entries()) {
     const sorted = dates.sort((a, b) => a.getTime() - b.getTime());
+    const criticidade = criticidadePorAtivo.get(instrumentId) ?? "MEDIUM";
     for (let i = 1; i < sorted.length; i++) {
-      gapsHours.push((sorted[i].getTime() - sorted[i - 1].getTime()) / 3600000);
+      const horas = (sorted[i].getTime() - sorted[i - 1].getTime()) / 3600000;
+      gapsHours.push(horas);
+      gapsPorCriticidade[criticidade].push(horas);
     }
   }
   // MTBF precisa de pelo menos duas falhas no mesmo ativo para existir um intervalo. Sem
   // isso e' null - zero significaria "quebra o tempo todo", o oposto do que se sabe.
   const mtbfHours = gapsHours.length ? gapsHours.reduce((a, b) => a + b, 0) / gapsHours.length : null;
+  const mtbfByCriticality = Object.fromEntries(
+    Object.entries(gapsPorCriticidade).map(([k, arr]) => [k, arr.length ? Number((arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1)) : null]),
+  ) as Record<"LOW" | "MEDIUM" | "HIGH" | "CRITICAL", number | null>;
 
   // Indisponibilidade: a janela da falha quando informada (o tempo que a producao ficou
   // parada de verdade), caindo para Iniciar->Concluir quando nao ha registro de falha.
@@ -1398,6 +1414,38 @@ export const getMaintenanceDashboard = asyncHandler(async (req: Request, res: Re
 
   const clientScopedWhere = { deletedAt: null, ...resolveClientScope(req, clientId), ...(instrumentId ? { instrumentId } : {}) };
 
+  // Peca abaixo do minimo que atende um ativo critico pesa muito mais que uma peca comum
+  // em falta - separado do alerta generico de estoque baixo (que trata toda peca igual)
+  // porque e' exatamente essa priorizacao que falta pro PCM decidir o que comprar primeiro.
+  const pecasVinculadasACriticos = await prisma.sparePart.findMany({
+    where: {
+      deletedAt: null,
+      active: true,
+      ...resolveClientScope(req, clientId),
+      assetLinks: { some: { instrument: { deletedAt: null, criticality: { in: ["HIGH", "CRITICAL"] } } } },
+    },
+    select: {
+      id: true, name: true, code: true, stockQty: true, minStock: true,
+      assetLinks: {
+        where: { instrument: { criticality: { in: ["HIGH", "CRITICAL"] } } },
+        select: { instrument: { select: { tag: true, criticality: true } } },
+        take: 3,
+      },
+    },
+  });
+  const criticalLowStock = pecasVinculadasACriticos
+    .filter((p) => p.stockQty <= p.minStock)
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      code: p.code,
+      stockQty: p.stockQty,
+      minStock: p.minStock,
+      assets: p.assetLinks.map((l) => ({ tag: l.instrument.tag, criticality: l.instrument.criticality })),
+    }))
+    .sort((a, b) => a.stockQty - b.stockQty)
+    .slice(0, 10);
+
   const openOrders = await prisma.maintenanceWorkOrder.findMany({
     where: { ...clientScopedWhere, status: { notIn: ["COMPLETED", "CANCELED"] } },
     select: { id: true, status: true, priority: true, scheduledDate: true, estimatedHours: true },
@@ -1423,6 +1471,9 @@ export const getMaintenanceDashboard = asyncHandler(async (req: Request, res: Re
   const scheduledCompleted = completedInPeriod.filter((w) => w.scheduledDate);
   const onSchedule = scheduledCompleted.filter((w) => w.completedAt! <= w.scheduledDate! || sameDay(w.completedAt!, w.scheduledDate!)).length;
   const scheduleAdherenceRate = scheduledCompleted.length ? onSchedule / scheduledCompleted.length : null;
+  // Quando da null, a tela precisa dizer O QUE falta (nao so "dados insuficientes") - senao
+  // parece um bug em vez de "ninguem programou data nas OS antes de executar".
+  const completedWithoutSchedule = completedInPeriod.length - scheduledCompleted.length;
 
   res.json({
     period: { from: periodStart.toISOString(), to: periodEnd.toISOString() },
@@ -1457,6 +1508,7 @@ export const getMaintenanceDashboard = asyncHandler(async (req: Request, res: Re
       mtbfHours: mtbfHours == null ? null : Number(mtbfHours.toFixed(1)),
       availabilityPct: availability == null ? null : Number((availability * 100).toFixed(1)),
       planComplianceRatePct: complianceRate == null ? null : Number((complianceRate * 100).toFixed(1)),
+      mtbfByCriticality,
     },
     // PCM: estado atual da fila (nao filtrado pelo periodo escolhido acima).
     pcm: {
@@ -1473,7 +1525,12 @@ export const getMaintenanceDashboard = asyncHandler(async (req: Request, res: Re
       actualHoursCompleted: Number(actualHoursCompleted.toFixed(1)),
       scheduleAdherencePct: scheduleAdherenceRate != null ? Number((scheduleAdherenceRate * 100).toFixed(1)) : null,
       scheduledCompletedCount: scheduledCompleted.length,
+      completedWithoutSchedule,
     },
+    // Estoque abaixo do minimo que atende ativo de alta criticidade/critico - prioridade
+    // de compra diferente de um item comum em falta (mesma logica de risco do resto do
+    // painel, so' que aplicada ao almoxarifado).
+    criticalLowStock,
   });
 });
 

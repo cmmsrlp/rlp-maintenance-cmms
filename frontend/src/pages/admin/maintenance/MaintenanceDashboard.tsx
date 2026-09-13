@@ -322,12 +322,48 @@ export default function MaintenanceDashboard() {
             <MiniStat label="Emergenciais (criticas, em aberto)" value={data.pcm.emergency} tone={data.pcm.emergency > 0 ? "red" : "default"} />
             <MiniStat
               label="Aderencia a programacao"
-              value={data.pcm.scheduleAdherencePct != null ? `${data.pcm.scheduleAdherencePct}%` : "Dados insuficientes"}
-              hint={data.pcm.scheduleAdherencePct != null ? `${data.pcm.scheduledCompletedCount} OS programadas concluidas no periodo` : undefined}
+              value={data.pcm.scheduleAdherencePct != null ? `${data.pcm.scheduleAdherencePct}%` : "Sem dados"}
+              hint={
+                data.pcm.scheduleAdherencePct != null
+                  ? `${data.pcm.scheduledCompletedCount} OS programadas concluidas no periodo`
+                  : data.pcm.completedWithoutSchedule > 0
+                    ? `${data.pcm.completedWithoutSchedule} OS concluidas sem data programada - defina "Data programada" ao planejar a OS pra esse indicador funcionar`
+                    : "Nenhuma OS concluida no periodo"
+              }
             />
           </div>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+            <div className="card p-5">
+              <p className="text-sm font-semibold text-navy-900">MTBF por criticidade do ativo</p>
+              <div className="mt-2 h-[140px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    layout="vertical"
+                    data={[
+                      { criticidade: "Critica", horas: data.kpis.mtbfByCriticality.CRITICAL },
+                      { criticidade: "Alta", horas: data.kpis.mtbfByCriticality.HIGH },
+                      { criticidade: "Media", horas: data.kpis.mtbfByCriticality.MEDIUM },
+                      { criticidade: "Baixa", horas: data.kpis.mtbfByCriticality.LOW },
+                    ]}
+                    margin={{ top: 4, right: 24, bottom: 4, left: 0 }}
+                  >
+                    <CartesianGrid horizontal={false} stroke="#e5e7ea" />
+                    <XAxis type="number" hide />
+                    <YAxis type="category" dataKey="criticidade" width={50} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#5f6674" }} />
+                    <Tooltip formatter={(v: unknown) => [v == null ? "Sem dados" : `${v as number}h`, "MTBF"]} cursor={{ fill: "#f4f5f6" }} />
+                    <Bar dataKey="horas" radius={[0, 6, 6, 0]} barSize={16} isAnimationActive={false}>
+                      <Cell fill="#D93025" />
+                      <Cell fill="#F5B400" />
+                      <Cell fill="#335684" />
+                      <Cell fill="#adc2dd" />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <p className="mt-1 text-[11px] text-graphite-400">Um MTBF baixo num ativo critico pesa mais que o mesmo numero num ativo de baixa criticidade.</p>
+            </div>
+
             <div className="card p-5">
               <p className="text-sm font-semibold text-navy-900">Fila parada, por motivo</p>
               <div className="mt-2 h-[140px]">
@@ -370,6 +406,31 @@ export default function MaintenanceDashboard() {
               </div>
             </div>
           </div>
+
+          {data.criticalLowStock.length > 0 && (
+            <div className="mt-4 card border-safety-red/30 bg-red-50/40 p-5">
+              <p className="text-sm font-semibold text-navy-900">Pecas criticas em risco de estoque</p>
+              <p className="text-xs text-graphite-500">Abaixo do minimo e vinculadas a ativo de criticidade alta ou critica - prioridade de compra diferente de uma peca comum em falta.</p>
+              <ul className="mt-3 space-y-2">
+                {data.criticalLowStock.map((p) => (
+                  <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white px-3 py-2 text-sm">
+                    <div>
+                      <span className="font-medium text-navy-900">{p.name}</span>
+                      {p.code && <span className="ml-1.5 text-xs text-graphite-400">{p.code}</span>}
+                      {p.assets.length > 0 && (
+                        <span className="ml-2 text-xs text-graphite-500">
+                          atende {p.assets.map((a) => a.tag ?? "-").join(", ")}
+                        </span>
+                      )}
+                    </div>
+                    <span className="font-semibold text-safety-red">
+                      {p.stockQty} / min. {p.minStock}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Backlog aberto: o total sozinho nao diz onde esta a fila. Aqui da pra ver que
               a HH pendente esta concentrada numa area (ou num ativo) so. */}
