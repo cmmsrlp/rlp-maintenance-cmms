@@ -1006,6 +1006,12 @@ export interface MaintenanceDashboardData {
     predictiveAutoOpened: number;
     canceled: number;
   };
+  costs: {
+    total: number;
+    preventive: number;
+    corrective: number;
+    predictive: number;
+  };
   kpis: {
     /** null quando nao ha base de calculo - a tela mostra "sem dados", nunca zero. */
     mttrHours: number | null;

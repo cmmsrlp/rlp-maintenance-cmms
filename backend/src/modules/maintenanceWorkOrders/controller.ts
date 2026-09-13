@@ -1292,8 +1292,31 @@ export const getMaintenanceDashboard = asyncHandler(async (req: Request, res: Re
 
   const workOrders = await prisma.maintenanceWorkOrder.findMany({
     where,
-    select: { id: true, type: true, status: true, startedAt: true, completedAt: true, instrumentId: true, triggeredByMeterId: true, failureStartedAt: true, failureEndedAt: true, createdAt: true },
+    select: {
+      id: true, type: true, status: true, startedAt: true, completedAt: true, instrumentId: true, triggeredByMeterId: true, failureStartedAt: true, failureEndedAt: true, createdAt: true,
+      partsUsed: { select: { quantity: true, unitCost: true } },
+      laborEntries: { select: { hours: true, hourlyRateSnapshot: true } },
+      thirdPartyServices: { select: { cost: true } },
+    },
   });
+
+  // Custo de uma OS = pecas consumidas + mao de obra apontada (pela taxa vigente na hora,
+  // nao a atual) + servicos de terceiros - mesma formula usada no Pareto de falhas.
+  function custoDaOrdem(o: (typeof workOrders)[number]): number {
+    const pecas = o.partsUsed.reduce((s, p) => s + (p.unitCost ?? 0) * p.quantity, 0);
+    const maoDeObra = o.laborEntries.reduce((s, l) => s + (l.hourlyRateSnapshot ?? 0) * l.hours, 0);
+    const terceiros = o.thirdPartyServices.reduce((s, t) => s + t.cost, 0);
+    return pecas + maoDeObra + terceiros;
+  }
+  const custosPorTipo = { preventive: 0, corrective: 0, predictive: 0 };
+  let custoTotal = 0;
+  for (const w of workOrders) {
+    const c = custoDaOrdem(w);
+    custoTotal += c;
+    if (w.type === "PREVENTIVE") custosPorTipo.preventive += c;
+    else if (w.type === "CORRECTIVE") custosPorTipo.corrective += c;
+    else if (w.type === "PREDICTIVE") custosPorTipo.predictive += c;
+  }
   const canceledCount = await prisma.maintenanceWorkOrder.count({
     where: { ...periodScopedWhere, status: "CANCELED" },
   });
@@ -1420,6 +1443,14 @@ export const getMaintenanceDashboard = asyncHandler(async (req: Request, res: Re
       // Indicador separado, nao somado ao volume executado: quem quiser acompanhar
       // cancelamentos ve aqui, sem distorcer os totais de cima.
       canceled: canceledCount,
+    },
+    // Custo de pecas + mao de obra + terceiros das OS do periodo (canceladas ficam de fora,
+    // mesma logica dos totais acima - OS cancelada nao gastou nada de verdade).
+    costs: {
+      total: Number(custoTotal.toFixed(2)),
+      preventive: Number(custosPorTipo.preventive.toFixed(2)),
+      corrective: Number(custosPorTipo.corrective.toFixed(2)),
+      predictive: Number(custosPorTipo.predictive.toFixed(2)),
     },
     kpis: {
       mttrHours: mttrMinutes == null ? null : Number((mttrMinutes / 60).toFixed(1)),

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Wrench, Gauge, Activity, TimerReset, Download } from "lucide-react";
-import { PieChart, Pie, Cell, Tooltip } from "recharts";
+import { Wrench, Gauge, Activity, TimerReset, Download, Wallet } from "lucide-react";
+import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import { getMaintenanceDashboard, getMaintenanceBacklog } from "../../../api/maintenanceWorkOrders";
 import type { BacklogGroupBy } from "../../../api/types";
 import { EmptyState } from "../../../components/EmptyState";
@@ -12,7 +12,7 @@ import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import { MiniStat } from "../../../components/StatCard";
 import { RadialGauge } from "../../../components/RadialGauge";
 import { FullPageSpinner } from "../../../components/Spinner";
-import { formatKpi } from "../../../lib/format";
+import { formatKpi, formatCurrency } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 import { buildCsv, downloadCsv } from "../../../lib/csvExport";
 
@@ -203,12 +203,12 @@ export default function MaintenanceDashboard() {
               ideias: "de que tipo sao as OS do periodo" (a composicao, que se ve melhor num
               grafico) e "onde elas estao agora" (aberta/andamento/concluida, que e' fluxo,
               nao composicao - fica melhor como contagem simples). */}
-          <div className="mt-6 grid gap-4 lg:grid-cols-5">
-            <div className="card p-5 lg:col-span-3">
-              <p className="text-sm font-semibold text-navy-900">Composicao das OS no periodo</p>
-              <div className="mt-4 flex items-center gap-6">
+          <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            <div className="card p-5">
+              <p className="text-sm font-semibold text-navy-900">Composicao das OS</p>
+              <div className="mt-3 flex items-center gap-4">
                 <div className="relative shrink-0">
-                  <PieChart width={120} height={120}>
+                  <PieChart width={92} height={92}>
                     <Pie
                       data={[
                         { name: "Preventiva", value: data.totals.preventive, color: COR_TIPO_OS.preventive },
@@ -220,8 +220,8 @@ export default function MaintenanceDashboard() {
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      innerRadius={38}
-                      outerRadius={58}
+                      innerRadius={28}
+                      outerRadius={44}
                       stroke="none"
                       isAnimationActive={false}
                     >
@@ -232,11 +232,11 @@ export default function MaintenanceDashboard() {
                     <Tooltip formatter={(v: number, n: string) => [`${v} OS`, n]} />
                   </PieChart>
                   <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-xl font-extrabold text-navy-900">{data.totals.workOrders}</span>
-                    <span className="text-[10px] uppercase tracking-wide text-graphite-400">total</span>
+                    <span className="text-base font-extrabold text-navy-900">{data.totals.workOrders}</span>
+                    <span className="text-[9px] uppercase tracking-wide text-graphite-400">total</span>
                   </div>
                 </div>
-                <ul className="flex-1 space-y-2 text-sm">
+                <ul className="min-w-0 flex-1 space-y-1.5 text-xs">
                   <li className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-1.5 text-graphite-600">
                       <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: COR_TIPO_OS.preventive }} />
@@ -255,9 +255,6 @@ export default function MaintenanceDashboard() {
                     <span className="flex items-center gap-1.5 text-graphite-600">
                       <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: COR_TIPO_OS.predictive }} />
                       Preditiva
-                      {data.totals.predictiveAutoOpened > 0 && (
-                        <span className="text-xs text-graphite-400">({data.totals.predictiveAutoOpened} por medidor)</span>
-                      )}
                     </span>
                     <span className="font-semibold text-navy-900">{data.totals.predictive}</span>
                   </li>
@@ -270,9 +267,44 @@ export default function MaintenanceDashboard() {
                   </li>
                 </ul>
               </div>
+              {data.totals.predictiveAutoOpened > 0 && (
+                <p className="mt-2 text-[11px] text-graphite-400">{data.totals.predictiveAutoOpened} preditiva(s) aberta(s) sozinha(s) por medidor.</p>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:col-span-2 lg:grid-cols-1">
+            <div className="card p-5">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-navy-900">Custos no periodo</p>
+                <span className="flex items-center gap-1 rounded-lg bg-navy-50 px-2 py-1 text-xs font-bold text-navy-700">
+                  <Wallet className="h-3.5 w-3.5" /> {formatCurrency(data.costs.total)}
+                </span>
+              </div>
+              <div className="mt-2 h-[132px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    layout="vertical"
+                    data={[
+                      { tipo: "Preventiva", valor: data.costs.preventive, cor: COR_TIPO_OS.preventive },
+                      { tipo: "Corretiva", valor: data.costs.corrective, cor: COR_TIPO_OS.corrective },
+                      { tipo: "Preditiva", valor: data.costs.predictive, cor: COR_TIPO_OS.predictive },
+                    ]}
+                    margin={{ top: 4, right: 12, bottom: 4, left: 0 }}
+                  >
+                    <CartesianGrid horizontal={false} stroke="#e5e7ea" />
+                    <XAxis type="number" hide />
+                    <YAxis type="category" dataKey="tipo" width={70} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#5f6674" }} />
+                    <Tooltip formatter={(v: number) => formatCurrency(v)} cursor={{ fill: "#f4f5f6" }} />
+                    <Bar dataKey="valor" radius={[0, 6, 6, 0]} barSize={18} isAnimationActive={false}>
+                      {["Preventiva", "Corretiva", "Preditiva"].map((tipo, i) => (
+                        <Cell key={tipo} fill={[COR_TIPO_OS.preventive, COR_TIPO_OS.corrective, COR_TIPO_OS.predictive][i]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
               <MiniStat label="Ordens abertas" value={data.totals.open} />
               <MiniStat label="Em andamento" value={data.totals.inProgress} />
               <MiniStat label="Concluidas (periodo)" value={data.totals.completed} />
