@@ -177,7 +177,11 @@ Regras importantes:
 - Nao invente funcionalidades que o sistema nao tem. Se nao tiver certeza de algo especifico
   do produto, diga que nao tem certeza em vez de inventar.
 - Respostas curtas e objetivas (poucos paragrafos) - isto e' um chat de suporte, nao um
-  artigo.`;
+  artigo.
+- Responda em TEXTO SIMPLES, sem formatacao Markdown - a tela do chat mostra os simbolos
+  literalmente (**, #, - de lista, etc.) em vez de formatar. Nao use asteriscos, hashtags,
+  nem tracos de lista. Para listar itens, numere por extenso na propria frase ou use linhas
+  separadas comecando com o numero seguido de ponto (ex.: "1. Primeiro passo").`;
 
 /**
  * Chat de suporte do "Assistente RLP" (portal do cliente) - sem acesso a dados da conta,
