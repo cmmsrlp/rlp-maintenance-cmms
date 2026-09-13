@@ -8,12 +8,18 @@ const MENSAGEM_INICIAL: ChatMessage = {
   content: "Oi! Sou o Assistente RLP. Posso ajudar com duvidas sobre como usar o CMMS - ordens, planos preventivos, lubrificacao, almoxarifado e mais. O que voce precisa?",
 };
 
+interface AssistantWidgetProps {
+  /** Estado da barra lateral no desktop - o botao precisa desviar da largura dela (w-16
+   * recolhida, w-64 aberta), senao fica flutuando por cima do logo/menu em vez de do lado. */
+  sidebarCollapsed: boolean;
+}
+
 /**
  * Assistente tecnico virtual flutuante do portal do cliente - responde duvidas de uso do
  * sistema e conceitos de manutencao via IA. Nao tem acesso aos dados da conta (numeros,
  * ordens especificas): e' orientacao, nao consulta.
  */
-export function AssistantWidget() {
+export function AssistantWidget({ sidebarCollapsed }: AssistantWidgetProps) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([MENSAGEM_INICIAL]);
   const [input, setInput] = useState("");
@@ -46,15 +52,19 @@ export function AssistantWidget() {
     }
   }
 
+  // No celular o topo-esquerdo ja e' o botao de abrir o menu (hamburguer) - o assistente
+  // ali em cima tampava os dois, entao no mobile ele fica embaixo. No desktop, o topo-
+  // esquerdo do VIEWPORT e' onde fica o logo da RLP/do cliente na barra lateral - o botao
+  // "fixed" ignora o layout e flutua por cima de tudo, entao precisa desviar da largura da
+  // barra (recolhida ou aberta) para ficar do lado dela, nao em cima do logo.
+  const ladoDesktop = sidebarCollapsed ? "lg:left-20" : "lg:left-72";
+
   return (
     <>
-      {/* No celular o topo-esquerdo ja e' o botao de abrir o menu (hamburguer) - o
-          assistente ali em cima ficava exatamente por cima dele, tampando os dois. So no
-          desktop (lg+) o canto superior esquerdo esta livre de verdade. */}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="fixed bottom-4 left-4 z-40 flex items-center gap-2 rounded-full bg-navy-900 py-2 pl-2.5 pr-4 text-sm font-semibold text-white shadow-lg ring-2 ring-white transition-transform hover:scale-105 lg:bottom-auto lg:top-4"
+        className={`fixed bottom-4 left-4 z-40 flex items-center gap-2 rounded-full bg-navy-900 py-2 pl-2.5 pr-4 text-sm font-semibold text-white shadow-lg ring-2 ring-white transition-transform hover:scale-105 lg:bottom-auto lg:top-4 ${ladoDesktop}`}
         aria-label={open ? "Fechar Assistente RLP" : "Abrir Assistente RLP"}
       >
         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-lime text-navy-950">
@@ -64,7 +74,9 @@ export function AssistantWidget() {
       </button>
 
       {open && (
-        <div className="fixed bottom-20 left-4 z-40 flex h-[min(32rem,calc(100vh-8rem))] w-[22rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl lg:bottom-auto lg:top-16 lg:h-[min(32rem,calc(100vh-6rem))]">
+        <div
+          className={`fixed bottom-20 left-4 z-40 flex h-[min(32rem,calc(100vh-8rem))] w-[22rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl lg:bottom-auto lg:top-16 lg:h-[min(32rem,calc(100vh-6rem))] ${ladoDesktop}`}
+        >
           <div className="flex items-center justify-between bg-navy-900 px-4 py-3">
             <div className="flex items-center gap-2 text-white">
               <Bot className="h-4.5 w-4.5" />
