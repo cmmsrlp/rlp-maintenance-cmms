@@ -325,10 +325,50 @@ export default function MaintenanceDashboard() {
               value={data.pcm.scheduleAdherencePct != null ? `${data.pcm.scheduleAdherencePct}%` : "Dados insuficientes"}
               hint={data.pcm.scheduleAdherencePct != null ? `${data.pcm.scheduledCompletedCount} OS programadas concluidas no periodo` : undefined}
             />
-            <MiniStat label="Aguardando material" value={data.pcm.awaitingMaterial} />
-            <MiniStat label="Aguardando liberacao" value={data.pcm.awaitingRelease} />
-            <MiniStat label="Aguardando parada" value={data.pcm.awaitingStoppage} />
-            <MiniStat label="HH prevista x realizada (concluidas)" value={`${data.pcm.plannedHoursCompleted}h / ${data.pcm.actualHoursCompleted}h`} />
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <div className="card p-5">
+              <p className="text-sm font-semibold text-navy-900">Fila parada, por motivo</p>
+              <div className="mt-2 h-[140px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    layout="vertical"
+                    data={[
+                      { motivo: "Material", valor: data.pcm.awaitingMaterial },
+                      { motivo: "Liberacao", valor: data.pcm.awaitingRelease },
+                      { motivo: "Parada", valor: data.pcm.awaitingStoppage },
+                    ]}
+                    margin={{ top: 4, right: 16, bottom: 4, left: 0 }}
+                  >
+                    <CartesianGrid horizontal={false} stroke="#e5e7ea" />
+                    <XAxis type="number" allowDecimals={false} hide />
+                    <YAxis type="category" dataKey="motivo" width={70} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#5f6674" }} />
+                    <Tooltip formatter={(v: number) => [`${v} OS`, "Aguardando"]} cursor={{ fill: "#f4f5f6" }} />
+                    <Bar dataKey="valor" fill="#F5B400" radius={[0, 6, 6, 0]} barSize={18} isAnimationActive={false} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="card p-5">
+              <p className="text-sm font-semibold text-navy-900">HH prevista x realizada (concluidas)</p>
+              <div className="mt-2 h-[140px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={[{ periodo: "Periodo", prevista: data.pcm.plannedHoursCompleted, realizada: data.pcm.actualHoursCompleted }]}
+                    margin={{ top: 4, right: 8, bottom: 4, left: -20 }}
+                  >
+                    <CartesianGrid vertical={false} stroke="#e5e7ea" />
+                    <XAxis dataKey="periodo" hide />
+                    <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#5f6674" }} />
+                    <Tooltip formatter={(v: number, n: string) => [`${v}h`, n === "prevista" ? "Prevista" : "Realizada"]} cursor={{ fill: "#f4f5f6" }} />
+                    <Bar dataKey="prevista" name="prevista" fill="#adc2dd" radius={[6, 6, 0, 0]} barSize={40} isAnimationActive={false} />
+                    <Bar dataKey="realizada" name="realizada" fill="#335684" radius={[6, 6, 0, 0]} barSize={40} isAnimationActive={false} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
 
           {/* Backlog aberto: o total sozinho nao diz onde esta a fila. Aqui da pra ver que
@@ -355,6 +395,28 @@ export default function MaintenanceDashboard() {
               <EmptyState title="Nenhuma OS em aberto" description="Sem fila pendente, nao ha backlog a distribuir." />
             ) : (
               <>
+                <div className="card mb-4 p-5">
+                  <div style={{ height: Math.max(120, backlog.itens.slice(0, 6).length * 34) }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        layout="vertical"
+                        data={backlog.itens.slice(0, 6).map((i) => ({ nome: i.nome, horas: i.horas, atrasada: i.atrasadas > 0 }))}
+                        margin={{ top: 4, right: 24, bottom: 4, left: 0 }}
+                      >
+                        <CartesianGrid horizontal={false} stroke="#e5e7ea" />
+                        <XAxis type="number" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#5f6674" }} unit="h" />
+                        <YAxis type="category" dataKey="nome" width={110} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#5f6674" }} />
+                        <Tooltip formatter={(v: number) => [`${v}h`, "Backlog"]} cursor={{ fill: "#f4f5f6" }} />
+                        <Bar dataKey="horas" radius={[0, 6, 6, 0]} barSize={16} isAnimationActive={false}>
+                          {backlog.itens.slice(0, 6).map((i) => (
+                            <Cell key={i.id} fill={i.atrasadas > 0 ? "#D93025" : "#335684"} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
                 {backlog.totais.coberturaPct != null && backlog.totais.coberturaPct < 100 && (
                   <p className="mb-2 text-xs text-safety-yellow-dark">
                     {backlog.totais.semEstimativa} das {backlog.totais.ordens} OS em aberto estao sem HH prevista
