@@ -70,7 +70,6 @@ const PORTAL_NAV_SECTIONS: PortalNavSection[] = [
     items: [
       { to: "/portal/manutencao", label: "Painel do CMMS", icon: Wrench, requires: ["CMMS_MAINTENANCE"], exact: true },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/insights", label: "Insights", icon: Sparkles, requires: ["CMMS_MAINTENANCE"] },
-      { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/analise-laudos", label: "Analise de laudos", icon: FileSearch, requires: ["CMMS_MAINTENANCE"] },
       { to: "/portal", label: "Dashboard", icon: LayoutDashboard, semCmms: true },
     ],
   },
@@ -87,6 +86,7 @@ const PORTAL_NAV_SECTIONS: PortalNavSection[] = [
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/planejamento", label: "Planejamento", icon: ListChecks, requires: ["CMMS_MAINTENANCE"] },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/planos", label: "Planos preventivos", icon: ShieldCheck, requires: ["CMMS_MAINTENANCE"] },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/preditiva", label: "Preditiva", icon: Radar, requires: ["CMMS_MAINTENANCE"] },
+      { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/analise-laudos", label: "Analise de laudos", icon: FileSearch, requires: ["CMMS_MAINTENANCE"] },
     ],
   },
   {
