@@ -153,3 +153,67 @@ export async function analisarLaudo(bufferArquivo: Buffer, mimeType: string): Pr
 
   return { severity: bruto.severity as AnaliseDeLaudo["severity"], summary: bruto.summary };
 }
+
+export interface MensagemDoChat {
+  role: "user" | "assistant";
+  content: string;
+}
+
+const SYSTEM_PROMPT_ASSISTENTE = `Voce e' o "Assistente RLP", o assistente tecnico virtual do RLP Maintenance CMMS - um
+sistema de gestao de manutencao industrial (CMMS). Voce atende a equipe de manutencao dos
+clientes que usam o portal do sistema.
+
+Ajude com duvidas sobre como usar o sistema e sobre conceitos de manutencao industrial:
+ordens de manutencao, planos preventivos, programacao, planejamento, manutencao preditiva,
+lubrificacao (pontos, rotas, lubrificantes), almoxarifado/pecas, falhas e RCA (analise de
+causa raiz), MTBF/MTTR/disponibilidade, insights de IA e analise de laudos tecnicos
+(vibracao, oleo, termografia).
+
+Regras importantes:
+- Responda sempre em portugues do Brasil, de forma direta e pratica.
+- Voce NAO tem acesso aos dados ao vivo da conta do usuario (numeros, status, ordens
+  especificas) - se perguntarem algo assim, explique isso e oriente qual tela do sistema
+  mostra essa informacao.
+- Nao invente funcionalidades que o sistema nao tem. Se nao tiver certeza de algo especifico
+  do produto, diga que nao tem certeza em vez de inventar.
+- Respostas curtas e objetivas (poucos paragrafos) - isto e' um chat de suporte, nao um
+  artigo.`;
+
+/**
+ * Chat de suporte do "Assistente RLP" (portal do cliente) - sem acesso a dados da conta,
+ * so' orientacao sobre como usar o sistema e conceitos de manutencao. Sem GEMINI_API_KEY
+ * configurada, lanca erro (o usuario esta esperando uma resposta imediata da propria acao).
+ */
+export async function responderAssistente(mensagens: MensagemDoChat[]): Promise<string> {
+  if (!env.geminiApiKey) {
+    throw new Error("Assistente de IA nao configurado (GEMINI_API_KEY ausente).");
+  }
+
+  const contents = mensagens.map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: m.content }],
+  }));
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${env.geminiApiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT_ASSISTENTE }] },
+        contents,
+        generationConfig: { temperature: 0.3 },
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Falha ao responder (Gemini respondeu ${response.status}): ${await response.text()}`);
+  }
+
+  const data = (await response.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+  const texto = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!texto) throw new Error("O assistente nao retornou uma resposta.");
+
+  return texto;
+}

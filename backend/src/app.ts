@@ -39,6 +39,7 @@ import { rootCauseAnalysesRouter } from "./modules/rootCauseAnalyses/routes";
 import { plansRouter } from "./modules/plans/routes";
 import { insightsRouter } from "./modules/insights/routes";
 import { documentAnalysisRouter } from "./modules/documentAnalysis/routes";
+import { assistantRouter } from "./modules/assistant/routes";
 
 export function createApp() {
   const app = express();
@@ -113,6 +114,7 @@ export function createApp() {
   app.use("/api/plans", plansRouter);
   app.use("/api/insights", insightsRouter);
   app.use("/api/document-analyses", documentAnalysisRouter);
+  app.use("/api/assistant", assistantRouter);
 
   if (env.isProduction) {
     const frontendDist = path.resolve(__dirname, "../../frontend/dist");

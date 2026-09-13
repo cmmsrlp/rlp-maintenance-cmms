@@ -6,6 +6,7 @@ import { getOwnClient } from "../api/clients";
 import { useAuth } from "../auth/AuthContext";
 import { getPortalNav, PORTAL_NAV_PADRAO_FECHADO } from "./portalNav";
 import { CmmsLogo } from "../components/CmmsLogo";
+import { AssistantWidget } from "../components/AssistantWidget";
 import { clientDisplayName } from "../lib/format";
 
 const COLLAPSE_KEY = "optiprocess-portal-sidebar-collapsed";
@@ -163,6 +164,7 @@ export function ClientPortalLayout() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
+      <AssistantWidget />
       <aside className={`hidden shrink-0 bg-navy-950 transition-[width] duration-150 lg:block ${collapsed ? "w-16" : "w-64"}`}>
         <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
           <div className={`flex h-16 items-center ${collapsed ? "justify-center px-2" : "px-5"}`}>
