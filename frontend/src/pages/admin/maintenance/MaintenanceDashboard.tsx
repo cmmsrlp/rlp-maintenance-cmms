@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Wrench, Gauge, Activity, TimerReset, Download } from "lucide-react";
+import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { getMaintenanceDashboard, getMaintenanceBacklog } from "../../../api/maintenanceWorkOrders";
 import type { BacklogGroupBy } from "../../../api/types";
 import { EmptyState } from "../../../components/EmptyState";
@@ -8,11 +9,58 @@ import { PageHeader } from "../../../components/PageHeader";
 import { getClient, getOwnClient } from "../../../api/clients";
 import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 
-import { StatCard, MiniStat } from "../../../components/StatCard";
+import { MiniStat } from "../../../components/StatCard";
+import { RadialGauge } from "../../../components/RadialGauge";
 import { FullPageSpinner } from "../../../components/Spinner";
 import { formatKpi } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 import { buildCsv, downloadCsv } from "../../../lib/csvExport";
+
+/** Card de indicador do topo do painel - numero grande com icone, e um anel de progresso
+ * (RadialGauge) por cima para os que sao percentual (disponibilidade, cumprimento do
+ * plano). MTTR/MTBF nao tem uma escala de 0-100% natural, entao ficam so com o icone. */
+function KpiCard({
+  label,
+  value,
+  icon: Icon,
+  accent,
+  gaugePct,
+}: {
+  label: string;
+  value: string;
+  icon: React.ElementType;
+  accent: { bg: string; text: string; ring: string };
+  gaugePct?: number | null;
+}) {
+  return (
+    <div className="card flex items-center justify-between gap-4 p-5">
+      <div className="min-w-0">
+        <div className={`mb-3 inline-flex rounded-xl p-2.5 ${accent.bg} ${accent.text}`}>
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </div>
+        <p className="text-2xl font-extrabold tracking-tight text-navy-900">{value}</p>
+        <p className="mt-0.5 text-sm text-graphite-500">{label}</p>
+      </div>
+      {gaugePct !== undefined && (
+        <div className="relative shrink-0">
+          <RadialGauge value={gaugePct} color={accent.ring} size={56} />
+          {gaugePct != null && (
+            <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-navy-900">
+              {Math.round(gaugePct)}%
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const COR_TIPO_OS = {
+  preventive: "#0F9D58",
+  corrective: "#F5B400",
+  predictive: "#335684",
+  canceled: "#cbcfd5",
+} as const;
 
 /** Como o backlog aparece na tela para cada agrupamento. */
 const ROTULO_AGRUPAMENTO: Record<BacklogGroupBy, string> = {
@@ -123,25 +171,112 @@ export default function MaintenanceDashboard() {
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="MTTR (horas)" value={formatKpi(data.kpis.mttrHours)} icon={TimerReset} tone="navy" />
-            <StatCard label="MTBF (horas)" value={formatKpi(data.kpis.mtbfHours)} icon={Activity} tone="navy" />
-            <StatCard label="Disponibilidade" value={formatKpi(data.kpis.availabilityPct, "%")} icon={Gauge} tone="green" />
-            <StatCard label="Cumprimento do plano" value={formatKpi(data.kpis.planComplianceRatePct, "%")} icon={Wrench} tone="yellow" />
+            <KpiCard
+              label="MTTR (horas)"
+              value={formatKpi(data.kpis.mttrHours)}
+              icon={TimerReset}
+              accent={{ bg: "bg-navy-50", text: "text-navy-700", ring: "#335684" }}
+            />
+            <KpiCard
+              label="MTBF (horas)"
+              value={formatKpi(data.kpis.mtbfHours)}
+              icon={Activity}
+              accent={{ bg: "bg-navy-50", text: "text-navy-700", ring: "#335684" }}
+            />
+            <KpiCard
+              label="Disponibilidade"
+              value={formatKpi(data.kpis.availabilityPct, "%")}
+              icon={Gauge}
+              accent={{ bg: "bg-green-50", text: "text-safety-green-dark", ring: "#0F9D58" }}
+              gaugePct={data.kpis.availabilityPct}
+            />
+            <KpiCard
+              label="Cumprimento do plano"
+              value={formatKpi(data.kpis.planComplianceRatePct, "%")}
+              icon={Wrench}
+              accent={{ bg: "bg-amber-50", text: "text-safety-yellow-dark", ring: "#F5B400" }}
+              gaugePct={data.kpis.planComplianceRatePct}
+            />
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <MiniStat label="Ordens abertas" value={data.totals.open} />
-            <MiniStat label="Em andamento" value={data.totals.inProgress} />
-            <MiniStat label="Concluidas (periodo)" value={data.totals.completed} />
-            <MiniStat label="Preventivas (periodo)" value={data.totals.preventive} />
-            <MiniStat label="Corretivas (periodo)" value={data.totals.corrective} />
-            <MiniStat
-              label="Preditivas (periodo)"
-              value={data.totals.predictive}
-              hint={data.totals.predictive > 0 ? `${data.totals.predictiveAutoOpened} abertas sozinhas por medidor` : undefined}
-            />
-            <MiniStat label="Total de OS (periodo)" value={data.totals.workOrders} />
-            <MiniStat label="Canceladas (periodo)" value={data.totals.canceled} />
+          {/* Antes eram 8 caixinhas iguais competindo por atencao - separado agora em duas
+              ideias: "de que tipo sao as OS do periodo" (a composicao, que se ve melhor num
+              grafico) e "onde elas estao agora" (aberta/andamento/concluida, que e' fluxo,
+              nao composicao - fica melhor como contagem simples). */}
+          <div className="mt-6 grid gap-4 lg:grid-cols-5">
+            <div className="card p-5 lg:col-span-3">
+              <p className="text-sm font-semibold text-navy-900">Composicao das OS no periodo</p>
+              <div className="mt-4 flex items-center gap-6">
+                <div className="relative shrink-0">
+                  <PieChart width={120} height={120}>
+                    <Pie
+                      data={[
+                        { name: "Preventiva", value: data.totals.preventive, color: COR_TIPO_OS.preventive },
+                        { name: "Corretiva", value: data.totals.corrective, color: COR_TIPO_OS.corrective },
+                        { name: "Preditiva", value: data.totals.predictive, color: COR_TIPO_OS.predictive },
+                        { name: "Cancelada", value: data.totals.canceled, color: COR_TIPO_OS.canceled },
+                      ]}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={38}
+                      outerRadius={58}
+                      stroke="none"
+                      isAnimationActive={false}
+                    >
+                      {[COR_TIPO_OS.preventive, COR_TIPO_OS.corrective, COR_TIPO_OS.predictive, COR_TIPO_OS.canceled].map((cor) => (
+                        <Cell key={cor} fill={cor} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(v: number, n: string) => [`${v} OS`, n]} />
+                  </PieChart>
+                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-xl font-extrabold text-navy-900">{data.totals.workOrders}</span>
+                    <span className="text-[10px] uppercase tracking-wide text-graphite-400">total</span>
+                  </div>
+                </div>
+                <ul className="flex-1 space-y-2 text-sm">
+                  <li className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 text-graphite-600">
+                      <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: COR_TIPO_OS.preventive }} />
+                      Preventiva
+                    </span>
+                    <span className="font-semibold text-navy-900">{data.totals.preventive}</span>
+                  </li>
+                  <li className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 text-graphite-600">
+                      <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: COR_TIPO_OS.corrective }} />
+                      Corretiva
+                    </span>
+                    <span className="font-semibold text-navy-900">{data.totals.corrective}</span>
+                  </li>
+                  <li className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 text-graphite-600">
+                      <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: COR_TIPO_OS.predictive }} />
+                      Preditiva
+                      {data.totals.predictiveAutoOpened > 0 && (
+                        <span className="text-xs text-graphite-400">({data.totals.predictiveAutoOpened} por medidor)</span>
+                      )}
+                    </span>
+                    <span className="font-semibold text-navy-900">{data.totals.predictive}</span>
+                  </li>
+                  <li className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 text-graphite-600">
+                      <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: COR_TIPO_OS.canceled }} />
+                      Cancelada
+                    </span>
+                    <span className="font-semibold text-navy-900">{data.totals.canceled}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:col-span-2 lg:grid-cols-1">
+              <MiniStat label="Ordens abertas" value={data.totals.open} />
+              <MiniStat label="Em andamento" value={data.totals.inProgress} />
+              <MiniStat label="Concluidas (periodo)" value={data.totals.completed} />
+            </div>
           </div>
 
           <h2 className="mb-3 mt-8 font-semibold text-navy-900">PCM - planejamento e controle</h2>
