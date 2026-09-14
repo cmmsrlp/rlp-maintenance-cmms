@@ -7,6 +7,8 @@ import {
   ArrowRight,
   ArrowUp,
   ArrowLeft,
+  Check,
+  ClipboardList,
   Plus,
   Save,
   Trash2,
@@ -24,7 +26,7 @@ import {
 } from "../../../api/shutdownSchedules";
 import { listMaintenanceWorkOrders } from "../../../api/maintenanceWorkOrders";
 import { getInstrument } from "../../../api/instruments";
-import type { ShutdownScheduleStatus, ShutdownTask } from "../../../api/types";
+import type { MaintenanceWorkOrder, ShutdownScheduleStatus, ShutdownTask } from "../../../api/types";
 import { PageHeader } from "../../../components/PageHeader";
 import { FullPageSpinner } from "../../../components/Spinner";
 import { StatusBadge } from "../../../components/StatusBadge";
@@ -160,6 +162,29 @@ function flattenForSave(nodes: EditorTask[], parentKey: string | null, list: Tas
   }
 }
 
+function collectWorkOrderIds(nodes: EditorTask[], set: Set<string>) {
+  for (const node of nodes) {
+    if (node.workOrderId) set.add(node.workOrderId);
+    collectWorkOrderIds(node.children, set);
+  }
+}
+
+function tarefaDeOs(os: MaintenanceWorkOrder): EditorTask {
+  const base = novaTarefa();
+  const inicio = os.plannedStart ?? os.scheduledDate ?? base.startDate;
+  return {
+    ...base,
+    name: os.title || os.description,
+    instrumentId: os.instrumentId,
+    instrumentLabel: os.instrument ? (os.instrument.tag ?? os.instrument.description ?? os.instrument.type) : null,
+    workOrderId: os.id,
+    workOrderNumber: os.number,
+    workOrderStatus: os.status,
+    startDate: inicio.slice(0, 10),
+    endDate: (os.plannedEnd ?? inicio).slice(0, 10),
+  };
+}
+
 function flattenForGantt(nodes: EditorTask[], depth: number, list: { task: EditorTask; depth: number }[]) {
   for (const node of nodes) {
     list.push({ task: node, depth });
@@ -195,6 +220,7 @@ export default function ShutdownScheduleDetail() {
   const [assetModalKey, setAssetModalKey] = useState<string | null>(null);
   const [linkOsModalKey, setLinkOsModalKey] = useState<string | null>(null);
   const [generatingKey, setGeneratingKey] = useState<string | null>(null);
+  const [fromOsModalOpen, setFromOsModalOpen] = useState(false);
 
   useEffect(() => {
     if (schedule) {
@@ -210,6 +236,18 @@ export default function ShutdownScheduleDetail() {
     fn(clone);
     setTasks(clone);
     setDirty(true);
+  }
+
+  const usedWorkOrderIds = useMemo(() => {
+    const set = new Set<string>();
+    collectWorkOrderIds(tasks, set);
+    return set;
+  }, [tasks]);
+
+  function addTaskFromWorkOrder(os: MaintenanceWorkOrder) {
+    mutateTasks((clone) => {
+      clone.push(tarefaDeOs(os));
+    });
   }
 
   function updateField(key: string, patch: Partial<EditorTask>) {
@@ -413,11 +451,16 @@ export default function ShutdownScheduleDetail() {
         />
       </div>
 
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-semibold text-navy-900">Tarefas ({ganttFlat.length})</h2>
-        <button className="btn-outline btn-sm" onClick={() => addSiblingAfter(null)}>
-          <Plus className="h-4 w-4" /> Nova tarefa
-        </button>
+        <div className="flex gap-2">
+          <button className="btn-outline btn-sm" onClick={() => setFromOsModalOpen(true)}>
+            <ClipboardList className="h-4 w-4" /> Tarefa a partir de OS
+          </button>
+          <button className="btn-outline btn-sm" onClick={() => addSiblingAfter(null)}>
+            <Plus className="h-4 w-4" /> Nova tarefa
+          </button>
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -510,6 +553,15 @@ export default function ShutdownScheduleDetail() {
               setLinkOsModalKey(null);
             }
           }}
+        />
+      )}
+
+      {fromOsModalOpen && (
+        <PickWorkOrdersModal
+          clientId={schedule.clientId}
+          usedIds={usedWorkOrderIds}
+          onClose={() => setFromOsModalOpen(false)}
+          onPick={addTaskFromWorkOrder}
         />
       )}
 
@@ -737,6 +789,78 @@ function LinkWorkOrderModal({
             ))}
           </ul>
         )}
+      </div>
+    </Modal>
+  );
+}
+
+/**
+ * "Cada OS e' uma tarefa": em vez de criar uma tarefa em branco e depois vincular a OS,
+ * aqui a pessoa escolhe direto entre as OS ja existentes - cada uma clicada vira uma nova
+ * tarefa, ja com nome, ativo e janela de data puxados da propria OS. O modal fica aberto
+ * entre um clique e outro para escolher varias de uma vez; as ja adicionadas ficam
+ * marcadas, pra nao duplicar a mesma OS em duas tarefas sem querer.
+ */
+function PickWorkOrdersModal({
+  clientId,
+  usedIds,
+  onClose,
+  onPick,
+}: {
+  clientId: string;
+  usedIds: Set<string>;
+  onClose: () => void;
+  onPick: (os: MaintenanceWorkOrder) => void;
+}) {
+  const [search, setSearch] = useState("");
+  const { data, isFetching } = useQuery({
+    queryKey: ["work-orders-from-os-picker", clientId, search],
+    queryFn: () => listMaintenanceWorkOrders({ clientId, search: search || undefined, pageSize: 20 }),
+  });
+
+  return (
+    <Modal open onClose={onClose} title="Adicionar tarefas a partir de OS" size="md">
+      <p className="mb-3 text-xs text-graphite-500">Clique numa OS para cria-la como tarefa. Pode escolher varias antes de fechar.</p>
+      <TextInput placeholder="Buscar por numero ou descricao" value={search} onChange={(e) => setSearch(e.target.value)} />
+      <div className="mt-3 max-h-96 overflow-y-auto rounded-lg border border-gray-200">
+        {isFetching ? (
+          <p className="px-3 py-3 text-sm text-graphite-500">Buscando...</p>
+        ) : (data?.items.length ?? 0) === 0 ? (
+          <p className="px-3 py-3 text-sm text-graphite-500">Nenhuma OS encontrada.</p>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {data!.items.map((os) => {
+              const usada = usedIds.has(os.id);
+              return (
+                <li key={os.id}>
+                  <button
+                    type="button"
+                    disabled={usada}
+                    className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    onClick={() => onPick(os)}
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-navy-900">OS {os.number}</span>
+                      <span className="block truncate text-xs text-graphite-400">
+                        {(os.title || os.description)} {os.instrument ? `- ${os.instrument.tag ?? os.instrument.description}` : ""}
+                      </span>
+                    </span>
+                    {usada ? (
+                      <span className="flex items-center gap-1 text-xs font-medium text-safety-green-dark">
+                        <Check className="h-4 w-4" /> Adicionada
+                      </span>
+                    ) : (
+                      <StatusBadge status={os.status} />
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+      <div className="mt-4 flex justify-end">
+        <button className="btn-primary" onClick={onClose}>Concluir</button>
       </div>
     </Modal>
   );
