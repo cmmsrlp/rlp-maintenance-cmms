@@ -1,6 +1,8 @@
-import type { InventoryMovementType } from "@prisma/client";
+import type { InventoryMovementType, Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 import { NotFoundError, ValidationError } from "../utils/errors";
+
+type Db = Prisma.TransactionClient | typeof prisma;
 
 interface SparePartMovementInput {
   sparePartId: string;
@@ -51,8 +53,16 @@ interface ReserveSparePartInput {
   createdById?: string;
 }
 
-export async function reserveSparePart(input: ReserveSparePartInput) {
-  const sparePart = await prisma.sparePart.findFirst({ where: { id: input.sparePartId, deletedAt: null } });
+/**
+ * `tx` opcional: quando chamada de dentro de outra transacao (geracao de OS a partir de um
+ * plano, que cria a ordem, atualiza o plano e reserva varias pecas de uma vez - nenhum desses
+ * passos podia falhar sozinho e deixar os outros feitos), passa o mesmo client da transacao
+ * de fora em vez de abrir uma transacao aninhada (Prisma nao suporta). Sem `tx`, continua
+ * atomica sozinha, do jeito que ja funcionava para quem chama isolado (ex.: reserva manual).
+ */
+export async function reserveSparePart(input: ReserveSparePartInput, tx?: Db) {
+  const db = tx ?? prisma;
+  const sparePart = await db.sparePart.findFirst({ where: { id: input.sparePartId, deletedAt: null } });
   if (!sparePart) throw new NotFoundError("Peca do almoxarifado");
 
   const available = sparePart.stockQty - sparePart.reservedQty;
@@ -60,6 +70,12 @@ export async function reserveSparePart(input: ReserveSparePartInput) {
     throw new ValidationError(
       `Saldo disponivel insuficiente para reservar (${available} un. disponiveis - ${sparePart.stockQty} em estoque, ${sparePart.reservedQty} ja reservado).`,
     );
+  }
+
+  if (tx) {
+    const reservation = await tx.sparePartReservation.create({ data: { ...input } });
+    await tx.sparePart.update({ where: { id: sparePart.id }, data: { reservedQty: { increment: input.quantity } } });
+    return reservation;
   }
 
   const [reservation] = await prisma.$transaction([

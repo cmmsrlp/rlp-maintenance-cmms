@@ -616,6 +616,9 @@ async function criarOsDoPlano(planId: string, opcoes: { userId?: string; automat
   if (!plan.instrumentId) {
     throw new ValidationError("Este plano ainda nao tem um ativo vinculado. Edite o plano e escolha um ativo antes de gerar a OS.");
   }
+  // Var local narrowed pro TS: dentro do callback da transacao (uma funcao aninhada), o
+  // TypeScript nao mantem a narrowing de "plan.instrumentId" feita pelo if acima.
+  const instrumentId = plan.instrumentId;
 
   // Uma OS aberta por vez. Sem isso, a rodada automatica criaria uma OS a cada passada e o
   // botao "Gerar OS" clicado duas vezes faria o mesmo - so que a segunda ja pertenceria ao
@@ -643,193 +646,203 @@ async function criarOsDoPlano(planId: string, opcoes: { userId?: string; automat
     }
   }
 
-  /**
-   * Material antes de criar a OS: a politica do plano pode ate impedir a geracao, entao
-   * a disponibilidade e' checada aqui. Para cada item previsto tenta o principal e, se
-   * faltar, o substituto - e guarda o motivo quando nenhum dos dois da.
-   */
-  const planoDeMaterial: {
-    partId: string;
-    sparePartId: string;
-    quantity: number;
-    required: boolean;
-    reason: string | null;
-  }[] = [];
-
-  for (const part of plan.parts) {
-    const candidatos = [part.sparePartId, part.alternativeSparePartId].filter(Boolean) as string[];
-    let escolhido: string | null = null;
-    let motivo: string | null = null;
-
-    for (const id of candidatos) {
-      const peca = await prisma.sparePart.findFirst({
-        where: { id, deletedAt: null },
-        select: { id: true, name: true, stockQty: true, reservedQty: true, active: true },
-      });
-      if (!peca) {
-        motivo = "Peca nao encontrada no almoxarifado.";
-        continue;
-      }
-      if (!peca.active) {
-        motivo = `Peca "${peca.name}" esta inativa.`;
-        continue;
-      }
-      const disponivel = peca.stockQty - peca.reservedQty;
-      if (disponivel < part.quantity) {
-        motivo = `Saldo insuficiente de "${peca.name}": precisa de ${part.quantity}, disponivel ${disponivel}.`;
-        continue;
-      }
-      escolhido = peca.id;
-      motivo = id === part.alternativeSparePartId ? "Reservado o substituto - o principal estava sem saldo." : null;
-      break;
-    }
-
-    planoDeMaterial.push({
-      partId: part.id,
-      sparePartId: escolhido ?? part.sparePartId,
-      quantity: part.quantity,
-      required: part.required,
-      reason: escolhido ? motivo : (motivo ?? "Sem saldo disponivel."),
-    });
-    if (!escolhido) planoDeMaterial[planoDeMaterial.length - 1].sparePartId = part.sparePartId;
-  }
-
-  const faltamObrigatorios = planoDeMaterial.filter(
-    (m) => m.required && m.reason != null && !m.reason.startsWith("Reservado o substituto"),
-  );
-
-  // "Nao gerar" e' a unica politica que recusa - e diz exatamente o que falta, em vez de
-  // falhar em silencio.
-  if (plan.materialPolicy === "DO_NOT_GENERATE" && faltamObrigatorios.length > 0) {
-    throw new ValidationError(
-      `OS nao gerada por falta de material obrigatorio: ${faltamObrigatorios.map((m) => m.reason).join(" ")}`,
-    );
-  }
-
   const number = await nextClientMaintenanceOrderNumber(plan.clientId);
 
-  // Falta material obrigatorio e a politica manda segurar? A OS ja nasce em "Aguardando
-  // material", em vez de entrar na fila como se estivesse pronta para executar.
-  const statusInicial =
-    plan.materialPolicy === "BLOCK_AWAITING_MATERIAL" && faltamObrigatorios.length > 0
-      ? "AWAITING_MATERIAL"
-      : plan.initialWorkOrderStatus;
+  // Da checagem de material ate a ultima reserva, tudo numa transacao so': antes eram varias
+  // idas ao banco soltas (criar a OS, atualizar o plano, reservar cada peca uma a uma) - uma
+  // falha no meio do caminho podia deixar a OS criada sem o plano atualizado, ou so' metade
+  // das pecas reservadas, sem chance de repetir com seguranca (recomendacao da reavaliacao:
+  // "tratar a geracao de OS como operacao idempotente").
+  return prisma.$transaction(async (tx) => {
+    /**
+     * Material antes de criar a OS: a politica do plano pode ate impedir a geracao, entao
+     * a disponibilidade e' checada aqui. Para cada item previsto tenta o principal e, se
+     * faltar, o substituto - e guarda o motivo quando nenhum dos dois da.
+     */
+    const planoDeMaterial: {
+      partId: string;
+      sparePartId: string;
+      quantity: number;
+      required: boolean;
+      reason: string | null;
+    }[] = [];
 
-  const observacoesDeGeracao = [
-    plan.requiresShutdown
-      ? `Requer parada de maquina${plan.estimatedShutdownHours ? ` (~${plan.estimatedShutdownHours}h)` : ""}.`
-      : null,
-    plan.requiresOperationalRelease ? "Requer liberacao operacional." : null,
-    plan.requiresLoto ? "Requer bloqueio/LOTO ou permissao de trabalho." : null,
-    plan.requiresApproval ? "Requer aprovacao antes da execucao." : null,
-    faltamObrigatorios.length > 0 ? `Material pendente: ${faltamObrigatorios.map((m) => m.reason).join(" ")}` : null,
-  ]
-    .filter(Boolean)
-    .join(" ");
+    for (const part of plan.parts) {
+      const candidatos = [part.sparePartId, part.alternativeSparePartId].filter(Boolean) as string[];
+      let escolhido: string | null = null;
+      let motivo: string | null = null;
 
-  const workOrder = await prisma.maintenanceWorkOrder.create({
-    data: {
-      number,
-      clientId: plan.clientId,
-      instrumentId: plan.instrumentId,
-      planId: plan.id,
-      type: "PREVENTIVE",
-      status: statusInicial,
-      priority: plan.defaultPriority,
-      title: plan.name,
-      description: plan.instructions?.trim() || plan.name,
-      // Rateio: cai no centro de custo do ativo, como qualquer outra OS dele.
-      costCenterId: plan.instrument?.costCenterId ?? null,
-      technicianId: plan.responsibleId,
-      // Data programada sugerida: o vencimento do ciclo que esta sendo atendido.
-      scheduledDate: plan.nextDueDate,
-      meterReadingAtExecution: plan.meter?.currentValue,
-      // Estimativa do plano e' previsao, nao apontamento: laborHours guarda o que foi de
-      // fato trabalhado e nasce vazio (antes ele ja vinha preenchido com a estimativa, o
-      // que dava a OS por executada antes de alguem encostar nela).
-      estimatedHours: plan.estimatedLaborHours,
-      observations: observacoesDeGeracao || null,
-      createdById: opcoes.userId,
-      // O item da OS leva a regra junto (tipo de resposta, faixa, foto): se o plano for
-      // editado depois, a OS ja executada continua contando a historia que valia na epoca.
-      checklist: {
-        create: plan.checklistTemplate.map((c, i) => ({
-          description: c.description,
-          sortOrder: i,
-          section: c.section,
-          required: c.required,
-          responseType: c.responseType,
-          unit: c.unit,
-          minValue: c.minValue,
-          maxValue: c.maxValue,
-          targetValue: c.targetValue,
-          requiresPhoto: c.requiresPhoto,
-          estimatedMinutes: c.estimatedMinutes,
-          reference: c.reference,
-        })),
-      },
-    },
-  });
-
-  await prisma.maintenancePlan.update({
-    where: { id: plan.id },
-    data: {
-      lastGeneratedAt: new Date(),
-      lastMeterAtGeneration: plan.meter?.currentValue,
-      // O proximo ciclo conta a partir do vencimento que acabou de ser atendido (nao de
-      // hoje): plano atrasado nao empurra o calendario inteiro para frente.
-      baseDate: plan.nextDueDate ?? new Date(),
-      nextDueDate:
-        plan.triggerType === "TIME" && plan.frequencyEvery
-          ? computeNextDue(plan.nextDueDate ?? new Date(), scheduleConfigOf(plan))
-          : plan.nextDueDate,
-    },
-  });
-
-  // Reserva conforme a politica do plano. ALERT_ONLY gera sem reservar; as demais tentam
-  // reservar. Em todos os casos fica registrado o que foi (ou nao foi) reservado e por que -
-  // o planejador nao descobre a falta so na hora da execucao.
-  const reservaAtiva = plan.materialPolicy !== "ALERT_ONLY";
-  for (const item of planoDeMaterial) {
-    let reservou = false;
-    let motivo = item.reason;
-
-    if (reservaAtiva && (motivo == null || motivo.startsWith("Reservado o substituto"))) {
-      try {
-        await reserveSparePart({
-          sparePartId: item.sparePartId,
-          workOrderId: workOrder.id,
-          quantity: item.quantity,
-          createdById: opcoes.userId,
+      for (const id of candidatos) {
+        const peca = await tx.sparePart.findFirst({
+          where: { id, deletedAt: null },
+          select: { id: true, name: true, stockQty: true, reservedQty: true, active: true },
         });
-        reservou = true;
-      } catch (erro) {
-        motivo = erro instanceof Error ? erro.message : "Falha ao reservar.";
+        if (!peca) {
+          motivo = "Peca nao encontrada no almoxarifado.";
+          continue;
+        }
+        if (!peca.active) {
+          motivo = `Peca "${peca.name}" esta inativa.`;
+          continue;
+        }
+        const disponivel = peca.stockQty - peca.reservedQty;
+        if (disponivel < part.quantity) {
+          motivo = `Saldo insuficiente de "${peca.name}": precisa de ${part.quantity}, disponivel ${disponivel}.`;
+          continue;
+        }
+        escolhido = peca.id;
+        motivo = id === part.alternativeSparePartId ? "Reservado o substituto - o principal estava sem saldo." : null;
+        break;
       }
-    } else if (!reservaAtiva) {
-      motivo = "Politica do plano: gerar sem reservar, com alerta.";
+
+      planoDeMaterial.push({
+        partId: part.id,
+        sparePartId: escolhido ?? part.sparePartId,
+        quantity: part.quantity,
+        required: part.required,
+        reason: escolhido ? motivo : (motivo ?? "Sem saldo disponivel."),
+      });
+      if (!escolhido) planoDeMaterial[planoDeMaterial.length - 1].sparePartId = part.sparePartId;
     }
 
-    await prisma.workOrderMaterialLog.create({
+    const faltamObrigatorios = planoDeMaterial.filter(
+      (m) => m.required && m.reason != null && !m.reason.startsWith("Reservado o substituto"),
+    );
+
+    // "Nao gerar" e' a unica politica que recusa - e diz exatamente o que falta, em vez de
+    // falhar em silencio.
+    if (plan.materialPolicy === "DO_NOT_GENERATE" && faltamObrigatorios.length > 0) {
+      throw new ValidationError(
+        `OS nao gerada por falta de material obrigatorio: ${faltamObrigatorios.map((m) => m.reason).join(" ")}`,
+      );
+    }
+
+    // Falta material obrigatorio e a politica manda segurar? A OS ja nasce em "Aguardando
+    // material", em vez de entrar na fila como se estivesse pronta para executar.
+    const statusInicial =
+      plan.materialPolicy === "BLOCK_AWAITING_MATERIAL" && faltamObrigatorios.length > 0
+        ? "AWAITING_MATERIAL"
+        : plan.initialWorkOrderStatus;
+
+    const observacoesDeGeracao = [
+      plan.requiresShutdown
+        ? `Requer parada de maquina${plan.estimatedShutdownHours ? ` (~${plan.estimatedShutdownHours}h)` : ""}.`
+        : null,
+      plan.requiresOperationalRelease ? "Requer liberacao operacional." : null,
+      plan.requiresLoto ? "Requer bloqueio/LOTO ou permissao de trabalho." : null,
+      plan.requiresApproval ? "Requer aprovacao antes da execucao." : null,
+      faltamObrigatorios.length > 0 ? `Material pendente: ${faltamObrigatorios.map((m) => m.reason).join(" ")}` : null,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    const workOrder = await tx.maintenanceWorkOrder.create({
       data: {
-        workOrderId: workOrder.id,
-        sparePartId: item.sparePartId,
-        quantityNeeded: item.quantity,
-        reserved: reservou,
-        reason: reservou && !motivo ? null : motivo,
+        number,
+        clientId: plan.clientId,
+        instrumentId,
+        planId: plan.id,
+        type: "PREVENTIVE",
+        status: statusInicial,
+        priority: plan.defaultPriority,
+        title: plan.name,
+        description: plan.instructions?.trim() || plan.name,
+        // Rateio: cai no centro de custo do ativo, como qualquer outra OS dele.
+        costCenterId: plan.instrument?.costCenterId ?? null,
+        technicianId: plan.responsibleId,
+        // Data programada sugerida: o vencimento do ciclo que esta sendo atendido.
+        scheduledDate: plan.nextDueDate,
+        meterReadingAtExecution: plan.meter?.currentValue,
+        // Estimativa do plano e' previsao, nao apontamento: laborHours guarda o que foi de
+        // fato trabalhado e nasce vazio (antes ele ja vinha preenchido com a estimativa, o
+        // que dava a OS por executada antes de alguem encostar nela).
+        estimatedHours: plan.estimatedLaborHours,
+        observations: observacoesDeGeracao || null,
+        createdById: opcoes.userId,
+        // O item da OS leva a regra junto (tipo de resposta, faixa, foto): se o plano for
+        // editado depois, a OS ja executada continua contando a historia que valia na epoca.
+        checklist: {
+          create: plan.checklistTemplate.map((c, i) => ({
+            description: c.description,
+            sortOrder: i,
+            section: c.section,
+            required: c.required,
+            responseType: c.responseType,
+            unit: c.unit,
+            minValue: c.minValue,
+            maxValue: c.maxValue,
+            targetValue: c.targetValue,
+            requiresPhoto: c.requiresPhoto,
+            estimatedMinutes: c.estimatedMinutes,
+            reference: c.reference,
+          })),
+        },
       },
     });
-  }
 
-  await writeAuditLog({
-    userId: opcoes.userId,
-    action: "CREATE",
-    entityType: "MaintenanceWorkOrder",
-    entityId: workOrder.id,
-    description: `OS ${workOrder.number} gerada a partir do plano "${plan.name}"`,
+    await tx.maintenancePlan.update({
+      where: { id: plan.id },
+      data: {
+        lastGeneratedAt: new Date(),
+        lastMeterAtGeneration: plan.meter?.currentValue,
+        // O proximo ciclo conta a partir do vencimento que acabou de ser atendido (nao de
+        // hoje): plano atrasado nao empurra o calendario inteiro para frente.
+        baseDate: plan.nextDueDate ?? new Date(),
+        nextDueDate:
+          plan.triggerType === "TIME" && plan.frequencyEvery
+            ? computeNextDue(plan.nextDueDate ?? new Date(), scheduleConfigOf(plan))
+            : plan.nextDueDate,
+      },
+    });
+
+    // Reserva conforme a politica do plano. ALERT_ONLY gera sem reservar; as demais tentam
+    // reservar. Em todos os casos fica registrado o que foi (ou nao foi) reservado e por que -
+    // o planejador nao descobre a falta so na hora da execucao.
+    const reservaAtiva = plan.materialPolicy !== "ALERT_ONLY";
+    for (const item of planoDeMaterial) {
+      let reservou = false;
+      let motivo = item.reason;
+
+      if (reservaAtiva && (motivo == null || motivo.startsWith("Reservado o substituto"))) {
+        try {
+          await reserveSparePart(
+            {
+              sparePartId: item.sparePartId,
+              workOrderId: workOrder.id,
+              quantity: item.quantity,
+              createdById: opcoes.userId,
+            },
+            tx,
+          );
+          reservou = true;
+        } catch (erro) {
+          motivo = erro instanceof Error ? erro.message : "Falha ao reservar.";
+        }
+      } else if (!reservaAtiva) {
+        motivo = "Politica do plano: gerar sem reservar, com alerta.";
+      }
+
+      await tx.workOrderMaterialLog.create({
+        data: {
+          workOrderId: workOrder.id,
+          sparePartId: item.sparePartId,
+          quantityNeeded: item.quantity,
+          reserved: reservou,
+          reason: reservou && !motivo ? null : motivo,
+        },
+      });
+    }
+
+    await writeAuditLog({
+      userId: opcoes.userId,
+      action: "CREATE",
+      entityType: "MaintenanceWorkOrder",
+      entityId: workOrder.id,
+      description: `OS ${workOrder.number} gerada a partir do plano "${plan.name}"`,
+    });
+
+    return workOrder;
   });
-
-  return workOrder;
 }
 
 
