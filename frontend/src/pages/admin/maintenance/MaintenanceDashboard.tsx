@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Wrench, Gauge, Activity, TimerReset, Download, Wallet } from "lucide-react";
-import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LabelList } from "recharts";
 import { getMaintenanceDashboard, getMaintenanceBacklog } from "../../../api/maintenanceWorkOrders";
 import type { BacklogGroupBy } from "../../../api/types";
 import { EmptyState } from "../../../components/EmptyState";
@@ -308,16 +308,22 @@ export default function MaintenanceDashboard() {
                       { tipo: "Corretiva", valor: data.costs.corrective, cor: COR_TIPO_OS.corrective },
                       { tipo: "Preditiva", valor: data.costs.predictive, cor: COR_TIPO_OS.predictive },
                     ]}
-                    margin={{ top: 4, right: 12, bottom: 4, left: 0 }}
+                    margin={{ top: 4, right: 56, bottom: 4, left: 0 }}
                   >
                     <CartesianGrid horizontal={false} stroke="#e5e7ea" />
-                    <XAxis type="number" hide />
+                    <XAxis type="number" hide domain={[0, (max: number) => (max > 0 ? max * 1.25 : 1)]} />
                     <YAxis type="category" dataKey="tipo" width={70} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#5f6674" }} />
                     <Tooltip formatter={(v: number) => formatCurrency(v)} cursor={{ fill: "#f4f5f6" }} />
                     <Bar dataKey="valor" radius={[0, 6, 6, 0]} barSize={18} isAnimationActive={false}>
                       {["Preventiva", "Corretiva", "Preditiva"].map((tipo, i) => (
                         <Cell key={tipo} fill={[COR_TIPO_OS.preventive, COR_TIPO_OS.corrective, COR_TIPO_OS.predictive][i]} />
                       ))}
+                      <LabelList
+                        dataKey="valor"
+                        position="right"
+                        formatter={(v: number) => formatCurrency(v)}
+                        style={{ fill: "#22252b", fontSize: 11, fontWeight: 600 }}
+                      />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
