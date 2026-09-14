@@ -45,7 +45,7 @@ function AtivosPorCliente() {
         actions={
           <>
             <button className="btn-outline" onClick={() => navigate("/gestao/ativos/cadastros")}>
-              <Tags className="h-4 w-4" /> Cadastros tecnicos
+              <Tags className="h-4 w-4" /> Cadastros técnicos
             </button>
             <button className="btn-primary" onClick={() => setCreateOpen(true)}>
               <Plus className="h-4 w-4" /> Novo ativo
@@ -77,7 +77,7 @@ function AtivosPorCliente() {
         pagination={data}
         onPageChange={setPage}
         emptyTitle="Nenhum cliente cadastrado"
-        emptyDescription="Cadastre um cliente para comecar a montar o parque de ativos dele."
+        emptyDescription="Cadastre um cliente para começar a montar o parque de ativos dele."
         columns={[
           {
             header: "Cliente",
@@ -155,15 +155,15 @@ function AtivosDoCliente({ clientId }: { clientId: string }) {
     <div>
       <PageHeader
         title={client ? clientDisplayName(client) : "Ativos"}
-        description="Arvore de manutencao do parque deste cliente"
+        description="Árvore de manutenção do parque deste cliente"
         breadcrumbs={[{ label: "Ativos", to: "/gestao/ativos" }, { label: client ? clientDisplayName(client) : "..." }]}
         actions={
           <>
             <button className="btn-outline" onClick={() => navigate(`/gestao/manutencao/arvore?clientId=${clientId}`)}>
-              <GitBranch className="h-4 w-4" /> Ver arvore
+              <GitBranch className="h-4 w-4" /> Ver árvore
             </button>
             <button className="btn-outline" onClick={() => navigate("/gestao/ativos/cadastros")}>
-              <Tags className="h-4 w-4" /> Cadastros tecnicos
+              <Tags className="h-4 w-4" /> Cadastros técnicos
             </button>
             {canManage && (
               <button className="btn-primary" onClick={() => setCreateOpen(true)}>
@@ -179,7 +179,7 @@ function AtivosDoCliente({ clientId }: { clientId: string }) {
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-graphite-400" />
           <input
             className="input pl-9"
-            placeholder="Buscar por tag, modelo, numero de serie..."
+            placeholder="Buscar por tag, modelo, número de série..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -189,25 +189,25 @@ function AtivosDoCliente({ clientId }: { clientId: string }) {
         </div>
         <select className="input sm:w-56" value={status} onChange={(e) => { setStatus(e.target.value as InstrumentStatus | ""); setPage(1); }}>
           <option value="">Todos os status</option>
-          <option value="VALID">Valido</option>
-          <option value="DUE_SOON">Proximo do vencimento</option>
+          <option value="VALID">Válido</option>
+          <option value="DUE_SOON">Próximo do vencimento</option>
           <option value="EXPIRED">Vencido</option>
-          <option value="IN_MAINTENANCE">Em manutencao</option>
+          <option value="IN_MAINTENANCE">Em manutenção</option>
         </select>
         <select className="input sm:w-56" value={criticality} onChange={(e) => { setCriticality(e.target.value as MaintenancePriority | ""); setPage(1); }}>
           <option value="">Todas as criticidades</option>
-          <option value="CRITICAL">Critica</option>
+          <option value="CRITICAL">Crítica</option>
           <option value="HIGH">Alta</option>
-          <option value="MEDIUM">Media</option>
+          <option value="MEDIUM">Média</option>
           <option value="LOW">Baixa</option>
         </select>
         <select className="input sm:w-56" value={operationalStatus} onChange={(e) => { setOperationalStatus(e.target.value as OperationalStatus | ""); setPage(1); }}>
-          <option value="">Todas as condicoes operacionais</option>
-          <option value="IN_OPERATION">Em operacao</option>
+          <option value="">Todas as condições operacionais</option>
+          <option value="IN_OPERATION">Em operação</option>
           <option value="STOPPED">Parado</option>
           <option value="STANDBY">Reserva</option>
           <option value="DEACTIVATED">Desativado</option>
-          <option value="IN_MAINTENANCE">Em manutencao</option>
+          <option value="IN_MAINTENANCE">Em manutenção</option>
         </select>
       </div>
 
@@ -219,7 +219,7 @@ function AtivosDoCliente({ clientId }: { clientId: string }) {
         pagination={data}
         onPageChange={setPage}
         emptyTitle="Nenhum ativo cadastrado"
-        emptyDescription="Cadastre o primeiro ativo do parque para comecar a montar planos e ordens."
+        emptyDescription="Cadastre o primeiro ativo do parque para começar a montar planos e ordens."
         emptyAction={
           canManage && (
             <button className="btn-primary btn-sm" onClick={() => setCreateOpen(true)}>
@@ -261,8 +261,8 @@ function AtivosDoCliente({ clientId }: { clientId: string }) {
           },
           { header: "Componente de", accessor: (i) => (i.parent ? `TAG ${i.parent.tag ?? i.parent.type}` : "-") },
           { header: "Criticidade", accessor: (i) => <StatusBadge status={i.criticality} /> },
-          { header: "Condicao", accessor: (i) => <StatusBadge status={i.operationalStatus} /> },
-          { header: "Proxima calibracao", accessor: (i) => formatDate(i.nextDueDate) },
+          { header: "Condição", accessor: (i) => <StatusBadge status={i.operationalStatus} /> },
+          { header: "Próxima calibração", accessor: (i) => formatDate(i.nextDueDate) },
           { header: "Status", accessor: (i) => <StatusBadge status={i.derivedStatus ?? i.status} /> },
         ]}
       />

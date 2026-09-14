@@ -66,7 +66,7 @@ const COR_TIPO_OS = {
 /** Como o backlog aparece na tela para cada agrupamento. */
 const ROTULO_AGRUPAMENTO: Record<BacklogGroupBy, string> = {
   plant: "Planta",
-  area: "Area",
+  area: "Área",
   instrument: "Ativo",
   costCenter: "Centro de custo",
 };
@@ -110,10 +110,10 @@ export default function MaintenanceDashboard() {
       { indicador: "Cumprimento do plano (%)", valor: formatKpi(data.kpis.planComplianceRatePct) },
       { indicador: "Ordens abertas", valor: data.totals.open },
       { indicador: "Em andamento", valor: data.totals.inProgress },
-      { indicador: "Concluidas (periodo)", valor: data.totals.completed },
-      { indicador: "Preventivas (periodo)", valor: data.totals.preventive },
-      { indicador: "Corretivas (periodo)", valor: data.totals.corrective },
-      { indicador: "Preditivas (periodo)", valor: data.totals.predictive },
+      { indicador: "Concluídas (período)", valor: data.totals.completed },
+      { indicador: "Preventivas (período)", valor: data.totals.preventive },
+      { indicador: "Corretivas (período)", valor: data.totals.corrective },
+      { indicador: "Preditivas (período)", valor: data.totals.predictive },
       { indicador: "Backlog (horas)", valor: data.pcm.backlogHours },
       { indicador: "Atrasadas", valor: data.pcm.overdue },
       { indicador: "Emergenciais em aberto", valor: data.pcm.emergency },
@@ -145,8 +145,8 @@ export default function MaintenanceDashboard() {
   return (
     <div>
       <PageHeader
-        title="Manutencao"
-        description="Ciclo completo de manutencao - planos preventivos, ordens, pecas e indicadores (ultimos 90 dias)"
+        title="Manutenção"
+        description="Ciclo completo de manutenção - planos preventivos, ordens, peças e indicadores (últimos 90 dias)"
         actions={
           <>
             {data && (
@@ -206,7 +206,7 @@ export default function MaintenanceDashboard() {
               nao composicao - fica melhor como contagem simples). */}
           <div className="mt-6 grid gap-4 lg:grid-cols-3">
             <div className="card p-5">
-              <p className="text-sm font-semibold text-navy-900">Composicao das OS</p>
+              <p className="text-sm font-semibold text-navy-900">Composição das OS</p>
               <div className="mt-3 flex items-center gap-4">
                 <div className="relative shrink-0">
                   <PieChart width={92} height={92}>
@@ -294,7 +294,7 @@ export default function MaintenanceDashboard() {
 
             <div className="card p-5">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-navy-900">Custos no periodo</p>
+                <p className="text-sm font-semibold text-navy-900">Custos no período</p>
                 <span className="flex items-center gap-1 rounded-lg bg-navy-50 px-2 py-1 text-xs font-bold text-navy-700">
                   <Wallet className="h-3.5 w-3.5" /> {formatCurrency(data.costs.total)}
                 </span>
@@ -333,7 +333,7 @@ export default function MaintenanceDashboard() {
             <div className="grid grid-cols-1 gap-4">
               <MiniStat label="Ordens abertas" value={data.totals.open} />
               <MiniStat label="Em andamento" value={data.totals.inProgress} />
-              <MiniStat label="Concluidas (periodo)" value={data.totals.completed} />
+              <MiniStat label="Concluídas (período)" value={data.totals.completed} />
             </div>
           </div>
 
@@ -345,16 +345,16 @@ export default function MaintenanceDashboard() {
               hint={data.pcm.openWithoutEstimate > 0 ? `${data.pcm.openWithoutEstimate} OS em aberto sem HH prevista (fora da conta)` : undefined}
             />
             <MiniStat label="Atrasadas" value={data.pcm.overdue} tone={data.pcm.overdue > 0 ? "red" : "default"} />
-            <MiniStat label="Emergenciais (criticas, em aberto)" value={data.pcm.emergency} tone={data.pcm.emergency > 0 ? "red" : "default"} />
+            <MiniStat label="Emergenciais (críticas, em aberto)" value={data.pcm.emergency} tone={data.pcm.emergency > 0 ? "red" : "default"} />
             <MiniStat
-              label="Aderencia a programacao"
+              label="Aderência à programação"
               value={data.pcm.scheduleAdherencePct != null ? `${data.pcm.scheduleAdherencePct}%` : "Sem dados"}
               hint={
                 data.pcm.scheduleAdherencePct != null
-                  ? `${data.pcm.scheduledCompletedCount} OS programadas concluidas no periodo`
+                  ? `${data.pcm.scheduledCompletedCount} OS programadas concluídas no período`
                   : data.pcm.completedWithoutSchedule > 0
-                    ? `${data.pcm.completedWithoutSchedule} OS concluidas sem data programada - defina "Data programada" ao planejar a OS pra esse indicador funcionar`
-                    : "Nenhuma OS concluida no periodo"
+                    ? `${data.pcm.completedWithoutSchedule} OS concluídas sem data programada - defina "Data programada" ao planejar a OS pra esse indicador funcionar`
+                    : "Nenhuma OS concluída no período"
               }
             />
           </div>
@@ -367,9 +367,9 @@ export default function MaintenanceDashboard() {
                   <BarChart
                     layout="vertical"
                     data={[
-                      { criticidade: "Critica", horas: data.kpis.mtbfByCriticality.CRITICAL },
+                      { criticidade: "Crítica", horas: data.kpis.mtbfByCriticality.CRITICAL },
                       { criticidade: "Alta", horas: data.kpis.mtbfByCriticality.HIGH },
-                      { criticidade: "Media", horas: data.kpis.mtbfByCriticality.MEDIUM },
+                      { criticidade: "Média", horas: data.kpis.mtbfByCriticality.MEDIUM },
                       { criticidade: "Baixa", horas: data.kpis.mtbfByCriticality.LOW },
                     ]}
                     margin={{ top: 4, right: 24, bottom: 4, left: 0 }}
@@ -387,7 +387,7 @@ export default function MaintenanceDashboard() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <p className="mt-1 text-[11px] text-graphite-400">Um MTBF baixo num ativo critico pesa mais que o mesmo numero num ativo de baixa criticidade.</p>
+              <p className="mt-1 text-[11px] text-graphite-400">Um MTBF baixo num ativo crítico pesa mais que o mesmo número num ativo de baixa criticidade.</p>
             </div>
 
             <div className="card p-5">
@@ -398,7 +398,7 @@ export default function MaintenanceDashboard() {
                     layout="vertical"
                     data={[
                       { motivo: "Material", valor: data.pcm.awaitingMaterial },
-                      { motivo: "Liberacao", valor: data.pcm.awaitingRelease },
+                      { motivo: "Liberação", valor: data.pcm.awaitingRelease },
                       { motivo: "Parada", valor: data.pcm.awaitingStoppage },
                     ]}
                     margin={{ top: 4, right: 16, bottom: 4, left: 0 }}
@@ -414,11 +414,11 @@ export default function MaintenanceDashboard() {
             </div>
 
             <div className="card p-5">
-              <p className="text-sm font-semibold text-navy-900">HH prevista x realizada (concluidas)</p>
+              <p className="text-sm font-semibold text-navy-900">HH prevista x realizada (concluídas)</p>
               <div className="mt-2 h-[140px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={[{ periodo: "Periodo", prevista: data.pcm.plannedHoursCompleted, realizada: data.pcm.actualHoursCompleted }]}
+                    data={[{ periodo: "Período", prevista: data.pcm.plannedHoursCompleted, realizada: data.pcm.actualHoursCompleted }]}
                     margin={{ top: 4, right: 8, bottom: 4, left: -20 }}
                   >
                     <CartesianGrid vertical={false} stroke="#e5e7ea" />
@@ -435,8 +435,8 @@ export default function MaintenanceDashboard() {
 
           {data.criticalLowStock.length > 0 && (
             <div className="mt-4 card border-safety-red/30 bg-red-50/40 p-5">
-              <p className="text-sm font-semibold text-navy-900">Pecas criticas em risco de estoque</p>
-              <p className="text-xs text-graphite-500">Abaixo do minimo e vinculadas a ativo de criticidade alta ou critica - prioridade de compra diferente de uma peca comum em falta.</p>
+              <p className="text-sm font-semibold text-navy-900">Peças críticas em risco de estoque</p>
+              <p className="text-xs text-graphite-500">Abaixo do mínimo e vinculadas a ativo de criticidade alta ou crítica - prioridade de compra diferente de uma peça comum em falta.</p>
               <ul className="mt-3 space-y-2">
                 {data.criticalLowStock.map((p) => (
                   <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white px-3 py-2 text-sm">
@@ -472,14 +472,14 @@ export default function MaintenanceDashboard() {
                 onChange={(e) => setAgrupamento(e.target.value as BacklogGroupBy)}
               >
                 <option value="plant">Geral da planta</option>
-                <option value="area">Por area</option>
+                <option value="area">Por área</option>
                 <option value="instrument">Por ativo</option>
                 <option value="costCenter">Por centro de custo</option>
               </select>
             </div>
 
             {!backlog || backlog.itens.length === 0 ? (
-              <EmptyState title="Nenhuma OS em aberto" description="Sem fila pendente, nao ha backlog a distribuir." />
+              <EmptyState title="Nenhuma OS em aberto" description="Sem fila pendente, não há backlog a distribuir." />
             ) : (
               <>
                 <div className="card mb-4 p-5">
@@ -506,8 +506,8 @@ export default function MaintenanceDashboard() {
 
                 {backlog.totais.coberturaPct != null && backlog.totais.coberturaPct < 100 && (
                   <p className="mb-2 text-xs text-safety-yellow-dark">
-                    {backlog.totais.semEstimativa} das {backlog.totais.ordens} OS em aberto estao sem HH prevista
-                    ({backlog.totais.coberturaPct}% da fila entra na conta de horas) - o backlog real e' maior que o numero abaixo.
+                    {backlog.totais.semEstimativa} das {backlog.totais.ordens} OS em aberto estão sem HH prevista
+                    ({backlog.totais.coberturaPct}% da fila entra na conta de horas) - o backlog real é maior que o número abaixo.
                   </p>
                 )}
                 <div className="card overflow-x-auto">
