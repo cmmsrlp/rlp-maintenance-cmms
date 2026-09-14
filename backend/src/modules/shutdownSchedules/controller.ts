@@ -23,6 +23,10 @@ const scheduleSelect = {
   notes: true,
   workingWeekdays: true,
   hoursPerDay: true,
+  shiftStart: true,
+  shiftEnd: true,
+  shift24h: true,
+  dateExceptions: true,
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -120,6 +124,20 @@ const scheduleSchema = z.object({
   // 0=domingo...6=sabado.
   workingWeekdays: z.array(z.number().int().min(0).max(6)).min(1).optional(),
   hoursPerDay: z.coerce.number().positive().max(24).optional(),
+  shiftStart: z.string().regex(/^\d{2}:\d{2}$/).nullish(),
+  shiftEnd: z.string().regex(/^\d{2}:\d{2}$/).nullish(),
+  shift24h: z.boolean().optional(),
+  dateExceptions: z
+    .array(
+      z.object({
+        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        working: z.boolean(),
+        shiftStart: z.string().regex(/^\d{2}:\d{2}$/).nullish(),
+        shiftEnd: z.string().regex(/^\d{2}:\d{2}$/).nullish(),
+        shift24h: z.boolean().nullish(),
+      }),
+    )
+    .optional(),
 });
 
 export const createSchedule = asyncHandler(async (req: Request, res: Response) => {
@@ -133,6 +151,10 @@ export const createSchedule = asyncHandler(async (req: Request, res: Response) =
       notes: data.notes,
       workingWeekdays: data.workingWeekdays,
       hoursPerDay: data.hoursPerDay,
+      shiftStart: data.shiftStart,
+      shiftEnd: data.shiftEnd,
+      shift24h: data.shift24h,
+      dateExceptions: data.dateExceptions,
       clientId,
       createdById: req.user?.sub,
     },
@@ -265,6 +287,16 @@ export const saveTasks = asyncHandler(async (req: Request, res: Response) => {
       const parentId = t.parentKey ? keyParaId.get(t.parentKey) ?? null : null;
       const predecessorId = t.predecessorKey ? keyParaId.get(t.predecessorKey) ?? null : null;
       await tx.shutdownTask.update({ where: { id: keyParaId.get(t.key)! }, data: { parentTaskId: parentId, predecessorTaskId: predecessorId } });
+    }
+
+    // Arrastar a tarefa (ou editar a data/hora dela) tambem move a OS vinculada - senao a
+    // OS ficaria com uma janela desatualizada, dessincronizada do cronograma que a gerou.
+    for (const t of tasks) {
+      if (!t.workOrderId) continue;
+      await tx.maintenanceWorkOrder.updateMany({
+        where: { id: t.workOrderId, clientId: schedule.clientId },
+        data: { plannedStart: t.startDate, plannedEnd: t.endDate, scheduledDate: t.startDate },
+      });
     }
   });
 

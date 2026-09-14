@@ -35,7 +35,7 @@ import {
 } from "../../../api/shutdownSchedules";
 import { listMaintenanceWorkOrders } from "../../../api/maintenanceWorkOrders";
 import { getInstrument } from "../../../api/instruments";
-import type { MaintenanceWorkOrder, ShutdownScheduleStatus, ShutdownTask } from "../../../api/types";
+import type { MaintenanceWorkOrder, ShutdownDateException, ShutdownScheduleStatus, ShutdownTask } from "../../../api/types";
 import { PageHeader } from "../../../components/PageHeader";
 import { FullPageSpinner } from "../../../components/Spinner";
 import { StatusBadge } from "../../../components/StatusBadge";
@@ -64,7 +64,9 @@ interface EditorTask {
   predecessorKey: string | null;
   lagDays: number;
   startDate: string;
+  startTime: string;
   endDate: string;
+  endTime: string;
   percentComplete: number;
   resources: string;
   notes: string;
@@ -79,7 +81,43 @@ function nomeDoResponsavel(w: { assignedResource?: { name: string } | null; tech
   return w?.assignedResource?.name ?? w?.technician?.name ?? null;
 }
 
-function novaTarefa(): EditorTask {
+// O resto do app (ficha da OS, "Janela planejada" etc.) mostra qualquer data/hora
+// convertida pro fuso do navegador - pra "07:30" aparecer como "07:30" lá tambem (e nao
+// 3h adiantado/atrasado), a combinacao de data+hora abaixo grava um instante UTC
+// equivalente ao horario LOCAL digitado, igual a um <input type="datetime-local"> comum.
+//
+// Excecao: um registro gravado ANTES desta tela ganhar horario e' sempre meia-noite UTC
+// exata (era so' "YYYY-MM-DD", sem hora nenhuma) - tratar esse como hora local
+// desvirtuaria a DATA tambem (meia-noite UTC cai no dia anterior aqui no Brasil). Esses
+// continuam lidos como "UTC puro" (so' a data importa, hora default 00:00/23:59); qualquer
+// tarefa nova ou editada por aqui a partir de agora ja fica no formato local-consistente.
+function ehMeiaNoiteUtcPura(iso: string): boolean {
+  return /T00:00:00(\.000)?Z$/.test(iso);
+}
+function extrairData(iso: string): string {
+  if (ehMeiaNoiteUtcPura(iso)) return iso.slice(0, 10);
+  return dataLocalParaISO(new Date(iso));
+}
+function extrairHora(iso: string): string {
+  if (ehMeiaNoiteUtcPura(iso)) return "00:00";
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+/** So pro FIM: um registro antigo (meia-noite UTC pura, de antes desta tela ganhar
+ * horario) na pratica significa "nenhum horario foi definido" - nao literalmente "termina
+ * a meia-noite". Mostrar 23:59 evita a armadilha de editar so o horario de inicio e cair
+ * num "termina antes de comecar" por causa desse resquicio. */
+function extrairHoraFim(iso: string): string {
+  if (ehMeiaNoiteUtcPura(iso)) return "23:59";
+  return extrairHora(iso);
+}
+function combinarDataHora(data: string, hora: string): string {
+  const [y, m, d] = data.split("-").map(Number);
+  const [h, min] = (hora || "00:00").split(":").map(Number);
+  return new Date(y, m - 1, d, h, min, 0, 0).toISOString();
+}
+
+function novaTarefa(horaInicio = "07:00", horaFim = "17:00"): EditorTask {
   const d = hoje();
   return {
     key: crypto.randomUUID(),
@@ -93,7 +131,9 @@ function novaTarefa(): EditorTask {
     predecessorKey: null,
     lagDays: 0,
     startDate: d,
+    startTime: horaInicio,
     endDate: d,
+    endTime: horaFim,
     percentComplete: 0,
     resources: "",
     notes: "",
@@ -118,8 +158,10 @@ function toEditorTree(tasks: ShutdownTask[]): EditorTask[] {
       // aponta certinho pra chave certa sem precisar de mapa nenhum.
       predecessorKey: t.predecessorTaskId,
       lagDays: t.lagDays,
-      startDate: t.startDate.slice(0, 10),
-      endDate: t.endDate.slice(0, 10),
+      startDate: extrairData(t.startDate),
+      startTime: extrairHora(t.startDate),
+      endDate: extrairData(t.endDate),
+      endTime: extrairHoraFim(t.endDate),
       percentComplete: t.percentComplete,
       resources: t.resources ?? "",
       notes: t.notes ?? "",
@@ -210,15 +252,23 @@ function formatarDataCurta(iso: string): string {
   return `${d}/${m}`;
 }
 
+/** Um dia especifico pode fugir do padrao semanal (parada trabalhada num sabado, por
+ * exemplo) - a excecao, quando existe pra essa data, sempre vence o padrao. */
+function ehDiaUtil(data: string, diasUteis: number[], excecoes: ShutdownDateException[]): boolean {
+  const excecao = excecoes.find((e) => e.date === data);
+  if (excecao) return excecao.working;
+  return diasUteis.length === 0 || diasUteis.includes(diaDaSemana(data));
+}
+
 /** Primeira data depois de `fimDaPredecessora` que e' dia util (segundo o calendario do
- * cronograma), pulando `lagDays` dias uteis extras de folga. Sem calendario configurado
- * (lista vazia), todo dia conta como util. */
-function proximaDataUtil(fimDaPredecessora: string, lagDays: number, diasUteis: number[]): string {
+ * cronograma - padrao semanal + excecoes pontuais), pulando `lagDays` dias uteis extras de
+ * folga. Sem calendario configurado (lista vazia), todo dia conta como util. */
+function proximaDataUtil(fimDaPredecessora: string, lagDays: number, diasUteis: number[], excecoes: ShutdownDateException[]): string {
   let atual = fimDaPredecessora;
   let passosQueFaltam = 1 + Math.max(0, lagDays);
   while (passosQueFaltam > 0) {
     atual = somarDias(atual, 1);
-    if (diasUteis.length === 0 || diasUteis.includes(diaDaSemana(atual))) passosQueFaltam--;
+    if (ehDiaUtil(atual, diasUteis, excecoes)) passosQueFaltam--;
   }
   return atual;
 }
@@ -230,7 +280,7 @@ function proximaDataUtil(fimDaPredecessora: string, lagDays: number, diasUteis: 
  * das tarefas na arvore) - o limite de passadas evita loop infinito se alguem formar um
  * ciclo (A depende de B que depende de A).
  */
-function aplicarSequencia(nodes: EditorTask[], diasUteis: number[]) {
+function aplicarSequencia(nodes: EditorTask[], diasUteis: number[], excecoes: ShutdownDateException[]) {
   const flat = flattenAll(nodes);
   const porKey = new Map(flat.map((t) => [t.key, t]));
   for (let passada = 0; passada <= flat.length; passada++) {
@@ -240,7 +290,7 @@ function aplicarSequencia(nodes: EditorTask[], diasUteis: number[]) {
       const predecessora = porKey.get(t.predecessorKey);
       if (!predecessora || predecessora === t) continue;
       const duracao = diferencaEmDias(t.startDate, t.endDate);
-      const novoInicio = proximaDataUtil(predecessora.endDate, t.lagDays, diasUteis);
+      const novoInicio = proximaDataUtil(predecessora.endDate, t.lagDays, diasUteis, excecoes);
       const novoFim = somarDias(novoInicio, duracao);
       if (novoInicio !== t.startDate || novoFim !== t.endDate) {
         t.startDate = novoInicio;
@@ -263,8 +313,8 @@ function flattenForSave(nodes: EditorTask[], parentKey: string | null, list: Tas
       name: node.name.trim() || "(sem nome)",
       instrumentId: node.instrumentId,
       workOrderId: node.workOrderId,
-      startDate: node.startDate,
-      endDate: node.endDate,
+      startDate: combinarDataHora(node.startDate, node.startTime),
+      endDate: combinarDataHora(node.endDate, node.endTime),
       percentComplete: node.percentComplete,
       resources: node.resources || null,
       notes: node.notes || null,
@@ -293,8 +343,10 @@ function tarefaDeOs(os: MaintenanceWorkOrder): EditorTask {
     workOrderNumber: os.number,
     workOrderStatus: os.status,
     responsavelNome: nomeDoResponsavel(os),
-    startDate: inicio.slice(0, 10),
-    endDate: (os.plannedEnd ?? inicio).slice(0, 10),
+    startDate: extrairData(inicio),
+    startTime: extrairHora(inicio),
+    endDate: extrairData(os.plannedEnd ?? inicio),
+    endTime: extrairHoraFim(os.plannedEnd ?? inicio),
   };
 }
 
@@ -340,6 +392,10 @@ export default function ShutdownScheduleDetail() {
   const [status, setStatus] = useState<ShutdownScheduleStatus>("PLANNING");
   const [workingWeekdays, setWorkingWeekdays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [hoursPerDay, setHoursPerDay] = useState(8);
+  const [shiftStart, setShiftStart] = useState("07:00");
+  const [shiftEnd, setShiftEnd] = useState("17:00");
+  const [shift24h, setShift24h] = useState(false);
+  const [dateExceptions, setDateExceptions] = useState<ShutdownDateException[]>([]);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [removeKey, setRemoveKey] = useState<string | null>(null);
@@ -350,11 +406,22 @@ export default function ShutdownScheduleDetail() {
 
   useEffect(() => {
     if (schedule) {
-      setTasks(toEditorTree(schedule.tasks ?? []));
+      const diasUteisCarregados = schedule.workingWeekdays.length ? schedule.workingWeekdays : [1, 2, 3, 4, 5];
+      const excecoesCarregadas = schedule.dateExceptions ?? [];
+      const arvore = toEditorTree(schedule.tasks ?? []);
+      // Reconcilia com o calendario assim que carrega - se uma excecao/atraso foi salva
+      // meio a meio de outras edicoes (ou o calendario mudou por fora), a tela sempre
+      // reflete o que o calendario atual manda, nao so' o que ficou gravado por ultimo.
+      aplicarSequencia(arvore, diasUteisCarregados, excecoesCarregadas);
+      setTasks(arvore);
       setName(schedule.name);
       setStatus(schedule.status);
-      setWorkingWeekdays(schedule.workingWeekdays.length ? schedule.workingWeekdays : [1, 2, 3, 4, 5]);
+      setWorkingWeekdays(diasUteisCarregados);
       setHoursPerDay(schedule.hoursPerDay || 8);
+      setShiftStart(schedule.shiftStart || "07:00");
+      setShiftEnd(schedule.shiftEnd || "17:00");
+      setShift24h(schedule.shift24h);
+      setDateExceptions(excecoesCarregadas);
       setDirty(false);
     }
   }, [schedule]);
@@ -365,18 +432,17 @@ export default function ShutdownScheduleDetail() {
   function mutateTasks(fn: (clone: EditorTask[]) => void) {
     const clone = cloneTree(tasks);
     fn(clone);
-    aplicarSequencia(clone, workingWeekdays);
+    aplicarSequencia(clone, workingWeekdays, dateExceptions);
     setTasks(clone);
     setDirty(true);
   }
 
-  // Troca no calendario (dias uteis) tambem pode empurrar datas - roda a mesma reconciliacao
-  // sem precisar de nenhuma mudanca na arvore em si.
-  function recalcularComCalendario(diasUteis: number[]) {
-    setWorkingWeekdays(diasUteis);
+  // Troca no calendario (dias uteis ou excecoes de data) tambem pode empurrar datas - roda
+  // a mesma reconciliacao sem precisar de nenhuma mudanca na arvore em si.
+  function recalcularComCalendario(diasUteis: number[], excecoes: ShutdownDateException[]) {
     setTasks((prev) => {
       const clone = cloneTree(prev);
-      aplicarSequencia(clone, diasUteis);
+      aplicarSequencia(clone, diasUteis, excecoes);
       return clone;
     });
     setDirty(true);
@@ -406,12 +472,12 @@ export default function ShutdownScheduleDetail() {
   function addSiblingAfter(key: string | null) {
     mutateTasks((clone) => {
       if (key === null) {
-        clone.push(novaTarefa());
+        clone.push(novaTarefa(shiftStart, shiftEnd));
         return;
       }
       const loc = findLoc(clone, key);
       if (!loc) return;
-      loc.siblings.splice(loc.index + 1, 0, novaTarefa());
+      loc.siblings.splice(loc.index + 1, 0, novaTarefa(shiftStart, shiftEnd));
     });
   }
 
@@ -419,7 +485,7 @@ export default function ShutdownScheduleDetail() {
     mutateTasks((clone) => {
       const node = findNode(clone, key);
       if (!node) return;
-      node.children.push(novaTarefa());
+      node.children.push(novaTarefa(shiftStart, shiftEnd));
     });
   }
 
@@ -473,14 +539,16 @@ export default function ShutdownScheduleDetail() {
   async function handleSave() {
     setSaving(true);
     try {
-      const scheduleChanged =
-        (name.trim() && name !== schedule?.name) ||
-        status !== schedule?.status ||
-        JSON.stringify([...workingWeekdays].sort()) !== JSON.stringify([...(schedule?.workingWeekdays ?? [])].sort()) ||
-        hoursPerDay !== schedule?.hoursPerDay;
-      if (scheduleChanged) {
-        await updateSchedule(id, { name: name.trim() || schedule?.name, status, workingWeekdays, hoursPerDay });
-      }
+      await updateSchedule(id, {
+        name: name.trim() || schedule?.name,
+        status,
+        workingWeekdays,
+        hoursPerDay,
+        shiftStart,
+        shiftEnd,
+        shift24h,
+        dateExceptions,
+      });
 
       const list: TaskInput[] = [];
       flattenForSave(tasks, null, list, { n: 0 });
@@ -660,11 +728,11 @@ export default function ShutdownScheduleDetail() {
       <div className="card mb-6 p-5">
         <p className="text-sm font-medium text-graphite-700">Calendario</p>
         <p className="mt-0.5 text-xs text-graphite-500">
-          Usado so pelo reagendamento automatico (predecessora + atraso) pra saber que dias pular - nao limita a data que voce pode digitar numa tarefa.
+          Usado so pelo reagendamento automatico (predecessora + atraso) pra saber que dias pular - nao limita a data/hora que voce pode digitar numa tarefa.
         </p>
         <div className="mt-3 flex flex-wrap items-end gap-4">
           <div>
-            <span className="mb-1 block text-sm font-medium text-graphite-700">Dias uteis</span>
+            <span className="mb-1 block text-sm font-medium text-graphite-700">Dias uteis (padrao semanal)</span>
             <div className="flex gap-1">
               {DIAS_DA_SEMANA.map((d) => {
                 const ativo = workingWeekdays.includes(d.valor);
@@ -678,7 +746,8 @@ export default function ShutdownScheduleDetail() {
                     onClick={() => {
                       const novo = ativo ? workingWeekdays.filter((v) => v !== d.valor) : [...workingWeekdays, d.valor];
                       if (novo.length === 0) return;
-                      recalcularComCalendario(novo);
+                      setWorkingWeekdays(novo);
+                      recalcularComCalendario(novo, dateExceptions);
                     }}
                   >
                     {d.sigla}
@@ -697,6 +766,118 @@ export default function ShutdownScheduleDetail() {
             value={hoursPerDay}
             onChange={(e) => { setHoursPerDay(Number(e.target.value) || 8); setDirty(true); }}
           />
+          <TextInput
+            label="Expediente - inicio"
+            type="time"
+            className="w-36"
+            disabled={shift24h}
+            value={shiftStart}
+            onChange={(e) => { setShiftStart(e.target.value); setDirty(true); }}
+          />
+          <TextInput
+            label="Expediente - fim"
+            type="time"
+            className="w-36"
+            disabled={shift24h}
+            value={shiftEnd}
+            onChange={(e) => { setShiftEnd(e.target.value); setDirty(true); }}
+          />
+          <label className="mb-2 flex items-center gap-2 text-sm text-graphite-700">
+            <input type="checkbox" checked={shift24h} onChange={(e) => { setShift24h(e.target.checked); setDirty(true); }} />
+            24 horas (turnos)
+          </label>
+        </div>
+
+        <div className="mt-5 border-t border-gray-100 pt-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-graphite-700">Excecoes de data</span>
+            <button
+              type="button"
+              className="btn-outline btn-sm"
+              onClick={() => {
+                const novas = [...dateExceptions, { date: hoje(), working: false } as ShutdownDateException];
+                setDateExceptions(novas);
+                recalcularComCalendario(workingWeekdays, novas);
+              }}
+            >
+              <Plus className="h-3.5 w-3.5" /> Adicionar excecao
+            </button>
+          </div>
+          <p className="mt-0.5 text-xs text-graphite-500">
+            Pra um dia especifico que foge do padrao - ex.: um sabado trabalhado so nesta parada, ou um dia parado no meio da semana.
+          </p>
+          {dateExceptions.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {dateExceptions.map((exc, i) => (
+                <div key={i} className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 p-2">
+                  <input
+                    type="date"
+                    className="input w-40"
+                    value={exc.date}
+                    onChange={(e) => {
+                      const novas = dateExceptions.map((x, j) => (j === i ? { ...x, date: e.target.value } : x));
+                      setDateExceptions(novas);
+                      recalcularComCalendario(workingWeekdays, novas);
+                    }}
+                  />
+                  <select
+                    className="input w-40"
+                    value={exc.working ? "1" : "0"}
+                    onChange={(e) => {
+                      const novas = dateExceptions.map((x, j) => (j === i ? { ...x, working: e.target.value === "1" } : x));
+                      setDateExceptions(novas);
+                      recalcularComCalendario(workingWeekdays, novas);
+                    }}
+                  >
+                    <option value="0">Nao e dia util</option>
+                    <option value="1">E dia util</option>
+                  </select>
+                  {exc.working && (
+                    <>
+                      <label className="flex items-center gap-1.5 text-xs text-graphite-600">
+                        <input
+                          type="checkbox"
+                          checked={!!exc.shift24h}
+                          onChange={(e) => setDateExceptions(dateExceptions.map((x, j) => (j === i ? { ...x, shift24h: e.target.checked } : x)))}
+                        />
+                        24h
+                      </label>
+                      {!exc.shift24h && (
+                        <>
+                          <input
+                            type="time"
+                            className="input w-28"
+                            placeholder="Inicio"
+                            value={exc.shiftStart ?? ""}
+                            onChange={(e) => setDateExceptions(dateExceptions.map((x, j) => (j === i ? { ...x, shiftStart: e.target.value } : x)))}
+                          />
+                          <input
+                            type="time"
+                            className="input w-28"
+                            placeholder="Fim"
+                            value={exc.shiftEnd ?? ""}
+                            onChange={(e) => setDateExceptions(dateExceptions.map((x, j) => (j === i ? { ...x, shiftEnd: e.target.value } : x)))}
+                          />
+                        </>
+                      )}
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    className="icon-btn ml-auto text-graphite-400 hover:text-safety-red"
+                    title="Remover excecao"
+                    onClick={() => {
+                      const novas = dateExceptions.filter((_, j) => j !== i);
+                      setDateExceptions(novas);
+                      recalcularComCalendario(workingWeekdays, novas);
+                    }}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -894,7 +1075,9 @@ function TaskRow({
           <span className="min-w-0 flex-1 truncate font-medium text-navy-900">{task.name || "(sem nome)"}</span>
           {task.workOrderNumber && <span className="shrink-0 rounded-full bg-navy-50 px-2 py-0.5 text-xs font-medium text-navy-700">OS {task.workOrderNumber}</span>}
           {task.instrumentLabel && <span className="hidden shrink-0 text-xs text-graphite-400 sm:inline">{task.instrumentLabel}</span>}
-          <span className="shrink-0 text-xs text-graphite-400">{formatarDataCurta(task.startDate)} - {formatarDataCurta(task.endDate)}</span>
+          <span className="shrink-0 text-xs text-graphite-400">
+            {formatarDataCurta(task.startDate)} {task.startTime} - {formatarDataCurta(task.endDate)} {task.endTime}
+          </span>
         </button>
 
         {aberto && (
@@ -988,20 +1171,33 @@ function TaskRow({
             />
           )}
 
-          <TextInput
-            label="Inicio"
-            type="date"
-            value={task.startDate}
-            disabled={temPredecessora}
-            title={temPredecessora ? "Calculado a partir da predecessora - remova a predecessora para editar a mao." : undefined}
-            onChange={(e) => onUpdate(task.key, { startDate: e.target.value })}
-          />
-          <TextInput
-            label="Fim"
-            type="date"
-            value={task.endDate}
-            onChange={(e) => onUpdate(task.key, { endDate: e.target.value })}
-          />
+          <div>
+            <label className="mb-1 block text-sm font-medium text-graphite-700">Inicio</label>
+            <div className="flex gap-1.5">
+              <input
+                type="date"
+                className="input"
+                value={task.startDate}
+                disabled={temPredecessora}
+                title={temPredecessora ? "Calculado a partir da predecessora - remova a predecessora para editar a mao." : undefined}
+                onChange={(e) => onUpdate(task.key, { startDate: e.target.value })}
+              />
+              <input
+                type="time"
+                className="input w-28"
+                disabled={temPredecessora}
+                value={task.startTime}
+                onChange={(e) => onUpdate(task.key, { startTime: e.target.value })}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-graphite-700">Fim</label>
+            <div className="flex gap-1.5">
+              <input type="date" className="input" value={task.endDate} onChange={(e) => onUpdate(task.key, { endDate: e.target.value })} />
+              <input type="time" className="input w-28" value={task.endTime} onChange={(e) => onUpdate(task.key, { endTime: e.target.value })} />
+            </div>
+          </div>
           <TextInput
             label="% concluida"
             type="number"
@@ -1054,6 +1250,10 @@ function TaskRow({
   );
 }
 
+// A OS ja concluida ou cancelada nao serve pra planejar nada daqui pra frente - nenhum
+// dos dois seletores de OS do cronograma deve oferecer ela.
+const STATUS_FORA_DO_SELETOR = new Set(["COMPLETED", "CANCELED"]);
+
 function LinkWorkOrderModal({
   clientId,
   instrumentId,
@@ -1066,22 +1266,27 @@ function LinkWorkOrderModal({
   onPick: (os: MaintenanceWorkOrder) => void;
 }) {
   const [search, setSearch] = useState("");
+  const [filtroAtivoId, setFiltroAtivoId] = useState(instrumentId ?? "");
   const { data, isFetching } = useQuery({
-    queryKey: ["work-orders-link-picker", clientId, instrumentId, search],
-    queryFn: () => listMaintenanceWorkOrders({ clientId, instrumentId: instrumentId ?? undefined, search: search || undefined, pageSize: 15 }),
+    queryKey: ["work-orders-link-picker", clientId, filtroAtivoId, search],
+    queryFn: () => listMaintenanceWorkOrders({ clientId, instrumentId: filtroAtivoId || undefined, search: search || undefined, pageSize: 30 }),
   });
+  const itens = (data?.items ?? []).filter((os) => !STATUS_FORA_DO_SELETOR.has(os.status));
 
   return (
     <Modal open onClose={onClose} title="Vincular OS existente" size="md">
-      <TextInput placeholder="Buscar por numero ou descricao" value={search} onChange={(e) => setSearch(e.target.value)} />
+      <div className="space-y-3">
+        <InstrumentPicker label="Filtrar por ativo (opcional)" clientId={clientId} name="filtroAtivo" value={filtroAtivoId} onChange={(e) => setFiltroAtivoId(e.target.value)} />
+        <TextInput placeholder="Buscar por numero ou descricao" value={search} onChange={(e) => setSearch(e.target.value)} />
+      </div>
       <div className="mt-3 max-h-80 overflow-y-auto rounded-lg border border-gray-200">
         {isFetching ? (
           <p className="px-3 py-3 text-sm text-graphite-500">Buscando...</p>
-        ) : (data?.items.length ?? 0) === 0 ? (
+        ) : itens.length === 0 ? (
           <p className="px-3 py-3 text-sm text-graphite-500">Nenhuma OS encontrada.</p>
         ) : (
           <ul className="divide-y divide-gray-100">
-            {data!.items.map((os) => (
+            {itens.map((os) => (
               <li key={os.id}>
                 <button
                   type="button"
@@ -1125,23 +1330,28 @@ function PickWorkOrdersModal({
   onPick: (os: MaintenanceWorkOrder) => void;
 }) {
   const [search, setSearch] = useState("");
+  const [filtroAtivoId, setFiltroAtivoId] = useState("");
   const { data, isFetching } = useQuery({
-    queryKey: ["work-orders-from-os-picker", clientId, search],
-    queryFn: () => listMaintenanceWorkOrders({ clientId, search: search || undefined, pageSize: 20 }),
+    queryKey: ["work-orders-from-os-picker", clientId, filtroAtivoId, search],
+    queryFn: () => listMaintenanceWorkOrders({ clientId, instrumentId: filtroAtivoId || undefined, search: search || undefined, pageSize: 30 }),
   });
+  const itens = (data?.items ?? []).filter((os) => !STATUS_FORA_DO_SELETOR.has(os.status));
 
   return (
     <Modal open onClose={onClose} title="Adicionar tarefas a partir de OS" size="md">
       <p className="mb-3 text-xs text-graphite-500">Clique numa OS para cria-la como tarefa. Pode escolher varias antes de fechar.</p>
-      <TextInput placeholder="Buscar por numero ou descricao" value={search} onChange={(e) => setSearch(e.target.value)} />
+      <div className="space-y-3">
+        <InstrumentPicker label="Filtrar por ativo (opcional)" clientId={clientId} name="filtroAtivo" value={filtroAtivoId} onChange={(e) => setFiltroAtivoId(e.target.value)} />
+        <TextInput placeholder="Buscar por numero ou descricao" value={search} onChange={(e) => setSearch(e.target.value)} />
+      </div>
       <div className="mt-3 max-h-96 overflow-y-auto rounded-lg border border-gray-200">
         {isFetching ? (
           <p className="px-3 py-3 text-sm text-graphite-500">Buscando...</p>
-        ) : (data?.items.length ?? 0) === 0 ? (
+        ) : itens.length === 0 ? (
           <p className="px-3 py-3 text-sm text-graphite-500">Nenhuma OS encontrada.</p>
         ) : (
           <ul className="divide-y divide-gray-100">
-            {data!.items.map((os) => {
+            {itens.map((os) => {
               const usada = usedIds.has(os.id);
               return (
                 <li key={os.id}>

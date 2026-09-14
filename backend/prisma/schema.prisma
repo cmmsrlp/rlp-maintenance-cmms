@@ -1891,6 +1891,17 @@ model ShutdownSchedule {
   // calculo automatico.
   workingWeekdays Int[]  @default([1, 2, 3, 4, 5])
   hoursPerDay     Float  @default(8)
+  // Horario padrao de expediente (ex.: "07:00"/"17:00") - usado pra sugerir a hora de
+  // inicio/fim quando a pessoa cria uma tarefa nova. shift24h marca que a parada roda em
+  // turnos (24h), sem horario de corte no dia.
+  shiftStart String? @default("07:00")
+  shiftEnd   String? @default("17:00")
+  shift24h   Boolean @default(false)
+  // Excecoes de data: um dia especifico que foge do padrao semanal/horario (ex.: um sabado
+  // trabalhado so' naquela parada, ou uma segunda-feira parada por algum motivo). Cada item:
+  // {date, working, shiftStart?, shiftEnd?, shift24h?}. Json por ser uma lista curta e
+  // ad-hoc - nao justifica tabela propria.
+  dateExceptions Json?
   createdById String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

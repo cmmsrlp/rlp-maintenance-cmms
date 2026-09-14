@@ -1473,6 +1473,14 @@ export interface ResultadoDaImportacao {
 
 export type ShutdownScheduleStatus = "PLANNING" | "IN_PROGRESS" | "DONE";
 
+export interface ShutdownDateException {
+  date: string;
+  working: boolean;
+  shiftStart?: string | null;
+  shiftEnd?: string | null;
+  shift24h?: boolean | null;
+}
+
 export interface ShutdownSchedule {
   id: string;
   clientId: string;
@@ -1482,6 +1490,13 @@ export interface ShutdownSchedule {
   /** 0=domingo...6=sabado - dias que contam como uteis pro reagendamento automatico. */
   workingWeekdays: number[];
   hoursPerDay: number;
+  /** Horario padrao de expediente ("07:00"/"17:00") - sugerido em tarefa nova. */
+  shiftStart: string | null;
+  shiftEnd: string | null;
+  shift24h: boolean;
+  /** Dia especifico que foge do padrao semanal/horario (parada trabalhada num sabado,
+   * feriado no meio da semana etc). */
+  dateExceptions: ShutdownDateException[] | null;
   taskCount: number;
   startDate: string | null;
   endDate: string | null;

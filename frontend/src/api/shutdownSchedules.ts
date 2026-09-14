@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { ShutdownSchedule, ShutdownScheduleStatus, ShutdownTask } from "./types";
+import type { ShutdownDateException, ShutdownSchedule, ShutdownScheduleStatus, ShutdownTask } from "./types";
 
 export interface PagedResult<T> {
   items: T[];
@@ -32,6 +32,10 @@ export interface ScheduleInput {
   notes?: string | null;
   workingWeekdays?: number[];
   hoursPerDay?: number;
+  shiftStart?: string | null;
+  shiftEnd?: string | null;
+  shift24h?: boolean;
+  dateExceptions?: ShutdownDateException[];
 }
 
 export async function createSchedule(input: ScheduleInput): Promise<ShutdownSchedule> {
