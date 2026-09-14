@@ -18,7 +18,9 @@ declare module "frappe-gantt" {
     bar_height?: number;
     padding?: number;
     container_height?: number | "auto";
+    move_dependencies?: boolean;
     on_click?: (task: GanttTask) => void;
+    on_date_change?: (task: GanttTask, start: Date, end: Date) => void;
     popup_on_click?: (task: GanttTask) => boolean | void;
   }
 

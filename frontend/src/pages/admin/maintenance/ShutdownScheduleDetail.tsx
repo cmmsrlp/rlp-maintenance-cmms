@@ -14,12 +14,15 @@ import {
   ArrowUp,
   ArrowLeft,
   Check,
+  ChevronDown,
+  ChevronRight,
   ClipboardList,
   Plus,
   Save,
   Trash2,
   Wrench,
   Link2,
+  Workflow,
   X,
 } from "lucide-react";
 import {
@@ -188,6 +191,23 @@ function diferencaEmDias(a: string, b: string): number {
 }
 function diaDaSemana(d: string): number {
   return parseISO(d).getUTCDay();
+}
+
+/** O frappe-gantt trabalha com Date em horario LOCAL (nao UTC, diferente do resto deste
+ * arquivo) - essa conversao so' e' usada pra ler de volta o que a pessoa arrastou na
+ * barra, pra nao voltar um dia errado por causa de fuso. */
+function dataLocalParaISO(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** "2026-09-14" -> "14/09" - so' pro resumo da tarefa recolhida, sem o ano (o cronograma
+ * inteiro cabe tipicamente num unico ano). */
+function formatarDataCurta(iso: string): string {
+  const [, m, d] = iso.split("-");
+  return `${d}/${m}`;
 }
 
 /** Primeira data depois de `fimDaPredecessora` que e' dia util (segundo o calendario do
@@ -515,6 +535,26 @@ export default function ShutdownScheduleDetail() {
     return list.filter((r) => r.task.startDate && r.task.endDate);
   }, [tasks]);
 
+  // "Ligar predecessora" no Gantt: clica numa barra (a predecessora), depois na outra (a
+  // que depende dela). O callback do Gantt so' e' registrado UMA VEZ (na criacao do
+  // grafico) - por isso le' tudo por ref, nunca direto do estado/das funcoes do render,
+  // senao ficaria preso na versao de quando o grafico nasceu (closure velha).
+  const [modoLigarPredecessora, setModoLigarPredecessora] = useState(false);
+  const modoLigarRef = useRef(false);
+  const origemLigarRef = useRef<string | null>(null);
+  const updateFieldRef = useRef<(key: string, patch: Partial<EditorTask>) => void>(() => {});
+  const notifyRef = useRef(notify);
+  updateFieldRef.current = updateField;
+  notifyRef.current = notify;
+
+  function alternarModoLigar() {
+    const novo = !modoLigarRef.current;
+    modoLigarRef.current = novo;
+    origemLigarRef.current = null;
+    setModoLigarPredecessora(novo);
+    if (novo) notify("success", "Clique numa tarefa (a predecessora) e depois na que depende dela.");
+  }
+
   useEffect(() => {
     if (!ganttRef.current) return;
     if (ganttFlat.length === 0) {
@@ -538,15 +578,40 @@ export default function ShutdownScheduleDetail() {
       } else {
         ganttInstance.current = new Gantt(ganttRef.current, ganttTasks, {
           view_mode: "Day",
-          readonly: true,
-          readonly_dates: true,
+          readonly: false,
+          // Datas arrastaveis na propria barra; progresso continua so' pelo campo "%
+          // concluida" do formulario, pra nao confundir arraste com avanco.
+          readonly_dates: false,
           readonly_progress: true,
+          // A lib tem um jeito proprio (ingenuo) de empurrar quem depende ao mover a
+          // predecessora - desligado porque quem cuida disso e' aplicarSequencia (que
+          // conhece o calendario de dias uteis); os dois mexendo juntos so' brigariam.
+          move_dependencies: false,
           bar_height: 28,
           // Numero fixo (nao "auto") em vez de deixar a lib encolher pro tamanho exato do
           // conteudo - com poucas tarefas isso deixava a caixa minusucula. Uma tela cheia de
           // altura da espaco de sobra sempre; com muitas tarefas o grid cresce alem disso
           // mesmo assim (a lib usa o MAIOR entre os dois), entao nada fica cortado.
           container_height: Math.max(500, Math.floor(window.innerHeight * 0.75)),
+          on_date_change: (task: { id: string }, start: Date, end: Date) => {
+            updateFieldRef.current(task.id, { startDate: dataLocalParaISO(start), endDate: dataLocalParaISO(end) });
+          },
+          on_click: (task: { id: string; name: string }) => {
+            if (!modoLigarRef.current) return;
+            if (!origemLigarRef.current) {
+              origemLigarRef.current = task.id;
+              notifyRef.current("success", `"${task.name}" marcada como predecessora - clique agora na tarefa que depende dela.`);
+              return;
+            }
+            const predKey = origemLigarRef.current;
+            origemLigarRef.current = null;
+            if (predKey === task.id) {
+              notifyRef.current("error", "Escolha uma tarefa diferente da predecessora.");
+              return;
+            }
+            updateFieldRef.current(task.id, { predecessorKey: predKey });
+            notifyRef.current("success", `"${task.name}" agora depende da tarefa marcada.`);
+          },
         });
       }
     } catch {
@@ -679,7 +744,22 @@ export default function ShutdownScheduleDetail() {
       </div>
 
       <div className="mt-8">
-        <h2 className="mb-3 font-semibold text-navy-900">Gantt</h2>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-semibold text-navy-900">Gantt</h2>
+          <button
+            type="button"
+            className={`btn-sm inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors ${
+              modoLigarPredecessora ? "border-safety-yellow-dark bg-safety-yellow text-navy-950" : "btn-outline"
+            }`}
+            onClick={alternarModoLigar}
+          >
+            <Workflow className="h-3.5 w-3.5" />
+            {modoLigarPredecessora ? "Clique na predecessora, depois na dependente..." : "Ligar predecessora no Gantt"}
+          </button>
+        </div>
+        <p className="mb-3 text-xs text-graphite-500">
+          Arraste uma barra pra mudar a data dela. Redimensione pela borda pra mudar a duracao.
+        </p>
         {ganttFlat.length === 0 ? (
           <div className="card p-8 text-center text-sm text-graphite-500">
             Adicione tarefas com data de inicio e fim para ver o Gantt.
@@ -805,10 +885,21 @@ function TaskRow({
 }) {
   const opcoesDePredecessora = allTasks.filter((t) => t.key !== task.key);
   const temPredecessora = !!task.predecessorKey;
+  const [aberto, setAberto] = useState(false);
   return (
     <>
       <div className="card p-4" style={{ marginLeft: depth * 24 }}>
-        <div className="mb-3 flex flex-wrap items-center gap-1">
+        <button type="button" className="flex w-full items-center gap-2 text-left" onClick={() => setAberto((a) => !a)}>
+          {aberto ? <ChevronDown className="h-4 w-4 shrink-0 text-graphite-400" /> : <ChevronRight className="h-4 w-4 shrink-0 text-graphite-400" />}
+          <span className="min-w-0 flex-1 truncate font-medium text-navy-900">{task.name || "(sem nome)"}</span>
+          {task.workOrderNumber && <span className="shrink-0 rounded-full bg-navy-50 px-2 py-0.5 text-xs font-medium text-navy-700">OS {task.workOrderNumber}</span>}
+          {task.instrumentLabel && <span className="hidden shrink-0 text-xs text-graphite-400 sm:inline">{task.instrumentLabel}</span>}
+          <span className="shrink-0 text-xs text-graphite-400">{formatarDataCurta(task.startDate)} - {formatarDataCurta(task.endDate)}</span>
+        </button>
+
+        {aberto && (
+        <>
+        <div className="mb-3 mt-4 flex flex-wrap items-center gap-1 border-t border-gray-100 pt-3">
           <button className="icon-btn" title="Subir" disabled={isFirst} onClick={() => onMoveUp(task.key)}>
             <ArrowUp className="h-3.5 w-3.5" />
           </button>
@@ -932,6 +1023,8 @@ function TaskRow({
             onChange={(e) => onUpdate(task.key, { notes: e.target.value })}
           />
         </div>
+        </>
+        )}
       </div>
 
       {task.children.map((child, i) => (
