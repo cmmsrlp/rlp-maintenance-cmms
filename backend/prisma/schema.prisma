@@ -2056,6 +2056,11 @@ model AssetCriticality {
   failureCount12m   Int?
   operatingHours12m Float?
 
+  // MTBF-meta (horas) usado na razao MTBF real/meta que vira a nota Q. Nulo = sem meta
+  // propria definida - o calculo usa a media da familia (mesmo Instrument.type) na hora,
+  // sem gravar aqui (ve resolverMtbfMeta em lib/assetCriticality.ts).
+  mtbfTargetHours Float?
+
   lastCalculatedAt DateTime?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

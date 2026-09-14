@@ -1575,6 +1575,7 @@ export interface AssetCriticality {
   mtbfHours: number | null;
   failureCount12m: number | null;
   operatingHours12m: number | null;
+  mtbfTargetHours: number | null;
   lastCalculatedAt: string | null;
   logs?: AssetCriticalityLogEntry[];
 }

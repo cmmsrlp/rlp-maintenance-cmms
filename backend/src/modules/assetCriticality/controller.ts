@@ -4,8 +4,9 @@ import { prisma } from "../../lib/prisma";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { parsePageParams, toSkipTake, buildPagedResult } from "../../utils/pagination";
 import { NotFoundError, ValidationError } from "../../utils/errors";
-import { clientScopeFilter, resolveClientScope } from "../../middleware/rbac";
-import { recalcularCriticidade } from "../../lib/assetCriticality";
+import { clientScopeFilter, resolveClientScope, resolveClientId } from "../../middleware/rbac";
+import { recalcularCriticidade, resolverMtbfMeta, revisarCriticidade } from "../../lib/assetCriticality";
+import { gerarPlanilhaCriticidade, lerPlanilhaCriticidade, type LinhaCriticidadeParaExportar } from "./spreadsheet";
 
 /**
  * Criticidade de ativos: nota dinamica (Seguranca/Producao/Falhas) por local funcional -
@@ -98,7 +99,11 @@ export const getCriticality = asyncHandler(async (req: Request, res: Response) =
     });
   }
 
-  res.json({ instrument, criticality: criticidade });
+  // MTBF-meta que esta valendo agora (propria, se definida, ou a media da familia) - so'
+  // pra tela mostrar de onde saiu a razao usada no calculo, sem gravar nada.
+  const mtbfTargetResolved = await resolverMtbfMeta(prisma, instrument.id, criticidade?.mtbfTargetHours);
+
+  res.json({ instrument, criticality: criticidade, mtbfTargetResolved });
 });
 
 const revisaoSchema = z
@@ -110,113 +115,23 @@ const revisaoSchema = z
     // "AUTO" volta o calculo automatico a mandar em Q; "MANUAL" exige failureScore + reason.
     failureScoreMode: z.enum(["AUTO", "MANUAL"]).optional(),
     failureScore: z.number().int().min(1).max(5).nullish(),
+    // MTBF-meta proprio do ativo (horas). Nulo explicito limpa a meta propria e volta a usar
+    // a media da familia; omitido (undefined) nao mexe no que ja esta gravado.
+    mtbfTargetHours: z.number().positive().nullish(),
     reason: z.string().min(3, "Explique o motivo da revisao.").optional(),
   })
   .refine((d) => d.failureScoreMode !== "MANUAL" || (d.failureScore != null && d.reason), {
     message: "Informe a nota de falha e o motivo pra sobrescrever o calculo automatico.",
   });
 
-/** Revisao manual de S/P (sempre manual) e, opcionalmente, sobrescrita de Q. Qualquer
- * campo tocado aqui conta como MANUAL_REVIEW no historico. */
+/** Revisao manual de S/P (sempre manual) e, opcionalmente, do MTBF-meta e/ou sobrescrita de
+ * Q. Qualquer campo tocado aqui conta como MANUAL_REVIEW no historico. */
 export const reviewCriticality = asyncHandler(async (req: Request, res: Response) => {
   const data = revisaoSchema.parse(req.body);
   const instrument = await prisma.instrument.findFirst({ where: { id: req.params.instrumentId, deletedAt: null, ...clientScopeFilter(req) } });
   if (!instrument) throw new NotFoundError("Ativo");
 
-  const existente = await prisma.assetCriticality.findUnique({ where: { instrumentId: instrument.id } });
-  const agora = new Date();
-
-  const safetyScore = data.safetyScore ?? existente?.safetyScore ?? 1;
-  const productionScore = data.productionScore ?? existente?.productionScore ?? 1;
-  const consequenceScore = Math.max(safetyScore, productionScore);
-
-  let failureScore = existente?.failureScore ?? null;
-  let failureScoreOrigin: "AUTO" | "MANUAL" = existente?.failureScoreOrigin ?? "AUTO";
-  let failureOverrideReason = existente?.failureOverrideReason ?? null;
-  let failureOverrideAt = existente?.failureOverrideAt ?? null;
-
-  if (data.failureScoreMode === "MANUAL") {
-    failureScore = data.failureScore!;
-    failureScoreOrigin = "MANUAL";
-    failureOverrideReason = data.reason!;
-    failureOverrideAt = agora;
-  } else if (data.failureScoreMode === "AUTO") {
-    failureScoreOrigin = "AUTO";
-    failureOverrideReason = null;
-    failureOverrideAt = null;
-    // Volta a valer o que o calculo automatico diria agora - recalcula de verdade
-    // (nao so limpa a flag) pra Q nao ficar preso no ultimo valor manual.
-  }
-
-  let criticalityIndex: number | null = null;
-  if (failureScoreOrigin === "MANUAL" && failureScore != null) {
-    criticalityIndex = 4 * consequenceScore * failureScore;
-  }
-  // Mesma regra independente de Q usada em recalcularCriticidade: Seguranca 4/5 ou Producao
-  // 5 e' Classe A mesmo sem indice calculado (Q ainda MANUAL sem nota, ou sem historico).
-  const criticalityClass: "A" | "B" | "C" | null =
-    safetyScore >= 4 || productionScore === 5
-      ? "A"
-      : criticalityIndex != null
-        ? criticalityIndex >= 60 ? "A" : criticalityIndex >= 25 ? "B" : "C"
-        : null;
-
-  await prisma.assetCriticality.upsert({
-    where: { instrumentId: instrument.id },
-    create: {
-      instrumentId: instrument.id,
-      clientId: instrument.clientId,
-      safetyScore,
-      safetyNotes: data.safetyNotes ?? null,
-      safetyUpdatedAt: data.safetyScore != null ? agora : null,
-      productionScore,
-      productionNotes: data.productionNotes ?? null,
-      productionUpdatedAt: data.productionScore != null ? agora : null,
-      failureScore,
-      failureScoreOrigin,
-      failureOverrideReason,
-      failureOverrideAt,
-      consequenceScore,
-      criticalityIndex,
-      criticalityClass,
-    },
-    update: {
-      safetyScore,
-      ...(data.safetyNotes !== undefined ? { safetyNotes: data.safetyNotes } : {}),
-      ...(data.safetyScore != null ? { safetyUpdatedAt: agora } : {}),
-      productionScore,
-      ...(data.productionNotes !== undefined ? { productionNotes: data.productionNotes } : {}),
-      ...(data.productionScore != null ? { productionUpdatedAt: agora } : {}),
-      failureScore,
-      failureScoreOrigin,
-      failureOverrideReason,
-      failureOverrideAt,
-      consequenceScore,
-      ...(failureScoreOrigin === "MANUAL" ? { criticalityIndex, criticalityClass } : {}),
-    },
-  });
-
-  // AUTO: refaz a conta de verdade (cobre tanto "acabou de voltar a automatico" quanto
-  // qualquer revisao de S/P, que muda C e portanto o indice mesmo com Q automatico).
-  if (failureScoreOrigin === "AUTO") {
-    await recalcularCriticidade(instrument.id, "MANUAL_REVIEW", { responsibleId: req.user?.sub, reason: data.reason });
-  } else {
-    const salvo = await prisma.assetCriticality.findUniqueOrThrow({ where: { instrumentId: instrument.id } });
-    await prisma.assetCriticalityLog.create({
-      data: {
-        criticalityId: salvo.id,
-        trigger: "MANUAL_REVIEW",
-        origin: "MANUAL",
-        safetyScore: salvo.safetyScore,
-        productionScore: salvo.productionScore,
-        failureScore: salvo.failureScore,
-        criticalityIndex: salvo.criticalityIndex,
-        criticalityClass: salvo.criticalityClass,
-        reason: data.reason ?? null,
-        responsibleId: req.user?.sub,
-      },
-    });
-  }
+  await revisarCriticidade(prisma, instrument.id, instrument.clientId, { ...data, responsibleId: req.user?.sub });
 
   const atualizado = await prisma.assetCriticality.findUnique({
     where: { instrumentId: instrument.id },
@@ -233,4 +148,169 @@ export const recalculateCriticality = asyncHandler(async (req: Request, res: Res
   const atualizado = await recalcularCriticidade(instrument.id, "MANUAL_REVIEW", { responsibleId: req.user?.sub, reason: "Recalculo manual" });
   if (!atualizado) throw new ValidationError("Nao foi possivel recalcular.");
   res.json(atualizado);
+});
+
+// ---------------------------------------------------------------------------
+// Planilha: exportar todos os ativos (com o que ja esta calculado) e reimportar a revisao
+// de Segurança/Produção/MTBF-meta em massa - a mesma logica de revisarCriticidade, so' que
+// linha a linha, pra ser bem mais rapido que abrir ativo por ativo no sistema.
+// ---------------------------------------------------------------------------
+
+export const exportCriticalities = asyncHandler(async (req: Request, res: Response) => {
+  const { clientId: queryClientId, plantId, areaId, class: classe, search, insufficient } = req.query as {
+    clientId?: string;
+    plantId?: string;
+    areaId?: string;
+    class?: string;
+    search?: string;
+    insufficient?: string;
+  };
+  const escopo = resolveClientScope(req, queryClientId);
+  const alvo = queryClientId ?? resolveClientId(req);
+
+  const where = {
+    deletedAt: null,
+    ...escopo,
+    ...(plantId ? { plantId } : {}),
+    ...(areaId ? { areaId } : {}),
+    ...(search
+      ? { OR: [{ tag: { contains: search, mode: "insensitive" as const } }, { description: { contains: search, mode: "insensitive" as const } }] }
+      : {}),
+    ...(insufficient === "true"
+      ? { OR: [{ assetCriticality: null }, { assetCriticality: { is: { failureScore: null } } }] }
+      : classe
+        ? { assetCriticality: { is: { criticalityClass: classe as never } } }
+        : {}),
+  };
+
+  const [cliente, instrumentos] = await Promise.all([
+    alvo ? prisma.client.findFirst({ where: { id: alvo }, select: { companyName: true } }) : Promise.resolve(null),
+    prisma.instrument.findMany({
+      where,
+      select: { ...instrumentoResumo, assetCriticality: true },
+      orderBy: [{ tag: "asc" }],
+    }),
+  ]);
+
+  const linhas: LinhaCriticidadeParaExportar[] = instrumentos.map((i) => ({
+    instrumentId: i.id,
+    tag: i.tag,
+    description: i.description,
+    type: i.type,
+    plantName: i.plant?.name ?? null,
+    areaName: i.area?.name ?? null,
+    safetyScore: i.assetCriticality?.safetyScore ?? 1,
+    productionScore: i.assetCriticality?.productionScore ?? 1,
+    mtbfTargetHours: i.assetCriticality?.mtbfTargetHours ?? null,
+    mtbfHours: i.assetCriticality?.mtbfHours ?? null,
+    failureCount12m: i.assetCriticality?.failureCount12m ?? null,
+    failureScore: i.assetCriticality?.failureScore ?? null,
+    criticalityIndex: i.assetCriticality?.criticalityIndex ?? null,
+    criticalityClass: i.assetCriticality?.criticalityClass ?? null,
+  }));
+
+  const arquivo = await gerarPlanilhaCriticidade(cliente?.companyName, linhas);
+  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  res.setHeader("Content-Disposition", 'attachment; filename="criticidade-de-ativos.xlsx"');
+  res.end(arquivo);
+});
+
+interface ResultadoDaLinha {
+  numero: number;
+  tag: string;
+  status: "alterado" | "sem_alteracao" | "erro";
+  mensagem?: string;
+  antes?: { safetyScore: number; productionScore: number; mtbfTargetHours: number | null };
+  depois?: { safetyScore: number; productionScore: number; mtbfTargetHours: number | null };
+}
+
+/** Confere linha a linha o que mudaria - usado tanto na previa (simular) quanto, com
+ * `aplicar: true`, na gravacao de verdade (confirmar). O calculo do que mudou e' sempre
+ * feito contra o estado ATUAL do banco, nunca contra o que a planilha tinha quando foi
+ * gerada - evita reaplicar um valor antigo por cima de uma edicao feita nesse meio tempo. */
+async function processarPlanilha(req: Request, aplicar: boolean) {
+  if (!req.file) throw new ValidationError("Selecione a planilha preenchida.");
+  const linhas = await lerPlanilhaCriticidade(req.file.buffer);
+  if (linhas.length === 0) throw new ValidationError("Planilha vazia ou fora do formato esperado (aba 'Ativos' nao encontrada).");
+
+  const resultados: ResultadoDaLinha[] = [];
+
+  for (const linha of linhas) {
+    const instrument = await prisma.instrument.findFirst({
+      where: { id: linha.instrumentId, deletedAt: null, ...clientScopeFilter(req) },
+      select: { id: true, clientId: true, tag: true, type: true },
+    });
+    if (!instrument) {
+      resultados.push({ numero: linha.numero, tag: linha.tag || linha.instrumentId, status: "erro", mensagem: "Ativo nao encontrado (ou fora do seu escopo)." });
+      continue;
+    }
+
+    const existente = await prisma.assetCriticality.findUnique({ where: { instrumentId: instrument.id } });
+    const safetyAtual = existente?.safetyScore ?? 1;
+    const productionAtual = existente?.productionScore ?? 1;
+    const mtbfMetaAtual = existente?.mtbfTargetHours ?? null;
+
+    const novaSeguranca = linha.novaSeguranca ?? safetyAtual;
+    const novaProducao = linha.novaProducao ?? productionAtual;
+    // 0 na planilha e' o jeito de pedir "limpar a meta propria"; em branco nao mexe.
+    const novoMtbfMeta = !linha.novoMtbfMetaInformado ? mtbfMetaAtual : linha.novoMtbfMeta === 0 ? null : linha.novoMtbfMeta;
+
+    const mudouSeguranca = novaSeguranca !== safetyAtual;
+    const mudouProducao = novaProducao !== productionAtual;
+    const mudouMtbfMeta = linha.novoMtbfMetaInformado && novoMtbfMeta !== mtbfMetaAtual;
+    const mudouAlgo = mudouSeguranca || mudouProducao || mudouMtbfMeta;
+
+    if (!mudouAlgo) {
+      resultados.push({ numero: linha.numero, tag: instrument.tag ?? linha.tag, status: "sem_alteracao" });
+      continue;
+    }
+    if (!linha.motivo.trim()) {
+      resultados.push({ numero: linha.numero, tag: instrument.tag ?? linha.tag, status: "erro", mensagem: "Linha alterada precisa do Motivo da revisao preenchido." });
+      continue;
+    }
+    if (linha.novaSeguranca != null && (linha.novaSeguranca < 1 || linha.novaSeguranca > 5)) {
+      resultados.push({ numero: linha.numero, tag: instrument.tag ?? linha.tag, status: "erro", mensagem: "Nova Segurança precisa ser de 1 a 5." });
+      continue;
+    }
+    if (linha.novaProducao != null && (linha.novaProducao < 1 || linha.novaProducao > 5)) {
+      resultados.push({ numero: linha.numero, tag: instrument.tag ?? linha.tag, status: "erro", mensagem: "Nova Produção precisa ser de 1 a 5." });
+      continue;
+    }
+
+    resultados.push({
+      numero: linha.numero,
+      tag: instrument.tag ?? linha.tag,
+      status: "alterado",
+      antes: { safetyScore: safetyAtual, productionScore: productionAtual, mtbfTargetHours: mtbfMetaAtual },
+      depois: { safetyScore: novaSeguranca, productionScore: novaProducao, mtbfTargetHours: novoMtbfMeta },
+    });
+
+    if (aplicar) {
+      await revisarCriticidade(prisma, instrument.id, instrument.clientId, {
+        safetyScore: novaSeguranca,
+        productionScore: novaProducao,
+        mtbfTargetHours: linha.novoMtbfMetaInformado ? novoMtbfMeta : undefined,
+        reason: linha.motivo.trim(),
+        responsibleId: req.user?.sub,
+      });
+    }
+  }
+
+  const resumo = {
+    total: resultados.length,
+    alterados: resultados.filter((r) => r.status === "alterado").length,
+    semAlteracao: resultados.filter((r) => r.status === "sem_alteracao").length,
+    comErro: resultados.filter((r) => r.status === "erro").length,
+  };
+  return { resumo, linhas: resultados };
+}
+
+export const simulateImportCriticalities = asyncHandler(async (req: Request, res: Response) => {
+  const resultado = await processarPlanilha(req, false);
+  res.json(resultado);
+});
+
+export const confirmImportCriticalities = asyncHandler(async (req: Request, res: Response) => {
+  const resultado = await processarPlanilha(req, true);
+  res.json(resultado);
 });

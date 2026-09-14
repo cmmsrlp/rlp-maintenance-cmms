@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { RefreshCw, ShieldAlert, Pencil } from "lucide-react";
+import { RefreshCw, ShieldAlert, Pencil, ChevronDown } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,7 +11,7 @@ import { PageHeader } from "../../../components/PageHeader";
 import { Modal } from "../../../components/Modal";
 import { CriticalityClassBadge } from "../../../components/CriticalityClassBadge";
 import { StatusBadge } from "../../../components/StatusBadge";
-import { SelectInput, TextareaInput } from "../../../components/form/Field";
+import { SelectInput, TextInput, TextareaInput } from "../../../components/form/Field";
 import { useToast } from "../../../components/Toast";
 import { formatDateTime } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
@@ -32,15 +32,16 @@ const schema = z
     productionNotes: z.string().optional(),
     failureScoreMode: z.enum(["AUTO", "MANUAL"]),
     failureScore: z.coerce.number().int().min(1).max(5).optional(),
-    reason: z.string().optional(),
+    // Texto livre em vez de numero: em branco = nao mexe na meta gravada; "0" = limpa a
+    // meta propria (volta a usar a media da familia); numero = define a meta propria.
+    mtbfTargetHours: z.string().optional(),
+    // Toda revisao manual (S, P, meta ou Q) exige justificativa - fica no historico com
+    // responsavel e data.
+    reason: z.string().min(3, "Explique o motivo da revisao."),
   })
   .refine((d) => d.failureScoreMode !== "MANUAL" || !!d.failureScore, {
     message: "Informe a nota de falha para sobrescrever o calculo automatico.",
     path: ["failureScore"],
-  })
-  .refine((d) => d.failureScoreMode !== "MANUAL" || !!d.reason?.trim(), {
-    message: "Explique o motivo da revisao manual.",
-    path: ["reason"],
   });
 type FormValues = z.infer<typeof schema>;
 
@@ -79,12 +80,15 @@ export default function AssetCriticalityDetail() {
       productionNotes: c?.productionNotes ?? "",
       failureScoreMode: c?.failureScoreOrigin ?? "AUTO",
       failureScore: (c?.failureScore ?? undefined) as unknown as number | undefined,
+      mtbfTargetHours: c?.mtbfTargetHours != null ? String(Math.round(c.mtbfTargetHours)) : "",
       reason: "",
     });
     setReviewOpen(true);
   }
 
   async function onSubmit(values: FormValues) {
+    const mtbfTexto = values.mtbfTargetHours?.trim() ?? "";
+    const mtbfTargetHours = mtbfTexto === "" ? undefined : mtbfTexto === "0" ? null : Number(mtbfTexto);
     try {
       await reviewCriticality(instrumentId!, {
         safetyScore: values.safetyScore,
@@ -93,6 +97,7 @@ export default function AssetCriticalityDetail() {
         productionNotes: values.productionNotes || null,
         failureScoreMode: values.failureScoreMode,
         failureScore: values.failureScoreMode === "MANUAL" ? values.failureScore : undefined,
+        mtbfTargetHours,
         reason: values.reason || undefined,
       });
       notify("success", "Criticidade revisada.");
@@ -127,8 +132,10 @@ export default function AssetCriticalityDetail() {
     return <div className="animate-pulse space-y-3"><div className="h-8 w-64 rounded bg-gray-100" /><div className="h-40 rounded bg-gray-100" /></div>;
   }
 
-  const { instrument, criticality } = data;
+  const { instrument, criticality, mtbfTargetResolved } = data;
   const consequencia = criticality ? Math.max(criticality.safetyScore, criticality.productionScore) : null;
+  const metaPropria = criticality?.mtbfTargetHours != null;
+  const razaoMtbf = criticality?.mtbfHours != null && mtbfTargetResolved ? criticality.mtbfHours / mtbfTargetResolved : null;
 
   return (
     <div>
@@ -186,12 +193,21 @@ export default function AssetCriticalityDetail() {
 
           <div className="mt-4 rounded-lg border border-dashed border-gray-200 p-3 font-mono text-xs text-graphite-600">
             <p>Consequencia C = max(S, P) = {consequencia ?? "-"}</p>
+            <p>
+              Q = razao MTBF real / MTBF-meta = {criticality?.mtbfHours != null ? Math.round(criticality.mtbfHours) : "-"} / {mtbfTargetResolved ? Math.round(mtbfTargetResolved) : "-"}
+              {razaoMtbf != null && ` = ${razaoMtbf.toFixed(2)}`}
+            </p>
             <p>Indice = 4 x C x Q = {criticality?.criticalityIndex ?? "sem calculo (dados insuficientes)"}</p>
             <p className="mt-1 text-graphite-400">Classe A tambem se aplica quando S &gt;= 4 ou P = 5, independente do indice.</p>
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
-            <div><p className="text-graphite-500">MTBF</p><p className="font-medium text-navy-900">{criticality?.mtbfHours != null ? `${Math.round(criticality.mtbfHours)} h` : "sem dados"}</p></div>
+            <div><p className="text-graphite-500">MTBF real</p><p className="font-medium text-navy-900">{criticality?.mtbfHours != null ? `${Math.round(criticality.mtbfHours)} h` : "sem dados"}</p></div>
+            <div>
+              <p className="text-graphite-500">MTBF-meta</p>
+              <p className="font-medium text-navy-900">{mtbfTargetResolved != null ? `${Math.round(mtbfTargetResolved)} h` : "sem dados"}</p>
+              <p className="text-[10px] text-graphite-400">{metaPropria ? "definida no ativo" : "media da familia"}</p>
+            </div>
             <div><p className="text-graphite-500">Falhas (12 meses)</p><p className="font-medium text-navy-900">{criticality?.failureCount12m ?? "sem dados"}</p></div>
             <div><p className="text-graphite-500">Horas operadas (12 meses)</p><p className="font-medium text-navy-900">{criticality?.operatingHours12m != null ? `${Math.round(criticality.operatingHours12m)} h` : "sem dados"}</p></div>
           </div>
@@ -250,6 +266,17 @@ export default function AssetCriticalityDetail() {
         }
       >
         <form id="criticality-review-form" onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+          <details className="rounded-lg border border-gray-200 bg-gray-50/60 text-sm open:pb-2">
+            <summary className="flex cursor-pointer items-center gap-1.5 px-3 py-2 font-medium text-navy-800">
+              <ChevronDown className="h-4 w-4" /> Tabela de referencia (S / P / Q)
+            </summary>
+            <div className="space-y-2 px-3 pb-1 text-xs text-graphite-600">
+              <p><span className="font-semibold text-navy-800">Seguranca/SSMA (S):</span> 1 sem lesao/impacto - 2 lesao leve - 3 afastamento/dano reversivel/risco legal moderado - 4 lesao grave/impacto significativo/infracao legal - 5 fatalidade/multiplas vitimas/impacto grave.</p>
+              <p><span className="font-semibold text-navy-800">Producao (P):</span> considere % de capacidade perdida, duracao da parada, redundancia/bypass, reserva disponivel e tempo de recuperacao. 1 sem parada ou redundancia integral - 2 parada local curta - 3 reducao de capacidade/parada parcial - 4 parada de linha/perda elevada - 5 parada total/gargalo principal.</p>
+              <p><span className="font-semibold text-navy-800">Quebras (Q):</span> calculado pela razao MTBF real / MTBF-meta - nao se preenche direto (veja o campo MTBF-meta abaixo).</p>
+            </div>
+          </details>
+
           <div className="grid grid-cols-2 gap-3">
             <SelectInput label="Seguranca / SSMA (S)" required options={NOTA_OPTIONS} error={errors.safetyScore?.message} {...register("safetyScore")} />
             <SelectInput label="Producao (P)" required options={NOTA_OPTIONS} error={errors.productionScore?.message} {...register("productionScore")} />
@@ -257,10 +284,16 @@ export default function AssetCriticalityDetail() {
           <TextareaInput label="Justificativa de Seguranca" rows={2} {...register("safetyNotes")} />
           <TextareaInput label="Justificativa de Producao" rows={2} {...register("productionNotes")} />
 
+          <TextInput
+            label="MTBF-meta (h)"
+            hint="Deixe em branco para nao mexer. Digite 0 para limpar e voltar a usar a media dos ativos do mesmo tipo."
+            {...register("mtbfTargetHours")}
+          />
+
           <SelectInput
             label="Origem da nota de Falhas (Q)"
             options={[
-              { value: "AUTO", label: "Automatica (recalcula pelo historico de falhas)" },
+              { value: "AUTO", label: "Automatica (recalcula pela razao MTBF real/meta)" },
               { value: "MANUAL", label: "Manual (sobrescreve o calculo automatico)" },
             ]}
             {...register("failureScoreMode")}
@@ -270,8 +303,8 @@ export default function AssetCriticalityDetail() {
           )}
           <TextareaInput
             label="Motivo da revisao"
-            required={failureScoreMode === "MANUAL"}
-            hint="Obrigatorio ao sobrescrever a nota de falhas manualmente; fica registrado no historico com responsavel e data."
+            required
+            hint="Fica registrado no historico com responsavel e data."
             error={errors.reason?.message}
             rows={2}
             {...register("reason")}
