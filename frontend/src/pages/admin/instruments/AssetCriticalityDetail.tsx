@@ -40,7 +40,7 @@ const schema = z
     reason: z.string().min(3, "Explique o motivo da revisao."),
   })
   .refine((d) => d.failureScoreMode !== "MANUAL" || !!d.failureScore, {
-    message: "Informe a nota de falha para sobrescrever o calculo automatico.",
+    message: "Informe a nota de falha para sobrescrever o cálculo automático.",
     path: ["failureScore"],
   });
 type FormValues = z.infer<typeof schema>;
@@ -166,7 +166,7 @@ export default function AssetCriticalityDetail() {
             <CriticalityClassBadge criticalityClass={criticality?.criticalityClass} />
           </div>
           <dl className="mt-4 space-y-2 text-sm">
-            <div className="flex justify-between"><dt className="text-graphite-500">Indice</dt><dd className="font-medium text-navy-900">{criticality?.criticalityIndex ?? "-"}</dd></div>
+            <div className="flex justify-between"><dt className="text-graphite-500">Índice</dt><dd className="font-medium text-navy-900">{criticality?.criticalityIndex ?? "-"}</dd></div>
             <div className="flex justify-between"><dt className="text-graphite-500">Local</dt><dd className="text-navy-900">{[instrument.plant?.name, instrument.area?.name].filter(Boolean).join(" / ") || "-"}</dd></div>
             <div className="flex justify-between"><dt className="text-graphite-500">Status do ativo</dt><dd><StatusBadge status={instrument.operationalStatus} /></dd></div>
             <div className="flex justify-between"><dt className="text-graphite-500">Atualizado em</dt><dd className="text-navy-900">{formatDateTime(criticality?.lastCalculatedAt)}</dd></div>
@@ -177,17 +177,17 @@ export default function AssetCriticalityDetail() {
           <p className="text-xs font-medium text-graphite-500">Notas e calculo utilizado</p>
           <div className="mt-3 grid grid-cols-3 gap-3">
             <div className="rounded-lg bg-navy-50 p-3 text-center">
-              <p className="text-xs text-navy-700">Seguranca (S)</p>
+              <p className="text-xs text-navy-700">Segurança (S)</p>
               <p className="text-xl font-bold text-navy-900">{criticality?.safetyScore ?? "-"}</p>
             </div>
             <div className="rounded-lg bg-navy-50 p-3 text-center">
-              <p className="text-xs text-navy-700">Producao (P)</p>
+              <p className="text-xs text-navy-700">Produção (P)</p>
               <p className="text-xl font-bold text-navy-900">{criticality?.productionScore ?? "-"}</p>
             </div>
             <div className="rounded-lg bg-navy-50 p-3 text-center">
               <p className="text-xs text-navy-700">Falhas (Q)</p>
               <p className="text-xl font-bold text-navy-900">{criticality?.failureScore ?? "sem dados"}</p>
-              <p className="text-[10px] text-navy-500">{criticality?.failureScoreOrigin === "MANUAL" ? "Manual" : "Automatico"}</p>
+              <p className="text-[10px] text-navy-500">{criticality?.failureScoreOrigin === "MANUAL" ? "Manual" : "Automático"}</p>
             </div>
           </div>
 
@@ -197,8 +197,8 @@ export default function AssetCriticalityDetail() {
               Q = razao MTBF real / MTBF-meta = {criticality?.mtbfHours != null ? Math.round(criticality.mtbfHours) : "-"} / {mtbfTargetResolved ? Math.round(mtbfTargetResolved) : "-"}
               {razaoMtbf != null && ` = ${razaoMtbf.toFixed(2)}`}
             </p>
-            <p>Indice = 4 x C x Q = {criticality?.criticalityIndex ?? "sem calculo (dados insuficientes)"}</p>
-            <p className="mt-1 text-graphite-400">Classe A tambem se aplica quando S &gt;= 4 ou P = 5, independente do indice.</p>
+            <p>Índice = 4 x C x Q = {criticality?.criticalityIndex ?? "sem cálculo (dados insuficientes)"}</p>
+            <p className="mt-1 text-graphite-400">Classe A também se aplica quando S &gt;= 4 ou P = 5, independente do índice.</p>
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
@@ -206,7 +206,7 @@ export default function AssetCriticalityDetail() {
             <div>
               <p className="text-graphite-500">MTBF-meta</p>
               <p className="font-medium text-navy-900">{mtbfTargetResolved != null ? `${Math.round(mtbfTargetResolved)} h` : "sem dados"}</p>
-              <p className="text-[10px] text-graphite-400">{metaPropria ? "definida no ativo" : "media da familia"}</p>
+              <p className="text-[10px] text-graphite-400">{metaPropria ? "definida no ativo" : "média da família"}</p>
             </div>
             <div><p className="text-graphite-500">Falhas (12 meses)</p><p className="font-medium text-navy-900">{criticality?.failureCount12m ?? "sem dados"}</p></div>
             <div><p className="text-graphite-500">Horas operadas (12 meses)</p><p className="font-medium text-navy-900">{criticality?.operatingHours12m != null ? `${Math.round(criticality.operatingHours12m)} h` : "sem dados"}</p></div>
@@ -214,8 +214,8 @@ export default function AssetCriticalityDetail() {
 
           {(criticality?.safetyNotes || criticality?.productionNotes) && (
             <div className="mt-4 space-y-2 text-sm">
-              {criticality.safetyNotes && <p><span className="font-medium text-navy-900">Seguranca:</span> {criticality.safetyNotes}</p>}
-              {criticality.productionNotes && <p><span className="font-medium text-navy-900">Producao:</span> {criticality.productionNotes}</p>}
+              {criticality.safetyNotes && <p><span className="font-medium text-navy-900">Segurança:</span> {criticality.safetyNotes}</p>}
+              {criticality.productionNotes && <p><span className="font-medium text-navy-900">Produção:</span> {criticality.productionNotes}</p>}
             </div>
           )}
         </div>
@@ -223,7 +223,7 @@ export default function AssetCriticalityDetail() {
 
       <div className="mt-6 rounded-xl border border-gray-200 bg-white">
         <div className="border-b border-gray-100 px-5 py-3">
-          <h2 className="text-sm font-semibold text-navy-900">Historico de alteracoes</h2>
+          <h2 className="text-sm font-semibold text-navy-900">Histórico de alterações</h2>
         </div>
         {!criticality?.logs || criticality.logs.length === 0 ? (
           <p className="px-5 py-6 text-center text-sm text-graphite-400">Nenhum calculo registrado ainda.</p>
@@ -236,7 +236,7 @@ export default function AssetCriticalityDetail() {
                   <div>
                     <p className="font-medium text-navy-900">{TRIGGER_LABELS[log.trigger] ?? log.trigger}</p>
                     <p className="text-xs text-graphite-500">
-                      S {log.safetyScore} / P {log.productionScore} / Q {log.failureScore ?? "-"} - Indice {log.criticalityIndex ?? "-"} - {log.origin === "MANUAL" ? "Manual" : "Automatico"}
+                      S {log.safetyScore} / P {log.productionScore} / Q {log.failureScore ?? "-"} - Índice {log.criticalityIndex ?? "-"} - {log.origin === "MANUAL" ? "Manual" : "Automático"}
                       {log.responsible ? ` - ${log.responsible.name}` : ""}
                     </p>
                     {log.reason && <p className="text-xs text-graphite-400">{log.reason}</p>}
@@ -271,30 +271,30 @@ export default function AssetCriticalityDetail() {
               <ChevronDown className="h-4 w-4" /> Tabela de referencia (S / P / Q)
             </summary>
             <div className="space-y-2 px-3 pb-1 text-xs text-graphite-600">
-              <p><span className="font-semibold text-navy-800">Seguranca/SSMA (S):</span> 1 sem lesao/impacto - 2 lesao leve - 3 afastamento/dano reversivel/risco legal moderado - 4 lesao grave/impacto significativo/infracao legal - 5 fatalidade/multiplas vitimas/impacto grave.</p>
-              <p><span className="font-semibold text-navy-800">Producao (P):</span> considere % de capacidade perdida, duracao da parada, redundancia/bypass, reserva disponivel e tempo de recuperacao. 1 sem parada ou redundancia integral - 2 parada local curta - 3 reducao de capacidade/parada parcial - 4 parada de linha/perda elevada - 5 parada total/gargalo principal.</p>
-              <p><span className="font-semibold text-navy-800">Quebras (Q):</span> calculado pela razao MTBF real / MTBF-meta - nao se preenche direto (veja o campo MTBF-meta abaixo).</p>
+              <p><span className="font-semibold text-navy-800">Segurança/SSMA (S):</span> 1 sem lesão/impacto - 2 lesão leve - 3 afastamento/dano reversível/risco legal moderado - 4 lesão grave/impacto significativo/infração legal - 5 fatalidade/múltiplas vítimas/impacto grave.</p>
+              <p><span className="font-semibold text-navy-800">Produção (P):</span> considere % de capacidade perdida, duração da parada, redundância/bypass, reserva disponível e tempo de recuperação. 1 sem parada ou redundância integral - 2 parada local curta - 3 redução de capacidade/parada parcial - 4 parada de linha/perda elevada - 5 parada total/gargalo principal.</p>
+              <p><span className="font-semibold text-navy-800">Quebras (Q):</span> calculado pela razão MTBF real / MTBF-meta - não se preenche direto (veja o campo MTBF-meta abaixo).</p>
             </div>
           </details>
 
           <div className="grid grid-cols-2 gap-3">
-            <SelectInput label="Seguranca / SSMA (S)" required options={NOTA_OPTIONS} error={errors.safetyScore?.message} {...register("safetyScore")} />
-            <SelectInput label="Producao (P)" required options={NOTA_OPTIONS} error={errors.productionScore?.message} {...register("productionScore")} />
+            <SelectInput label="Segurança / SSMA (S)" required options={NOTA_OPTIONS} error={errors.safetyScore?.message} {...register("safetyScore")} />
+            <SelectInput label="Produção (P)" required options={NOTA_OPTIONS} error={errors.productionScore?.message} {...register("productionScore")} />
           </div>
-          <TextareaInput label="Justificativa de Seguranca" rows={2} {...register("safetyNotes")} />
-          <TextareaInput label="Justificativa de Producao" rows={2} {...register("productionNotes")} />
+          <TextareaInput label="Justificativa de Segurança" rows={2} {...register("safetyNotes")} />
+          <TextareaInput label="Justificativa de Produção" rows={2} {...register("productionNotes")} />
 
           <TextInput
             label="MTBF-meta (h)"
-            hint="Deixe em branco para nao mexer. Digite 0 para limpar e voltar a usar a media dos ativos do mesmo tipo."
+            hint="Deixe em branco para não mexer. Digite 0 para limpar e voltar a usar a média dos ativos do mesmo tipo."
             {...register("mtbfTargetHours")}
           />
 
           <SelectInput
             label="Origem da nota de Falhas (Q)"
             options={[
-              { value: "AUTO", label: "Automatica (recalcula pela razao MTBF real/meta)" },
-              { value: "MANUAL", label: "Manual (sobrescreve o calculo automatico)" },
+              { value: "AUTO", label: "Automática (recalcula pela razão MTBF real/meta)" },
+              { value: "MANUAL", label: "Manual (sobrescreve o cálculo automático)" },
             ]}
             {...register("failureScoreMode")}
           />
@@ -304,7 +304,7 @@ export default function AssetCriticalityDetail() {
           <TextareaInput
             label="Motivo da revisao"
             required
-            hint="Fica registrado no historico com responsavel e data."
+            hint="Fica registrado no histórico com responsável e data."
             error={errors.reason?.message}
             rows={2}
             {...register("reason")}

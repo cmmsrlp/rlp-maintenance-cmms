@@ -158,7 +158,7 @@ export default function AssetCriticalityList() {
     <div>
       <PageHeader
         title="Criticidade de ativos"
-        description="Classificacao dinamica por Seguranca, Producao e historico de quebras/falhas - separada da prioridade da OS"
+        description="Classificação dinâmica por Segurança, Produção e histórico de quebras/falhas - separada da prioridade da OS"
         breadcrumbs={[{ label: "Ativos", to: assetsBase }, { label: "Criticidade de ativos" }]}
         actions={
           clientId && (
@@ -177,7 +177,7 @@ export default function AssetCriticalityList() {
       {clientId && (
         <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-            <p className="text-xs font-medium text-safety-red">Classe A - Critico</p>
+            <p className="text-xs font-medium text-safety-red">Classe A - Crítico</p>
             <p className="mt-1 text-2xl font-bold text-navy-900">{summary?.classA ?? "-"}</p>
           </div>
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
@@ -211,7 +211,7 @@ export default function AssetCriticalityList() {
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-graphite-400" />
               <input
                 className="input pl-9"
-                placeholder="Buscar por tag ou descricao..."
+                placeholder="Buscar por tag ou descrição..."
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               />
@@ -223,7 +223,7 @@ export default function AssetCriticalityList() {
               ))}
             </select>
             <select className="input sm:w-48" value={areaId} onChange={(e) => { setAreaId(e.target.value); setPage(1); }}>
-              <option value="">Todas as areas</option>
+              <option value="">Todas as áreas</option>
               {(areas ?? []).map((a) => (
                 <option key={a.id} value={a.id}>{a.name}</option>
               ))}
@@ -239,7 +239,7 @@ export default function AssetCriticalityList() {
               }}
             >
               <option value="">Todas as classes</option>
-              <option value="A">Classe A - Critico</option>
+              <option value="A">Classe A - Crítico</option>
               <option value="B">Classe B - Importante</option>
               <option value="C">Classe C - Comum</option>
               <option value="insufficient">Dados insuficientes</option>
@@ -278,9 +278,9 @@ export default function AssetCriticalityList() {
             { header: "P", accessor: (r) => r.assetCriticality?.productionScore ?? "-" },
             { header: "Q", accessor: (r) => r.assetCriticality?.failureScore ?? formatKpi(null) },
             { header: "MTBF", accessor: (r) => (r.assetCriticality?.mtbfHours != null ? `${Math.round(r.assetCriticality.mtbfHours)} h` : "-") },
-            { header: "Indice", accessor: (r) => r.assetCriticality?.criticalityIndex ?? "-" },
+            { header: "Índice", accessor: (r) => r.assetCriticality?.criticalityIndex ?? "-" },
             { header: "Classe", accessor: (r) => <CriticalityClassBadge criticalityClass={r.assetCriticality?.criticalityClass} size="sm" /> },
-            { header: "Tendencia", accessor: (r) => <Tendencia trend={r.assetCriticality?.trend} /> },
+            { header: "Tendência", accessor: (r) => <Tendencia trend={r.assetCriticality?.trend} /> },
             { header: "Atualizado em", accessor: (r) => formatDateTime(r.assetCriticality?.lastCalculatedAt) },
           ]}
         />
@@ -314,7 +314,7 @@ export default function AssetCriticalityList() {
             <p className="text-sm text-graphite-600">
               Exporte a planilha, revise as colunas <span className="font-medium text-navy-800">Nova Segurança</span>,{" "}
               <span className="font-medium text-navy-800">Nova Produção</span> e <span className="font-medium text-navy-800">MTBF-meta</span>{" "}
-              e preencha o <span className="font-medium text-navy-800">Motivo da revisão</span> nas linhas que mudou. Envie de volta aqui - nada e' gravado sem confirmar.
+              e preencha o <span className="font-medium text-navy-800">Motivo da revisão</span> nas linhas que mudou. Envie de volta aqui - nada é gravado sem confirmar.
             </p>
 
             <label className="btn-primary inline-flex cursor-pointer items-center gap-2">
@@ -338,8 +338,8 @@ export default function AssetCriticalityList() {
               <div className="rounded-lg border border-gray-200">
                 <div className="flex flex-wrap gap-4 border-b border-gray-100 px-4 py-3 text-sm">
                   <span><span className="font-semibold text-navy-900">{conferencia.resumo.total}</span> linha(s) lida(s)</span>
-                  <span className="text-safety-green-dark"><span className="font-semibold">{conferencia.resumo.alterados}</span> serao alteradas</span>
-                  <span className="text-graphite-500"><span className="font-semibold">{conferencia.resumo.semAlteracao}</span> sem mudanca</span>
+                  <span className="text-safety-green-dark"><span className="font-semibold">{conferencia.resumo.alterados}</span> serão alteradas</span>
+                  <span className="text-graphite-500"><span className="font-semibold">{conferencia.resumo.semAlteracao}</span> sem mudança</span>
                   {conferencia.resumo.comErro > 0 && (
                     <span className="text-safety-red"><span className="font-semibold">{conferencia.resumo.comErro}</span> com erro</span>
                   )}
@@ -368,7 +368,7 @@ export default function AssetCriticalityList() {
                         <li key={l.numero}>
                           <span className="font-medium text-navy-800">{l.tag}:</span>{" "}
                           S {l.antes?.safetyScore}→{l.depois?.safetyScore}, P {l.antes?.productionScore}→{l.depois?.productionScore}
-                          {l.antes?.mtbfTargetHours !== l.depois?.mtbfTargetHours && `, MTBF-meta ${l.antes?.mtbfTargetHours ?? "familia"}→${l.depois?.mtbfTargetHours ?? "familia"}h`}
+                          {l.antes?.mtbfTargetHours !== l.depois?.mtbfTargetHours && `, MTBF-meta ${l.antes?.mtbfTargetHours ?? "família"}→${l.depois?.mtbfTargetHours ?? "família"}h`}
                         </li>
                       ))}
                       {conferencia.resumo.alterados > 50 && (
@@ -383,10 +383,10 @@ export default function AssetCriticalityList() {
         ) : (
           <div className="rounded-lg border border-safety-green/40 bg-green-50/40 p-4">
             <p className="flex items-center gap-2 font-semibold text-safety-green-dark">
-              <CheckCircle2 className="h-5 w-5" /> Importacao concluida
+              <CheckCircle2 className="h-5 w-5" /> Importação concluída
             </p>
             <p className="mt-1 text-sm text-graphite-700">
-              {importacaoConcluida.resumo.alterados} ativo(s) revisado(s) - o historico de cada um ja mostra a alteracao.
+              {importacaoConcluida.resumo.alterados} ativo(s) revisado(s) - o histórico de cada um já mostra a alteração.
             </p>
           </div>
         )}

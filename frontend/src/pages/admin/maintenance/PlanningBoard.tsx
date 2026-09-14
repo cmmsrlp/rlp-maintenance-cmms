@@ -27,29 +27,29 @@ import { MoverOrdemModal } from "./MoverOrdemModal";
 const FAIXAS = [
   {
     id: "sem-dono",
-    titulo: "Sem responsavel",
-    explicacao: "Ninguem assumiu e ninguem foi atribuido - e' por aqui que o dia comeca.",
+    titulo: "Sem responsável",
+    explicacao: "Ninguém assumiu e ninguém foi atribuído - é por aqui que o dia começa.",
     icone: UserPlus,
     badge: "bg-amber-50 text-safety-yellow-dark",
   },
   {
     id: "pendente",
     titulo: "Pendente",
-    explicacao: "Tem responsavel, mas ainda nao pode ser executada (aguardando material, parada, liberacao...).",
+    explicacao: "Tem responsável, mas ainda não pode ser executada (aguardando material, parada, liberação...).",
     icone: Clock,
     badge: "bg-graphite-100 text-graphite-500",
   },
   {
     id: "liberada",
     titulo: "Liberada",
-    explicacao: "Pode ser executada agora - ou ja esta em execucao.",
+    explicacao: "Pode ser executada agora - ou já está em execução.",
     icone: PlayCircle,
     badge: "bg-navy-50 text-navy-600",
   },
   {
     id: "concluida",
-    titulo: "Concluida",
-    explicacao: "Encerrada. Fica aqui como o que saiu da fila no periodo.",
+    titulo: "Concluída",
+    explicacao: "Encerrada. Fica aqui como o que saiu da fila no período.",
     icone: CheckCircle2,
     badge: "bg-green-50 text-safety-green-dark",
   },
@@ -101,7 +101,7 @@ function Cartao({
       </p>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-gray-50 pt-2.5 text-xs">
         <span className={os.assignedResource ? "font-medium text-graphite-600" : "font-medium text-safety-yellow-dark"}>
-          {os.assignedResource?.name ?? "sem responsavel"}
+          {os.assignedResource?.name ?? "sem responsável"}
         </span>
         <span className="text-graphite-400">
           {os.scheduledDate ? formatDate(os.scheduledDate) : os.completedAt ? formatDate(os.completedAt) : "sem data"}
@@ -150,7 +150,7 @@ export default function PlanningBoard() {
     // OS concluida nao volta arrastando: reabrir e' decisao com motivo, feita na propria
     // OS - aqui seria um arrasto acidental desfazendo um encerramento.
     if (ordem.status === "COMPLETED") {
-      notify("error", "Esta OS ja foi concluida. Para reabrir, entre na OS e mude a situacao.");
+      notify("error", "Esta OS já foi concluída. Para reabrir, entre na OS e mude a situação.");
       return;
     }
     setMovendo({ ordem, destino });
@@ -167,7 +167,7 @@ export default function PlanningBoard() {
     <div>
       <PageHeader
         title="Planejamento"
-        description="Onde cada ordem esta na fila - o que falta ter dono, o que esta parado, o que pode ser executado e o que saiu"
+        description="Onde cada ordem está na fila - o que falta ter dono, o que está parado, o que pode ser executado e o que saiu"
         breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Planejamento" }]}
       />
 
@@ -186,7 +186,7 @@ export default function PlanningBoard() {
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-graphite-400" />
             <input
               className="input pl-9"
-              placeholder="Buscar por numero, ativo, servico ou responsavel..."
+              placeholder="Buscar por número, ativo, serviço ou responsável..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
             />
@@ -196,7 +196,7 @@ export default function PlanningBoard() {
 
       {(isClient || clientId) && (
         <p className="mb-3 text-xs text-graphite-500">
-          Arraste um cartao para a proxima coluna - o sistema abre o que falta para a OS caber la.
+          Arraste um cartão para a próxima coluna - o sistema abre o que falta para a OS caber lá.
         </p>
       )}
 
