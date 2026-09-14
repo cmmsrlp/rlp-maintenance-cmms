@@ -229,6 +229,49 @@ function scheduleConfigOf(plan: {
   };
 }
 
+const UNIDADE_LABEL: Record<MaintenanceFrequencyUnit, [string, string]> = {
+  DAY: ["dia", "dias"],
+  WEEK: ["semana", "semanas"],
+  MONTH: ["mes", "meses"],
+  YEAR: ["ano", "anos"],
+};
+
+/** Memoria de calculo do proximo vencimento, em texto - o proprio numero de dias entre
+ * data-base e vencimento pode parecer errado a um olho destreinado (mes tem 28-31 dias,
+ * nao 30 fixos, e o ajuste de calendario pode empurrar mais alguns dias), e nao ha como
+ * conferir a conta sem ver os componentes que entraram nela (achado em reavaliacao: um
+ * vencimento correto foi lido como incorreto por falta dessa memoria). */
+function memoriaDeCalculoDoVencimento(plan: {
+  triggerType: string;
+  baseDate: Date | null;
+  frequencyEvery: number | null;
+  frequencyUnit: MaintenanceFrequencyUnit;
+  dayOfMonth: number | null;
+  operationalCalendar: OperationalCalendar;
+  toleranceDaysBefore: number | null;
+  toleranceDaysAfter: number | null;
+  generateAdvanceDays: number | null;
+  nextDueDate: Date | null;
+}): string | null {
+  if (plan.triggerType !== "TIME" || !plan.baseDate || !plan.frequencyEvery || !plan.nextDueDate) return null;
+
+  const fmt = (d: Date) => d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+  const [singular, plural] = UNIDADE_LABEL[plan.frequencyUnit];
+  const partes = [
+    `Data-base ${fmt(plan.baseDate)} + ${plan.frequencyEvery} ${plan.frequencyEvery === 1 ? singular : plural}`,
+    plan.dayOfMonth ? `ancorado no dia ${plan.dayOfMonth}` : null,
+    plan.operationalCalendar === "BUSINESS_DAYS" ? "ajustado para dia util" : null,
+  ].filter(Boolean);
+  let texto = `${partes.join(", ")} = vencimento em ${fmt(plan.nextDueDate)}.`;
+  if (plan.generateAdvanceDays) {
+    texto += ` A OS pode ser gerada ${plan.generateAdvanceDays} dia(s) antes (a partir de ${fmt(computeGenerationDate(plan.nextDueDate, plan.generateAdvanceDays))}).`;
+  }
+  if (plan.toleranceDaysBefore || plan.toleranceDaysAfter) {
+    texto += ` Conta como no prazo de ${plan.toleranceDaysBefore ?? 0} dia(s) antes ate ${plan.toleranceDaysAfter ?? 0} dia(s) depois do vencimento.`;
+  }
+  return texto;
+}
+
 /** Campos cuja mudanca desloca o ciclo do plano - o pedido e' que cada alteracao desses
  * fique registrada na auditoria e recalcule o vencimento sem apagar o historico. */
 const CAMPOS_DE_AGENDAMENTO = [
@@ -865,6 +908,14 @@ export const getMaintenancePlanIndicators = asyncHandler(async (req: Request, re
       nextDueDate: true,
       lastExecutionAt: true,
       generateAdvanceDays: true,
+      triggerType: true,
+      baseDate: true,
+      frequencyEvery: true,
+      frequencyUnit: true,
+      dayOfMonth: true,
+      toleranceDaysBefore: true,
+      toleranceDaysAfter: true,
+      operationalCalendar: true,
       parts: { select: { quantity: true, sparePart: { select: { unitCost: true } } } },
     },
   });
@@ -938,6 +989,7 @@ export const getMaintenancePlanIndicators = asyncHandler(async (req: Request, re
     lastExecutionAt: plan.lastExecutionAt,
     nextDueDate: plan.nextDueDate,
     nextGenerationDate: plan.nextDueDate ? computeGenerationDate(plan.nextDueDate, plan.generateAdvanceDays) : null,
+    nextDueBreakdown: memoriaDeCalculoDoVencimento(plan),
     totals: {
       generated: workOrders.length,
       completed: concluidas.length,
@@ -957,10 +1009,14 @@ export const getMaintenancePlanIndicators = asyncHandler(async (req: Request, re
       thirdParty: custoTerceiros,
       total: custoPecas + custoMaoDeObra + custoTerceiros,
       tracked: concluidas.length > 0,
-      // Planejado x realizado precisa comparar o mesmo numero de execucoes: o custo de um
-      // ciclo multiplicado pelas OS concluidas. So material - ver o comentario acima.
+      // O que sai por execucao (usado sempre, mesmo sem nenhuma OS concluida ainda - e'
+      // o numero que responde "quanto custa material para RODAR o plano uma vez").
       plannedPerCycle: custoPlanejadoPorCiclo,
-      planned: custoPlanejadoPorCiclo != null ? custoPlanejadoPorCiclo * concluidas.length : null,
+      // O planejado acumulado (por ciclo x OS concluidas) so' faz sentido lado a lado do
+      // realizado em pecas - com zero OS concluidas ele sempre daria R$ 0,00 mesmo havendo
+      // material previsto, e "R$ 0,00 previsto" ao lado de "R$ 29,00 por execucao" lia como
+      // contradicao (achado em reavaliacao). null enquanto nao houver o que comparar.
+      planned: custoPlanejadoPorCiclo != null && concluidas.length > 0 ? custoPlanejadoPorCiclo * concluidas.length : null,
       plannedCovers: "material" as const,
     },
     materialUsage: [...consumo.values()].sort((a, b) => b.quantity - a.quantity),

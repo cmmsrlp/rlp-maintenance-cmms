@@ -210,8 +210,16 @@ export default function MaintenancePlanForm() {
   // volta ao topo do assistente a cada troca de etapa forca a pessoa a ver o conteudo novo
   // antes de poder clicar em qualquer botao daquela etapa.
   const topoDoAssistenteRef = useRef<HTMLDivElement>(null);
+  // Trava curta logo apos qualquer troca de etapa: um clique duplo (ou um clique repetido
+  // rapido demais, humano ou de automacao de teste) podia acertar duas vezes o mesmo lugar
+  // da tela - a segunda vez cai exatamente onde o botao "Salvar plano" acabou de aparecer no
+  // lugar do "Continuar" da ultima etapa, salvando o plano sem querer (achado em
+  // reavaliacao). Ignorar cliques nos botoes de navegacao por um instante apos cada troca
+  // fecha essa janela, complementando o scroll ao topo que ja existia.
+  const [trocandoDeEtapa, setTrocandoDeEtapa] = useState(false);
 
   async function goToStep(next: number) {
+    if (trocandoDeEtapa) return;
     if (next > step) {
       const ok = await trigger(STEP_FIELDS[step]);
       if (!ok) {
@@ -223,6 +231,8 @@ export default function MaintenancePlanForm() {
       }
     }
     setStep(next);
+    setTrocandoDeEtapa(true);
+    setTimeout(() => setTrocandoDeEtapa(false), 400);
     topoDoAssistenteRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -1012,15 +1022,15 @@ export default function MaintenancePlanForm() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <button type="button" className="btn-outline" onClick={() => (step === 0 ? navigate(-1) : goToStep(step - 1))}>
+          <button type="button" className="btn-outline" disabled={trocandoDeEtapa} onClick={() => (step === 0 ? navigate(-1) : goToStep(step - 1))}>
             {step === 0 ? "Cancelar" : "Voltar"}
           </button>
           {step < 2 ? (
-            <button type="button" className="btn-primary" onClick={() => goToStep(step + 1)}>
+            <button type="button" className="btn-primary" disabled={trocandoDeEtapa} onClick={() => goToStep(step + 1)}>
               Continuar
             </button>
           ) : (
-            <button type="submit" className="btn-primary" disabled={isSubmitting}>
+            <button type="submit" className="btn-primary" disabled={isSubmitting || trocandoDeEtapa}>
               {isSubmitting ? "Salvando..." : "Salvar plano"}
             </button>
           )}

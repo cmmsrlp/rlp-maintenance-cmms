@@ -70,6 +70,19 @@ export const InstrumentPicker = forwardRef<HTMLInputElement, InstrumentPickerPro
     enabled: pronto && aberto,
   });
 
+  // O ativo pode estar cadastrado numa area diferente da escolhida (denominacao errada,
+  // reclassificacao pendente etc.) - sem isso a solicitacao "nasce sem ativo e perde
+  // rastreabilidade" (achado em reavaliacao: TAG exato digitado em Corte 1 nao encontrava
+  // um ativo que existe, so' que fora dessa area). So dispara quando a busca com area deu
+  // zero resultado, pra nao gastar outra consulta em toda digitada.
+  const buscaSemArea = !!areaId && !!buscaAplicada && !isFetching && (data?.items?.length ?? 0) === 0;
+  const { data: dataForaDaArea } = useQuery({
+    queryKey: ["instruments-busca-fora-area", clientId ?? "own", buscaAplicada],
+    queryFn: () => listInstruments({ clientId, search: buscaAplicada, scope: "cmms", pageSize: 5 }),
+    enabled: pronto && aberto && buscaSemArea,
+  });
+  const opcoesForaDaArea = (dataForaDaArea?.items ?? []).filter((i) => i.id !== excludeId);
+
   // Ao editar, o valor ja vem preenchido: busca a ficha so para mostrar de quem se trata.
   const { data: selecionado } = useQuery({
     queryKey: ["instrument-selecionado", selecionadoId],
@@ -171,9 +184,34 @@ export const InstrumentPicker = forwardRef<HTMLInputElement, InstrumentPickerPro
           {isFetching && opcoes.length === 0 ? (
             <p className="px-3 py-2 text-sm text-graphite-500">Buscando...</p>
           ) : opcoes.length === 0 ? (
-            <p className="px-3 py-2 text-sm text-graphite-500">
-              {buscaAplicada ? `Nenhum ativo encontrado para "${buscaAplicada}".` : "Digite para buscar um ativo."}
-            </p>
+            <>
+              <p className="px-3 py-2 text-sm text-graphite-500">
+                {buscaAplicada ? `Nenhum ativo encontrado para "${buscaAplicada}" nesta area.` : "Digite para buscar um ativo."}
+              </p>
+              {opcoesForaDaArea.length > 0 && (
+                <div className="border-t border-gray-100">
+                  <p className="px-3 pt-2 text-xs font-medium uppercase tracking-wide text-graphite-400">Encontrado fora desta area</p>
+                  <ul className="divide-y divide-gray-100">
+                    {opcoesForaDaArea.map((i) => (
+                      <li key={i.id}>
+                        <button
+                          type="button"
+                          className="flex w-full items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-50"
+                          onClick={() => escolher(i.id)}
+                        >
+                          <span className="min-w-0">
+                            <span className="block text-sm font-medium text-navy-900">{i.tag ?? i.type}</span>
+                            <span className="block truncate text-xs text-graphite-400">
+                              {[i.description || i.model, i.area?.name, i.plant?.name].filter(Boolean).join(" - ") || i.type}
+                            </span>
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
           ) : (
             <ul className="divide-y divide-gray-100">
               {opcoes.map((i) => (

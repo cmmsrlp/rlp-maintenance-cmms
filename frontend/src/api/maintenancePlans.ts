@@ -96,6 +96,7 @@ export interface PlanIndicators {
   lastExecutionAt: string | null;
   nextDueDate: string | null;
   nextGenerationDate: string | null;
+  nextDueBreakdown: string | null;
   totals: { generated: number; completed: number; open: number; overdue: number };
   /** null = sem OS concluida ainda; a tela mostra "Dados insuficientes", nao 0%. */
   compliancePct: number | null;

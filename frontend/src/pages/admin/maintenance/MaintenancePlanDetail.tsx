@@ -37,6 +37,11 @@ export default function MaintenancePlanDetail() {
   const [generating, setGenerating] = useState(false);
   const [busy, setBusy] = useState(false);
   const [atribuirOpen, setAtribuirOpen] = useState(false);
+  // window.confirm() e' um dialogo nativo bloqueante - o mesmo padrao que ja tinha travado a
+  // sessao ao consumir uma reserva de material (window.prompt) e voltou a travar aqui ao
+  // gerar OS antes da antecedencia configurada (achado em reavaliacao: clique em "Gerar OS"
+  // parou de responder e nenhuma aba nova abria). Substituido por confirmacao no proprio app.
+  const [confirmAntecipar, setConfirmAntecipar] = useState<string | null>(null);
 
   const { data: plan, isLoading } = useQuery({ queryKey: ["maintenance-plan", id], queryFn: () => getMaintenancePlan(id) });
   const { data: indicators } = useQuery({
@@ -96,15 +101,10 @@ export default function MaintenancePlanDetail() {
       // so mostrar o erro, oferece a antecipacao explicita - que e' uma decisao legitima
       // do planejador, desde que consciente.
       if (!forcar && mensagem.includes("geracao forcada")) {
-        if (window.confirm(`${mensagem}
-
-Gerar a OS agora mesmo assim?`)) {
-          setGenerating(false);
-          return handleGenerate(true);
-        }
-      } else {
-        notify("error", mensagem);
+        setConfirmAntecipar(mensagem);
+        return;
       }
+      notify("error", mensagem);
     } finally {
       setGenerating(false);
     }
@@ -210,6 +210,12 @@ Gerar a OS agora mesmo assim?`)) {
             <IndicadorCard rotulo="Proxima geracao da OS" valor={formatDate(indicators.nextGenerationDate) || "-"} />
             <IndicadorCard rotulo="Proximo vencimento" valor={formatDate(indicators.nextDueDate) || "-"} />
           </div>
+          {/* Memoria de calculo: sem ver data-base, periodicidade e ajustes um vencimento
+              correto pode parecer errado (mes nao tem 30 dias fixos, antecedencia de geracao
+              e vencimento sao datas diferentes de proposito) - achado em reavaliacao. */}
+          {indicators.nextDueBreakdown && (
+            <p className="-mt-2 text-xs text-graphite-500">{indicators.nextDueBreakdown}</p>
+          )}
 
           <div className="card p-5">
             <h2 className="mb-3 font-semibold text-navy-900">Custo planejado x realizado</h2>
@@ -230,20 +236,21 @@ Gerar a OS agora mesmo assim?`)) {
                 guarda a HH prevista, mas nao um valor/hora - e uma taxa media inventada
                 faria a comparacao confrontar um numero medido com um chute. */}
             <div className="mt-4 rounded-lg bg-gray-50 px-4 py-3 text-sm">
-              {indicators.cost.planned != null ? (
+              {indicators.cost.plannedPerCycle != null ? (
                 <>
                   <p className="text-graphite-700">
-                    Material previsto: <span className="font-semibold text-navy-900">{formatCurrency(indicators.cost.planned)}</span>
-                    {indicators.cost.plannedPerCycle != null && (
-                      <span className="text-graphite-500"> ({formatCurrency(indicators.cost.plannedPerCycle)} por execucao)</span>
-                    )}
-                    {indicators.cost.tracked && (
-                      <>
-                        {" x realizado em pecas: "}
-                        <span className="font-semibold text-navy-900">{formatCurrency(indicators.cost.parts)}</span>
-                      </>
-                    )}
+                    Material previsto por execucao: <span className="font-semibold text-navy-900">{formatCurrency(indicators.cost.plannedPerCycle)}</span>
                   </p>
+                  {/* So compara acumulado com realizado quando ha pelo menos uma OS concluida -
+                      antes disso o acumulado e' sempre zero e "R$ 0,00 previsto" ao lado de um
+                      custo por execucao diferente de zero lia como contradicao. */}
+                  {indicators.cost.planned != null && indicators.cost.tracked && (
+                    <p className="mt-1 text-graphite-700">
+                      Planejado acumulado ({indicators.totals.completed}x): <span className="font-semibold text-navy-900">{formatCurrency(indicators.cost.planned)}</span>
+                      {" x realizado em pecas: "}
+                      <span className="font-semibold text-navy-900">{formatCurrency(indicators.cost.parts)}</span>
+                    </p>
+                  )}
                   <p className="mt-1 text-xs text-graphite-500">
                     O planejado cobre so o material previsto. Mao de obra planejada aparece em horas no cartao
                     "HH planejada x realizada" - o plano nao guarda valor/hora.
@@ -359,6 +366,19 @@ Gerar a OS agora mesmo assim?`)) {
         loading={deleting}
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}
+      />
+
+      <ConfirmDialog
+        open={confirmAntecipar != null}
+        title="Antecipar geracao da OS"
+        description={`${confirmAntecipar ?? ""} Gerar a OS agora mesmo assim?`}
+        confirmLabel="Gerar mesmo assim"
+        loading={generating}
+        onConfirm={() => {
+          setConfirmAntecipar(null);
+          handleGenerate(true);
+        }}
+        onCancel={() => setConfirmAntecipar(null)}
       />
 
       {atribuirOpen && (
