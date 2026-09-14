@@ -27,6 +27,7 @@ import { getApiErrorMessage } from "../../../api/client";
 import { formatCurrency } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 import { FORMATOS_DE_IMAGEM, problemaNaImagem } from "../../../lib/imagens";
+import { numeroOpcional } from "../../../lib/zodHelpers";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -35,7 +36,7 @@ const schema = z.object({
   type: z.string().min(1, "Selecione o tipo de mao de obra."),
   name: z.string().min(2, "Informe o nome."),
   registrationNumber: z.string().optional(),
-  hourlyRate: z.coerce.number().nonnegative().optional().or(z.literal("")),
+  hourlyRate: numeroOpcional(z.coerce.number().nonnegative()),
   userId: z.string().optional(),
 });
 type FormValues = z.infer<typeof schema>;
@@ -91,7 +92,7 @@ export default function LaborResourcesList() {
       type: recurso?.type ?? "",
       name: recurso?.name ?? "",
       registrationNumber: recurso?.registrationNumber ?? "",
-      hourlyRate: recurso?.hourlyRate != null ? recurso.hourlyRate : "",
+      hourlyRate: recurso?.hourlyRate ?? undefined,
       userId: recurso?.userId ?? "",
     });
     setEditing(recurso);
@@ -110,7 +111,7 @@ export default function LaborResourcesList() {
     try {
       const payload = {
         ...values,
-        hourlyRate: values.hourlyRate === "" ? null : values.hourlyRate,
+        hourlyRate: values.hourlyRate ?? null,
         userId: values.userId || null,
       };
       const recurso = editing

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { numeroOpcional } from "../../../lib/zodHelpers";
 import { Plus, Trash2 } from "lucide-react";
 import { PageHeader } from "../../../components/PageHeader";
 import { TextInput, TextareaInput, SelectInput } from "../../../components/form/Field";
@@ -57,7 +58,7 @@ const schema = z.object({
   checklist: z.array(
     z.object({
       description: z.string(),
-      estimatedMinutes: z.coerce.number().int().nonnegative().optional().or(z.literal("")),
+      estimatedMinutes: numeroOpcional(z.coerce.number().int().nonnegative()),
     }),
   ),
 });
@@ -100,7 +101,7 @@ export default function WorkOrderForm() {
       tipoSelecionado: "CORRECTIVE_IN_OPERATION",
       priority: "MEDIUM",
       status: "OPEN",
-      checklist: [{ description: "", estimatedMinutes: "" }],
+      checklist: [{ description: "", estimatedMinutes: undefined }],
     },
   });
   const { fields, append, remove } = useFieldArray({ control, name: "checklist" });
@@ -179,8 +180,8 @@ export default function WorkOrderForm() {
         failureCorrectiveAction: existing.failureCorrectiveAction ?? "",
         productionLoss: existing.productionLoss ?? undefined,
         checklist: existing.checklist?.length
-          ? existing.checklist.map((c) => ({ description: c.description, estimatedMinutes: c.estimatedMinutes ?? "" }))
-          : [{ description: "", estimatedMinutes: "" }],
+          ? existing.checklist.map((c) => ({ description: c.description, estimatedMinutes: c.estimatedMinutes ?? undefined }))
+          : [{ description: "", estimatedMinutes: undefined }],
       });
     }
   }, [existing, reset]);
@@ -232,7 +233,7 @@ export default function WorkOrderForm() {
         status: (values.status || undefined) as MaintenanceOrderStatus | undefined,
         checklist: values.checklist
           .filter((c) => c.description.trim())
-          .map((c) => ({ description: c.description, estimatedMinutes: c.estimatedMinutes === "" ? null : Number(c.estimatedMinutes) })),
+          .map((c) => ({ description: c.description, estimatedMinutes: c.estimatedMinutes ?? null })),
       };
       const saved = isEdit ? await updateMaintenanceWorkOrder(id!, payload) : await createMaintenanceWorkOrder(payload);
       notify("success", isEdit ? "OS atualizada." : "OS criada.");
@@ -529,7 +530,7 @@ export default function WorkOrderForm() {
             <div>
               <p className="text-xs text-graphite-500">O que fazer, em ordem, e o tempo esperado de cada uma (em minutos).</p>
             </div>
-            <button type="button" className="btn-ghost btn-sm" onClick={() => append({ description: "", estimatedMinutes: "" })}>
+            <button type="button" className="btn-ghost btn-sm" onClick={() => append({ description: "", estimatedMinutes: undefined })}>
               <Plus className="h-4 w-4" /> Adicionar item
             </button>
           </div>

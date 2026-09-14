@@ -15,6 +15,7 @@ import { SparePartPicker } from "../../../components/SparePartPicker";
 import { Tabs } from "../../../components/Tabs";
 import { InstrumentFormModal } from "./InstrumentFormModal";
 import { MeterFormModal } from "./MeterFormModal";
+import { TECNICAS_PREDITIVAS } from "../../../lib/maintenanceLabels";
 import { AssetPhoto } from "../../../components/AssetPhoto";
 import { AssetSetupAlerts } from "../../../components/AssetSetupAlerts";
 import { AssetLubricationCard } from "../../../components/AssetLubricationCard";
@@ -349,6 +350,9 @@ export default function InstrumentDetail() {
                       <div>
                         <p className="flex items-center gap-1.5 font-medium text-graphite-800">
                           {m.name}
+                          <span className="rounded-full bg-navy-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-navy-700">
+                            {TECNICAS_PREDITIVAS[m.technique]}
+                          </span>
                           {outOfRange && <AlertTriangle className="h-3.5 w-3.5 text-safety-red" aria-label="Fora da faixa normal" />}
                         </p>
                         <p className={`text-xs ${outOfRange ? "font-medium text-safety-red" : "text-graphite-400"}`}>

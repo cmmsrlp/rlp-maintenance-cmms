@@ -13,6 +13,7 @@ import { TextInput } from "../../../components/form/Field";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
 import { formatCurrency, formatDate, formatDateTime } from "../../../lib/format";
+import { numeroOpcional } from "../../../lib/zodHelpers";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -23,7 +24,7 @@ const schema = z.object({
   category: z.string().optional(),
   unit: z.string().optional(),
   minStock: z.coerce.number().int().nonnegative().optional(),
-  unitCost: z.coerce.number().nonnegative().optional().or(z.literal("")),
+  unitCost: numeroOpcional(z.coerce.number().nonnegative()),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -36,6 +37,14 @@ export default function SparePartsList() {
   const [page, setPage] = useState(1);
   const [createOpen, setCreateOpen] = useState(false);
   const [historicoDe, setHistoricoDe] = useState<SparePart | null>(null);
+  // window.prompt() encadeado (quantidade, depois custo) e' o mesmo dialogo nativo
+  // bloqueante que ja tinha travado a sessao noutros dois fluxos desta auditoria (consumir
+  // reserva, gerar OS antes da antecedencia) - so que aqui ninguem tinha reproduzido ainda
+  // (achado nesta varredura). Substituido por um Modal do proprio app.
+  const [movimento, setMovimento] = useState<{ part: SparePart; type: "IN" | "OUT" } | null>(null);
+  const [quantidadeMovimento, setQuantidadeMovimento] = useState("");
+  const [custoMovimento, setCustoMovimento] = useState("");
+  const [salvandoMovimento, setSalvandoMovimento] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["spare-parts", clientId, search, page],
@@ -62,7 +71,7 @@ export default function SparePartsList() {
 
   async function onSubmit(values: FormValues) {
     try {
-      await createSparePart({ ...values, clientId, unitCost: values.unitCost === "" ? null : values.unitCost });
+      await createSparePart({ ...values, clientId, unitCost: values.unitCost ?? null });
       notify("success", "Peca cadastrada no almoxarifado.");
       reset({ unit: "un" });
       setCreateOpen(false);
@@ -72,20 +81,32 @@ export default function SparePartsList() {
     }
   }
 
-  async function handleMovement(part: SparePart, type: "IN" | "OUT") {
-    const raw = window.prompt(type === "IN" ? `Entrada de quantos "${part.name}"?` : `Saida de quantos "${part.name}"?`);
-    if (!raw || Number.isNaN(Number(raw)) || Number(raw) <= 0) return;
-    let unitCost: number | undefined;
-    if (type === "IN") {
-      const costRaw = window.prompt(`Custo unitario desta compra (opcional, deixe em branco pra pular):`, part.unitCost != null ? String(part.unitCost) : "");
-      if (costRaw && !Number.isNaN(Number(costRaw)) && Number(costRaw) >= 0) unitCost = Number(costRaw);
+  function handleMovement(part: SparePart, type: "IN" | "OUT") {
+    setMovimento({ part, type });
+    setQuantidadeMovimento("");
+    setCustoMovimento(type === "IN" && part.unitCost != null ? String(part.unitCost) : "");
+  }
+
+  async function submitMovimento() {
+    if (!movimento) return;
+    const quantidade = Math.trunc(Number(quantidadeMovimento));
+    if (!quantidadeMovimento || Number.isNaN(quantidade) || quantidade <= 0) {
+      notify("error", "Informe uma quantidade valida (maior que zero).");
+      return;
     }
+    const unitCost = movimento.type === "IN" && custoMovimento && !Number.isNaN(Number(custoMovimento)) && Number(custoMovimento) >= 0
+      ? Number(custoMovimento)
+      : undefined;
+    setSalvandoMovimento(true);
     try {
-      await addSparePartMovement(part.id, { type, quantity: Math.trunc(Number(raw)), unitCost });
+      await addSparePartMovement(movimento.part.id, { type: movimento.type, quantity: quantidade, unitCost });
       notify("success", "Estoque atualizado.");
+      setMovimento(null);
       queryClient.invalidateQueries({ queryKey: ["spare-parts"] });
     } catch (error) {
       notify("error", getApiErrorMessage(error));
+    } finally {
+      setSalvandoMovimento(false);
     }
   }
 
@@ -340,6 +361,44 @@ export default function SparePartsList() {
             ))}
           </ul>
         )}
+      </Modal>
+
+      <Modal
+        open={!!movimento}
+        onClose={() => setMovimento(null)}
+        title={movimento ? `${movimento.type === "IN" ? "Entrada" : "Saida"} - ${movimento.part.name}` : ""}
+        size="sm"
+        footer={
+          <>
+            <button type="button" className="btn-outline" onClick={() => setMovimento(null)}>Cancelar</button>
+            <button type="button" className="btn-primary" disabled={salvandoMovimento} onClick={submitMovimento}>
+              {salvandoMovimento ? "Salvando..." : "Confirmar"}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-graphite-600">
+            Saldo atual: {movimento?.part.stockQty} {movimento?.part.unit}
+          </p>
+          <TextInput
+            label="Quantidade"
+            required
+            type="number"
+            min={1}
+            value={quantidadeMovimento}
+            onChange={(e) => setQuantidadeMovimento(e.target.value)}
+          />
+          {movimento?.type === "IN" && (
+            <TextInput
+              label="Custo unitario desta compra (opcional)"
+              type="number"
+              step="any"
+              value={custoMovimento}
+              onChange={(e) => setCustoMovimento(e.target.value)}
+            />
+          )}
+        </div>
       </Modal>
     </div>
   );

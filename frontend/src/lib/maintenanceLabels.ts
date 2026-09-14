@@ -1,7 +1,19 @@
 import type { CorrectiveType, MaintenanceOrderType, MaintenancePlanType, FailureSeverity, LubricationMethod,
   WorkOrderExecutionCondition,
   MaintenanceOrderStatus,
+  PredictiveTechnique,
 } from "../api/types";
+
+export const TECNICAS_PREDITIVAS: Record<PredictiveTechnique, string> = {
+  COUNTER: "Contador",
+  VIBRATION: "Vibracao",
+  THERMOGRAPHY: "Termografia",
+  OIL_ANALYSIS: "Analise de oleo",
+  ULTRASOUND: "Ultrassom",
+  MOTOR_CURRENT: "Corrente do motor",
+  VISUAL: "Inspecao visual",
+  OTHER: "Outra",
+};
 
 /** Rotulos dos tipos de servico. Ficam num arquivo so porque apareciam repetidos em cada
  * tela - e, repetidos, saiam de sincronia toda vez que um tipo novo entrava. */
