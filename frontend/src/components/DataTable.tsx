@@ -137,7 +137,7 @@ export function DataTable<T>({
       {pagination && pagination.totalPages > 1 && onPageChange && (
         <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3 text-sm text-graphite-600">
           <span>
-            Pagina {pagination.page} de {pagination.totalPages} - {pagination.total} registros
+            Página {pagination.page} de {pagination.totalPages} - {pagination.total} registros
           </span>
           <div className="flex gap-1">
             <button
@@ -145,7 +145,7 @@ export function DataTable<T>({
               className="btn-ghost btn-sm"
               disabled={pagination.page <= 1}
               onClick={() => onPageChange(pagination.page - 1)}
-              aria-label="Pagina anterior"
+              aria-label="Página anterior"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -154,7 +154,7 @@ export function DataTable<T>({
               className="btn-ghost btn-sm"
               disabled={pagination.page >= pagination.totalPages}
               onClick={() => onPageChange(pagination.page + 1)}
-              aria-label="Proxima pagina"
+              aria-label="Próxima página"
             >
               <ChevronRight className="h-4 w-4" />
             </button>

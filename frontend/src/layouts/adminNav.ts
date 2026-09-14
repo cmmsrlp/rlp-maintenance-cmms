@@ -26,7 +26,7 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/gestao/ativos", label: "Ativos", icon: Gauge, roles: ["ADMIN", "TECHNICIAN", "COMMERCIAL"] },
   { to: "/gestao/ativos/criticidade", label: "Criticidade de ativos", icon: ShieldAlert, roles: ["ADMIN", "TECHNICIAN", "COMMERCIAL"] },
   { to: "/gestao/manutencao", label: "CMMS", icon: Wrench, roles: ["ADMIN"] },
-  { to: "/gestao/usuarios", label: "Usuarios e perfis", icon: Users, roles: ["ADMIN"] },
+  { to: "/gestao/usuarios", label: "Usuários e perfis", icon: Users, roles: ["ADMIN"] },
   { to: "/gestao/auditoria", label: "Auditoria", icon: History, roles: ["ADMIN"] },
-  { to: "/gestao/plataforma", label: "Administracao da plataforma", icon: Layers3, roles: ["ADMIN"] },
+  { to: "/gestao/plataforma", label: "Administração da plataforma", icon: Layers3, roles: ["ADMIN"] },
 ];

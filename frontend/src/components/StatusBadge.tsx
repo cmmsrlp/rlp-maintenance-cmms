@@ -15,13 +15,13 @@ const STATUS_MAP: Record<string, { label: string; tone: Tone }> = {
   PROSPECT: { label: "Prospecto", tone: "navy" },
   CANCELED: { label: "Cancelado", tone: "red" },
   // instrumentos / calibracao / contratos (status derivado por vencimento)
-  VALID: { label: "Valido", tone: "green" },
-  DUE_SOON: { label: "Proximo do vencimento", tone: "yellow" },
+  VALID: { label: "Válido", tone: "green" },
+  DUE_SOON: { label: "Próximo do vencimento", tone: "yellow" },
   EXPIRED: { label: "Vencido", tone: "red" },
   EXPIRING_SOON: { label: "Vencendo em breve", tone: "yellow" },
-  IN_MAINTENANCE: { label: "Em manutencao", tone: "navy" },
+  IN_MAINTENANCE: { label: "Em manutenção", tone: "navy" },
   // condicao operacional do ativo (independente do status de calibracao acima)
-  IN_OPERATION: { label: "Em operacao", tone: "green" },
+  IN_OPERATION: { label: "Em operação", tone: "green" },
   STOPPED: { label: "Parado", tone: "red" },
   STANDBY: { label: "Reserva", tone: "navy" },
   DEACTIVATED: { label: "Desativado", tone: "graphite" },
@@ -29,7 +29,7 @@ const STATUS_MAP: Record<string, { label: string; tone: Tone }> = {
   // (rotulo generico "Reprovado"); use o prop `label` pra sobrescrever com "Rejeitada".
   OPEN: { label: "Aberta", tone: "navy" },
   IN_TRIAGE: { label: "Em triagem", tone: "yellow" },
-  AWAITING_INFO: { label: "Aguardando informacao", tone: "yellow" },
+  AWAITING_INFO: { label: "Aguardando informação", tone: "yellow" },
   PLANNED: { label: "Planejada", tone: "navy" },
   CONVERTED: { label: "Convertida em OS", tone: "green" },
   CLOSED: { label: "Encerrada", tone: "graphite" },
@@ -37,25 +37,25 @@ const STATUS_MAP: Record<string, { label: string; tone: Tone }> = {
   PROGRAMMED: { label: "Programada", tone: "navy" },
   RELEASED: { label: "Liberada", tone: "navy" },
   AWAITING_MATERIAL: { label: "Aguardando material", tone: "yellow" },
-  AWAITING_RELEASE: { label: "Aguardando liberacao", tone: "yellow" },
+  AWAITING_RELEASE: { label: "Aguardando liberação", tone: "yellow" },
   AWAITING_STOPPAGE: { label: "Aguardando parada", tone: "yellow" },
   // ordem de servico
-  BUDGET: { label: "Orcamento", tone: "graphite" },
+  BUDGET: { label: "Orçamento", tone: "graphite" },
   APPROVED: { label: "Aprovada", tone: "navy" },
   SCHEDULED: { label: "Agendada", tone: "navy" },
   IN_PROGRESS: { label: "Em andamento", tone: "yellow" },
-  COMPLETED: { label: "Concluida", tone: "green" },
+  COMPLETED: { label: "Concluída", tone: "green" },
   // laudos / certificados
   DRAFT: { label: "Rascunho", tone: "graphite" },
   ISSUED: { label: "Emitido", tone: "green" },
   APPROVED_WITH_RESTRICTION: { label: "Aprovado com ressalva", tone: "yellow" },
   REJECTED: { label: "Reprovado", tone: "red" },
   // produtos
-  UNAVAILABLE: { label: "Indisponivel", tone: "graphite" },
+  UNAVAILABLE: { label: "Indisponível", tone: "graphite" },
   // orcamentos / pedidos
   NEW: { label: "Novo", tone: "navy" },
-  IN_ANALYSIS: { label: "Em analise", tone: "yellow" },
-  QUOTE_SENT: { label: "Orcamento enviado", tone: "navy" },
+  IN_ANALYSIS: { label: "Em análise", tone: "yellow" },
+  QUOTE_SENT: { label: "Orçamento enviado", tone: "navy" },
   SEPARATED: { label: "Separado", tone: "yellow" },
   DELIVERED: { label: "Entregue", tone: "green" },
   PENDING: { label: "Pendente", tone: "graphite" },
@@ -75,12 +75,12 @@ const STATUS_MAP: Record<string, { label: string; tone: Tone }> = {
   PARTIALLY_REPAIRED: { label: "Reparo parcial", tone: "yellow" },
   // cronograma de parada programada (IN_PROGRESS reaproveita a entrada de ordem de servico)
   PLANNING: { label: "Planejamento", tone: "navy" },
-  DONE: { label: "Concluido", tone: "green" },
+  DONE: { label: "Concluído", tone: "green" },
   // criticidade do ativo / prioridade da OS (mesma escala nos dois)
   LOW: { label: "Baixa", tone: "graphite" },
-  MEDIUM: { label: "Media", tone: "navy" },
+  MEDIUM: { label: "Média", tone: "navy" },
   HIGH: { label: "Alta", tone: "yellow" },
-  CRITICAL: { label: "Critica", tone: "red" },
+  CRITICAL: { label: "Crítica", tone: "red" },
 };
 
 /** Mesmo texto que o badge mostra, pra reaproveitar em CSV/relatorio sem duplicar o mapa. */

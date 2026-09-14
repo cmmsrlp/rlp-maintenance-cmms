@@ -82,9 +82,9 @@ const PORTAL_NAV_SECTIONS: PortalNavSection[] = [
     title: "Operacional",
     icon: HardHat,
     items: [
-      { to: "/portal/manutencao/solicitacoes", label: "Solicitacoes", icon: ClipboardPlus, requires: ["CMMS_MAINTENANCE"] },
-      { to: "/portal/manutencao/ordens", label: "Ordens de manutencao", icon: ClipboardList, requires: ["CMMS_MAINTENANCE"] },
-      { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/programacao", label: "Programacao", icon: CalendarDays, requires: ["CMMS_MAINTENANCE"] },
+      { to: "/portal/manutencao/solicitacoes", label: "Solicitações", icon: ClipboardPlus, requires: ["CMMS_MAINTENANCE"] },
+      { to: "/portal/manutencao/ordens", label: "Ordens de manutenção", icon: ClipboardList, requires: ["CMMS_MAINTENANCE"] },
+      { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/programacao", label: "Programação", icon: CalendarDays, requires: ["CMMS_MAINTENANCE"] },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/planejamento", label: "Planejamento", icon: ListChecks, requires: ["CMMS_MAINTENANCE"] },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/cronogramas-parada", label: "Cronogramas de parada", icon: CalendarRange, requires: ["CMMS_MAINTENANCE"] },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/planos", label: "Planos preventivos", icon: ShieldCheck, requires: ["CMMS_MAINTENANCE"] },
@@ -95,7 +95,7 @@ const PORTAL_NAV_SECTIONS: PortalNavSection[] = [
     // Lubrificacao tem topico proprio: e' um ciclo inteiro (lubrificante no almoxarifado ->
     // ponto -> rota -> aplicacao -> previsao de consumo), com rotina e responsavel proprios,
     // e nao um item solto dentro de manutencao.
-    title: "Lubrificacao",
+    title: "Lubrificação",
     icon: Droplet,
     defaultCollapsed: true,
     items: [
@@ -103,12 +103,12 @@ const PORTAL_NAV_SECTIONS: PortalNavSection[] = [
       { to: "/portal/lubrificacao/pontos", label: "Pontos", icon: MapPin, requires: ["CMMS_MAINTENANCE"] },
       { to: "/portal/lubrificacao/rotas", label: "Rotas", icon: Route, requires: ["CMMS_MAINTENANCE"] },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/lubrificacao/lubrificantes", label: "Lubrificantes", icon: FlaskConical, requires: ["CMMS_MAINTENANCE"] },
-      { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/lubrificacao/previsao", label: "Previsao de consumo", icon: TrendingUp, requires: ["CMMS_MAINTENANCE"] },
-      { to: "/portal/lubrificacao/historico", label: "Historico", icon: History, requires: ["CMMS_MAINTENANCE"] },
+      { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/lubrificacao/previsao", label: "Previsão de consumo", icon: TrendingUp, requires: ["CMMS_MAINTENANCE"] },
+      { to: "/portal/lubrificacao/historico", label: "Histórico", icon: History, requires: ["CMMS_MAINTENANCE"] },
     ],
   },
   {
-    title: "Gestao",
+    title: "Gestão",
     icon: LayoutGrid,
     defaultCollapsed: true,
     items: [
@@ -116,16 +116,16 @@ const PORTAL_NAV_SECTIONS: PortalNavSection[] = [
       // funcoes da equipe precisam existir para o primeiro ativo ser cadastrado inteiro.
       // Ficava em "Configuracao", no rodape, como se fosse ajuste raro - e quem chegava
       // para cadastrar o parque so descobria os catalogos depois de tropecar neles.
-      { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/ativos/cadastros", label: "Cadastros tecnicos", icon: SlidersHorizontal, requires: ["CMMS_MAINTENANCE"] },
+      { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/ativos/cadastros", label: "Cadastros técnicos", icon: SlidersHorizontal, requires: ["CMMS_MAINTENANCE"] },
       { to: "/portal/ativos", label: "Meus ativos", icon: Gauge, requires: ["CMMS_MAINTENANCE"] },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/ativos/criticidade", label: "Criticidade de ativos", icon: ShieldAlert, requires: ["CMMS_MAINTENANCE"] },
-      { to: "/portal/manutencao/equipamentos-recondicionaveis", label: "Equipamentos recondicionaveis", icon: RefreshCw, requires: ["CMMS_MAINTENANCE"] },
+      { to: "/portal/manutencao/equipamentos-recondicionaveis", label: "Equipamentos recondicionáveis", icon: RefreshCw, requires: ["CMMS_MAINTENANCE"] },
       { to: "/portal/almoxarifado", label: "Almoxarifado", icon: Boxes, requires: ["CMMS_MAINTENANCE"] },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/pareto", label: "Falhas e RCA", icon: BarChart3, requires: ["CMMS_MAINTENANCE"] },
     ],
   },
   {
-    title: "Configuracao",
+    title: "Configuração",
     icon: Settings,
     items: [
       { perfis: ["CLIENT"], to: "/portal/manutencao/importar", label: "Importar dados", icon: FileSpreadsheet, requires: ["CMMS_MAINTENANCE"] },
@@ -143,7 +143,7 @@ const PORTAL_NAV_SECTIONS: PortalNavSection[] = [
 const NAV_DO_SOLICITANTE: PortalNavSection[] = [
   {
     items: [
-      { to: "/portal/manutencao/solicitacoes", label: "Minhas solicitacoes", icon: ClipboardPlus },
+      { to: "/portal/manutencao/solicitacoes", label: "Minhas solicitações", icon: ClipboardPlus },
       { to: "/portal/perfil", label: "Meu perfil", icon: User },
     ],
   },

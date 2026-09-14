@@ -43,12 +43,12 @@ export function formatFileSize(bytes: number): string {
 }
 
 const SERVICE_CATEGORY_LABELS: Record<string, string> = {
-  ELECTRICAL_MAINTENANCE: "Manutencao eletrica",
-  PANEL_MAINTENANCE: "Manutencao de paineis",
-  MOTOR_MAINTENANCE: "Manutencao de motores",
-  TECHNICAL_REPORT: "Laudo tecnico",
-  CALIBRATION: "Calibracao",
-  TECHNICAL_ASSISTANCE: "Assistencia tecnica",
+  ELECTRICAL_MAINTENANCE: "Manutenção elétrica",
+  PANEL_MAINTENANCE: "Manutenção de painéis",
+  MOTOR_MAINTENANCE: "Manutenção de motores",
+  TECHNICAL_REPORT: "Laudo técnico",
+  CALIBRATION: "Calibração",
+  TECHNICAL_ASSISTANCE: "Assistência técnica",
   EV_CHARGER: "Carregador veicular",
   CMMS_MAINTENANCE: "RLP Maintenance CMMS",
   OTHER: "Outros",
@@ -59,11 +59,11 @@ export function formatServiceCategory(value: string): string {
 }
 
 const TECHNICAL_REPORT_CATEGORY_LABELS: Record<string, string> = {
-  ELECTRICAL_INSTALLATION: "Instalacoes eletricas",
+  ELECTRICAL_INSTALLATION: "Instalações elétricas",
   THERMOGRAPHY: "Termografia infravermelha",
-  GROUNDING: "Aterramento eletrico",
+  GROUNDING: "Aterramento elétrico",
   SPDA: "SPDA (para-raios)",
-  OTHER: "Outros relatorios",
+  OTHER: "Outros relatórios",
 };
 
 export function formatReportCategory(value: string): string {
@@ -72,7 +72,7 @@ export function formatReportCategory(value: string): string {
 
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: "Administrador",
-  TECHNICIAN: "Tecnico",
+  TECHNICIAN: "Técnico",
   COMMERCIAL: "Comercial",
   CLIENT: "Cliente",
 };
