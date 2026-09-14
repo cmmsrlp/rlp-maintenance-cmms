@@ -16,7 +16,6 @@ import type { Instrument } from "../../api/types";
 import { useToast } from "../../components/Toast";
 import { getApiErrorMessage } from "../../api/client";
 import { useAuth } from "../../auth/AuthContext";
-import { camposDoTipo } from "../../lib/camposPorTipoDeAtivo";
 
 const schema = z.object({
   level: z.enum(["PLANT", "AREA", "MACHINE", "SUBASSEMBLY", "PART"]).optional().or(z.literal("")),
@@ -34,7 +33,6 @@ const schema = z.object({
   parentId: z.string().uuid().optional().or(z.literal("")),
   plantId: z.string().uuid().optional().or(z.literal("")),
   areaId: z.string().uuid().optional().or(z.literal("")),
-  specificAttributes: z.record(z.string(), z.string()).optional(),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -62,8 +60,6 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
   const parentId = watch("parentId");
   // O tipo so aparece depois do nivel escolhido - e' ele que diz qual lista faz sentido.
   const nivel = watch("level") || undefined;
-  const tipoEscolhido = watch("type");
-  const camposEspecificos = camposDoTipo(tipoEscolhido);
   const plantId = watch("plantId");
   const areaId = watch("areaId");
 
@@ -110,7 +106,6 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
               parentId: instrument.parentId ?? "",
               plantId: instrument.plantId ?? "",
               areaId: instrument.areaId ?? "",
-              specificAttributes: instrument.specificAttributes ?? {},
             }
           : { criticality: "MEDIUM", operationalStatus: "IN_OPERATION", parentId: initialParentId ?? "", tag: initialTagPrefix ?? "" },
       );
@@ -119,9 +114,6 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
 
   async function onSubmit(values: FormValues) {
     try {
-      const attrsPreenchidos = Object.fromEntries(
-        Object.entries(values.specificAttributes ?? {}).filter(([, v]) => v?.trim()),
-      );
       const payload = {
         ...values,
         description: values.description || null,
@@ -133,7 +125,6 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
         type: values.type || undefined,
         plantId: values.plantId || null,
         areaId: values.areaId || null,
-        specificAttributes: Object.keys(attrsPreenchidos).length > 0 ? attrsPreenchidos : null,
       };
       const saved = instrument ? await updateInstrument(instrument.id, payload) : await createInstrument(payload);
       notify("success", instrument ? "Ativo atualizado." : "Ativo cadastrado.");
@@ -208,32 +199,6 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
             {...register("operationalStatus")}
           />
         </div>
-
-        {camposEspecificos.length > 0 && (
-          <div className="rounded-lg border border-gray-200 p-4">
-            <p className="text-sm font-medium text-graphite-700">Ficha tecnica de {tipoEscolhido}</p>
-            <p className="mt-0.5 text-xs text-graphite-500">Campos proprios deste tipo de equipamento - todos opcionais.</p>
-            <div className="mt-3 grid gap-4 sm:grid-cols-3">
-              {camposEspecificos.map((campo) =>
-                campo.tipo === "select" ? (
-                  <SelectInput
-                    key={campo.chave}
-                    label={campo.rotulo}
-                    options={(campo.opcoes ?? []).map((o) => ({ value: o, label: o }))}
-                    {...register(`specificAttributes.${campo.chave}` as "specificAttributes.string")}
-                  />
-                ) : (
-                  <TextInput
-                    key={campo.chave}
-                    label={campo.rotulo}
-                    placeholder={campo.placeholder}
-                    {...register(`specificAttributes.${campo.chave}` as "specificAttributes.string")}
-                  />
-                ),
-              )}
-            </div>
-          </div>
-        )}
 
         <InstrumentPicker
           label="Faz parte de (ativo pai)"

@@ -28,7 +28,6 @@ import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
 import { clientDisplayName, formatDate, formatDateTime, formatCurrency } from "../../../lib/format";
 import { EmptyState } from "../../../components/EmptyState";
-import { camposDoTipo } from "../../../lib/camposPorTipoDeAtivo";
 
 const PRIORITY_LABELS: Record<string, string> = { LOW: "Baixa", MEDIUM: "Media", HIGH: "Alta", CRITICAL: "Critica" };
 
@@ -249,19 +248,6 @@ export default function InstrumentDetail() {
             <Info label="Ultima calibracao" value={formatDate(instrument.lastCalibrationDate)} />
             <Info label="Proxima calibracao" value={formatDate(instrument.nextDueDate)} />
           </dl>
-
-          {/* So aparece para tipos com ficha tecnica conhecida (Motor, Redutor, Extrusora,
-              Rolo...) - um tipo customizado do cliente, fora do mapa, nao mostra nada aqui. */}
-          {camposDoTipo(instrument.type).length > 0 && (
-            <div className="mt-6 border-t border-gray-100 pt-5">
-              <h3 className="mb-3 text-sm font-semibold text-navy-900">Ficha tecnica de {instrument.type}</h3>
-              <dl className="grid gap-4 sm:grid-cols-3">
-                {camposDoTipo(instrument.type).map((campo) => (
-                  <Info key={campo.chave} label={campo.rotulo} value={instrument.specificAttributes?.[campo.chave] || "-"} />
-                ))}
-              </dl>
-            </div>
-          )}
         </div>
       )}
 

@@ -10,7 +10,6 @@ import { TextInput, SelectInput, CheckboxInput } from "../../../components/form/
 import { ClientPicker } from "../../../components/ClientPicker";
 import { AssetTypeInput } from "../../../components/AssetTypeInput";
 import { AssetLevelInput } from "../../../components/AssetLevelInput";
-import { camposDoTipo } from "../../../lib/camposPorTipoDeAtivo";
 import { InstrumentPicker } from "../../../components/InstrumentPicker";
 import { LocationPicker } from "../../../components/LocationPicker";
 import { createInstrument, updateInstrument, getInstrument, uploadInstrumentPhoto, deleteInstrumentPhoto } from "../../../api/instruments";
@@ -48,8 +47,6 @@ const schema = z.object({
   // Contexto so e' escolhido no ativo raiz (a planta). Nos filhos vem herdado do pai.
   plantId: z.string().uuid().optional().or(z.literal("")),
   areaId: z.string().uuid().optional().or(z.literal("")),
-  // Ficha tecnica que depende do tipo (potencia de um Motor, relacao de um Redutor...).
-  specificAttributes: z.record(z.string(), z.string()).optional(),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -101,11 +98,6 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
   const level = watch("level") || null;
   const isRoot = level === "PLANT";
 
-  // Campos que dependem do tipo escolhido (Motor, Redutor, Extrusora, Rolo...) - so
-  // aparecem quando o tipo bate com um conjunto conhecido.
-  const tipoEscolhido = watch("type");
-  const camposEspecificos = camposDoTipo(tipoEscolhido);
-
   // Contexto herdado do pai - so leitura, o filho nao redefine planta/area/centro de custo.
   const { data: parent } = useQuery({
     queryKey: ["instrument-parent-context", parentId],
@@ -142,7 +134,6 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
               status: instrument.status,
               plantId: instrument.plantId ?? "",
               areaId: instrument.areaId ?? "",
-              specificAttributes: instrument.specificAttributes ?? {},
             }
           : {
               criticality: "MEDIUM",
@@ -158,11 +149,6 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
 
   async function onSubmit(values: FormValues) {
     try {
-      // So grava o que a pessoa de fato preencheu - campo de outro tipo (escolhido antes de
-      // trocar o tipo, por exemplo) nao fica sobrando no registro.
-      const attrsPreenchidos = Object.fromEntries(
-        Object.entries(values.specificAttributes ?? {}).filter(([, v]) => v?.trim()),
-      );
       const payload = {
         ...values,
         description: values.description || null,
@@ -174,7 +160,6 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
         areaId: values.areaId || null,
         costCenterId: values.costCenterId || null,
         level: values.level || null,
-        specificAttributes: Object.keys(attrsPreenchidos).length > 0 ? attrsPreenchidos : null,
       };
       let saved = instrument ? await updateInstrument(instrument.id, payload) : await createInstrument(payload);
 
@@ -318,32 +303,6 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
             {...register("operationalStatus")}
           />
         </div>
-
-        {camposEspecificos.length > 0 && (
-          <div className="rounded-lg border border-gray-200 p-4">
-            <p className="text-sm font-medium text-graphite-700">Ficha tecnica de {tipoEscolhido}</p>
-            <p className="mt-0.5 text-xs text-graphite-500">Campos proprios deste tipo de equipamento - todos opcionais.</p>
-            <div className="mt-3 grid gap-4 sm:grid-cols-3">
-              {camposEspecificos.map((campo) =>
-                campo.tipo === "select" ? (
-                  <SelectInput
-                    key={campo.chave}
-                    label={campo.rotulo}
-                    options={(campo.opcoes ?? []).map((o) => ({ value: o, label: o }))}
-                    {...register(`specificAttributes.${campo.chave}` as "specificAttributes.string")}
-                  />
-                ) : (
-                  <TextInput
-                    key={campo.chave}
-                    label={campo.rotulo}
-                    placeholder={campo.placeholder}
-                    {...register(`specificAttributes.${campo.chave}` as "specificAttributes.string")}
-                  />
-                ),
-              )}
-            </div>
-          </div>
-        )}
 
         <SecaoRecolhivel titulo="Ficha do fabricante" dica="opcional">
           <div className="grid gap-4 sm:grid-cols-3">
