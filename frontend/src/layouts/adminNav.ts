@@ -8,6 +8,7 @@ import {
   Wrench,
   Layers3,
   Sparkles,
+  ShieldAlert,
 } from "lucide-react";
 import type { Role } from "../api/types";
 
@@ -23,6 +24,7 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/gestao/clientes", label: "Clientes", icon: Building2, roles: ["ADMIN", "TECHNICIAN", "COMMERCIAL"] },
   { to: "/gestao/insights", label: "Insights", icon: Sparkles, roles: ["ADMIN"] },
   { to: "/gestao/ativos", label: "Ativos", icon: Gauge, roles: ["ADMIN", "TECHNICIAN", "COMMERCIAL"] },
+  { to: "/gestao/ativos/criticidade", label: "Criticidade de ativos", icon: ShieldAlert, roles: ["ADMIN", "TECHNICIAN", "COMMERCIAL"] },
   { to: "/gestao/manutencao", label: "CMMS", icon: Wrench, roles: ["ADMIN"] },
   { to: "/gestao/usuarios", label: "Usuarios e perfis", icon: Users, roles: ["ADMIN"] },
   { to: "/gestao/auditoria", label: "Auditoria", icon: History, roles: ["ADMIN"] },
