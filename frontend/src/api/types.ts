@@ -438,6 +438,86 @@ export interface FailureCode {
   active: boolean;
 }
 
+// ---------------------------------------------------------------------------
+// Equipamentos recondicionaveis (rotativos/reparaveis: motor, redutor, rolo...)
+// ---------------------------------------------------------------------------
+
+export type RotableEquipmentStatus = "IN_STOCK" | "INSTALLED" | "QUARANTINE" | "IN_RECONDITIONING" | "SCRAPPED";
+export type RepairBudgetStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type RotableRepairOutcome = "REPAIRED" | "PARTIALLY_REPAIRED" | "SCRAPPED";
+
+export interface RotableEquipment {
+  id: string;
+  clientId: string;
+  code: string;
+  type: string;
+  manufacturer: string | null;
+  model: string | null;
+  serialNumber: string | null;
+  specificAttributes: Record<string, string> | null;
+  status: RotableEquipmentStatus;
+  currentInstrumentId: string | null;
+  currentInstrument: { id: string; tag: string | null; description: string | null; type: string } | null;
+  acquisitionDate: string | null;
+  acquisitionCost: number | null;
+  photoKey: string | null;
+  photoFileName: string | null;
+  notes: string | null;
+  active: boolean;
+  createdAt: string;
+  installations?: RotableInstallation[];
+  repairOrders?: RotableRepairOrder[];
+}
+
+export interface RotableInstallation {
+  id: string;
+  rotableId: string;
+  instrumentId: string;
+  instrument?: { id: string; tag: string | null; description: string | null };
+  installedAt: string;
+  meterReadingAtInstall: number | null;
+  meterReadingAtRemoval: number | null;
+  removedAt: string | null;
+  installedById: string | null;
+  removedById: string | null;
+  removalReason: string | null;
+  conditionAtRemoval: string | null;
+  workOrderId: string | null;
+  workOrder?: { id: string; number: string } | null;
+  notes: string | null;
+}
+
+export interface RotableRepairOrder {
+  id: string;
+  rotableId: string;
+  workOrderId: string | null;
+  defectReported: string | null;
+  diagnosis: string | null;
+  failureCodeId: string | null;
+  failureCode?: { id: string; code: string; description: string } | null;
+  vendor: string | null;
+  sentAt: string;
+  budgetNumber: string | null;
+  budgetValue: number | null;
+  budgetStatus: RepairBudgetStatus;
+  approvedById: string | null;
+  approvedAt: string | null;
+  promisedReturnAt: string | null;
+  returnedAt: string | null;
+  serviceDone: string | null;
+  partsReplacedNotes: string | null;
+  laborNotes: string | null;
+  testsPerformed: string | null;
+  finalReport: string | null;
+  warrantyMonths: number | null;
+  warrantyNotes: string | null;
+  finalCost: number | null;
+  conditionAfterRepair: string | null;
+  outcome: RotableRepairOutcome | null;
+  notes: string | null;
+  createdAt: string;
+}
+
 export type MaintenanceTriggerType = "TIME" | "METER" | "CONDITION";
 export type MaintenanceOrderType = "PREVENTIVE" | "CORRECTIVE" | "PREDICTIVE" | "LUBRICATION" | "INSPECTION" | "PROJECT";
 export type MaintenancePriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
@@ -841,6 +921,11 @@ export interface MaintenanceWorkOrder {
   client?: ClientRef;
   instrumentId: string;
   instrument?: InstrumentRef;
+  // Vinculo duplo: instrumentId/instrument acima e' o local funcional (onde o problema
+  // ocorreu); rotableEquipmentId e' a unidade fisica (motor, redutor...) que apresentou a
+  // falha, quando o ativo tem um equipamento recondicionavel instalado.
+  rotableEquipmentId?: string | null;
+  rotableEquipment?: { id: string; code: string; type: string; manufacturer: string | null; model: string | null; serialNumber: string | null; status: RotableEquipmentStatus } | null;
   planId: string | null;
   plan?: { id: string; name: string } | null;
   type: MaintenanceOrderType;

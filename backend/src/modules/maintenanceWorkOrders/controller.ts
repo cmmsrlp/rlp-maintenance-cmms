@@ -24,6 +24,9 @@ const materialLogInclude = {
 const detailInclude = {
   client: { select: { id: true, companyName: true, tradeName: true } },
   instrument: { select: { id: true, type: true, model: true, serialNumber: true, tag: true } },
+  // Vinculo duplo: instrument acima e' o local funcional, isto e' a unidade fisica
+  // (motor, redutor...) que apresentou a falha, quando o ativo tem uma instalada.
+  rotableEquipment: { select: { id: true, code: true, type: true, manufacturer: true, model: true, serialNumber: true, status: true } },
   plan: { select: { id: true, name: true } },
   technician: { select: { id: true, name: true } },
   assignedResource: { select: { id: true, name: true, type: true } },
@@ -204,6 +207,11 @@ const checklistItemInput = z.object({
 const workOrderSchema = z.object({
   clientId: z.string().uuid().optional(),
   instrumentId: z.string().uuid(),
+  // Vinculo duplo: instrumentId acima e' o local funcional (onde o problema ocorreu);
+  // rotableEquipmentId e' a unidade fisica que apresentou a falha (motor, redutor...),
+  // quando o ativo tem um equipamento recondicionavel instalado. Opcional porque nem todo
+  // ativo tem um rotavel vinculado.
+  rotableEquipmentId: z.string().uuid().nullish(),
   type: z.nativeEnum(MaintenanceOrderType),
   // So para corretiva: em operacao (maquina rodando) ou de quebra (maquina parada).
   correctiveType: z.nativeEnum(CorrectiveType).nullish(),
@@ -375,9 +383,24 @@ export const createMaintenanceWorkOrder = asyncHandler(async (req: Request, res:
   const data = workOrderSchema.parse(req.body);
   const clientId = resolveClientId(req, data.clientId);
 
-  const instrument = await prisma.instrument.findFirst({ where: { id: data.instrumentId, deletedAt: null }, select: { clientId: true, costCenterId: true } });
+  const instrument = await prisma.instrument.findFirst({
+    where: { id: data.instrumentId, deletedAt: null },
+    select: { clientId: true, costCenterId: true, installedRotables: { where: { status: "INSTALLED", deletedAt: null }, select: { id: true }, take: 1 } },
+  });
   if (!instrument) throw new NotFoundError("Ativo");
   if (instrument.clientId !== clientId) throw new ValidationError("Esse ativo pertence a outra empresa.");
+
+  // Vinculo duplo: quando ninguem escolheu explicitamente, a OS ja nasce apontando pro
+  // equipamento recondicionavel instalado agora neste ativo (se houver um) - e' o que
+  // "apresentou o problema" na maioria dos casos; a troca via /rotable-equipment/substituir
+  // pode reapontar isso depois se o diagnostico mudar.
+  const rotableEquipmentId =
+    data.rotableEquipmentId !== undefined ? data.rotableEquipmentId : instrument.installedRotables[0]?.id ?? null;
+  if (rotableEquipmentId) {
+    const rotable = await prisma.rotableEquipment.findFirst({ where: { id: rotableEquipmentId, deletedAt: null }, select: { clientId: true } });
+    if (!rotable) throw new NotFoundError("Equipamento recondicionavel");
+    if (rotable.clientId !== clientId) throw new ValidationError("Esse equipamento recondicionavel pertence a outra empresa.");
+  }
 
   await assertFailureCodeUsable(data.failureCodeId, clientId);
   await assertResourceBelongsToClient(data.assignedResourceId, clientId);
@@ -398,6 +421,7 @@ export const createMaintenanceWorkOrder = asyncHandler(async (req: Request, res:
       ...orderData,
       clientId,
       number,
+      rotableEquipmentId,
       // Sem centro de custo informado, a OS herda o do ativo - e' onde o custo cai por
       // padrao. Fica gravado na OS para nao mudar retroativamente se o ativo for movido.
       costCenterId: orderData.costCenterId ?? instrument.costCenterId,

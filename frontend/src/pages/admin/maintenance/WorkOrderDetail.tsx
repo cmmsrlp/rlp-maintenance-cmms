@@ -3,7 +3,10 @@ import { CONDICOES_DE_EXECUCAO } from "../../../lib/maintenanceLabels";
 import { centroDeCustoComDescricao } from "../../../lib/centroDeCusto";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, PlayCircle, CheckCircle2, Plus, X, Square, ShoppingCart, UserCheck, Printer } from "lucide-react";
+import { Pencil, PlayCircle, CheckCircle2, Plus, X, Square, ShoppingCart, UserCheck, Printer, RefreshCw } from "lucide-react";
+import { listRotableEquipment, substituteRotableEquipment } from "../../../api/rotableEquipment";
+import { listFailureCodes } from "../../../api/failureCodes";
+import type { RotableEquipment } from "../../../api/types";
 import {
   getMaintenanceWorkOrder,
   updateMaintenanceWorkOrder,
@@ -39,7 +42,7 @@ import { LaborResourcePicker } from "../../../components/LaborResourcePicker";
 import { Tabs } from "../../../components/Tabs";
 import { WorkOrderAttachments } from "./WorkOrderAttachments";
 import { Modal } from "../../../components/Modal";
-import { TextInput } from "../../../components/form/Field";
+import { TextInput, SelectInput, TextareaInput, CheckboxInput } from "../../../components/form/Field";
 import { useCmms } from "../../../lib/cmms";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
@@ -67,6 +70,7 @@ export default function WorkOrderDetail() {
   const [tab, setTab] = useState("geral");
   const [busy, setBusy] = useState(false);
   const [consumeModal, setConsumeModal] = useState<{ reservationId: string; reservado: number; peca: string; valor: string } | null>(null);
+  const [substituteOpen, setSubstituteOpen] = useState(false);
   const [closureNotes, setClosureNotes] = useState("");
   const [partSparePartId, setPartSparePartId] = useState("");
   const [partQty, setPartQty] = useState(1);
@@ -558,6 +562,11 @@ export default function WorkOrderDetail() {
                   <Pencil className="h-4 w-4" /> Editar
                 </button>
               )}
+              {!isCompleted && (
+                <button className="btn-outline" onClick={() => setSubstituteOpen(true)}>
+                  <RefreshCw className="h-4 w-4" /> Substituir equipamento
+                </button>
+              )}
               {/* Nao existe "Remover": apagar a OS levaria junto as horas lancadas, o
                   material consumido e a falha registrada. O que se faz com uma OS que nao
                   sera executada e' CANCELAR, no seletor de situacao - o registro fica. */}
@@ -667,6 +676,9 @@ export default function WorkOrderDetail() {
             </div>
             <Info label="Programada para" value={workOrder.scheduledDate ? formatDateTime(workOrder.scheduledDate).slice(0, 10) : "-"} />
             <Info label="Codigo de falha" value={workOrder.failureCode ? `${workOrder.failureCode.code} - ${workOrder.failureCode.description}` : "-"} />
+            {/* Vinculo duplo: instrumentId acima (no cabecalho da OS) e' o local funcional;
+                isto e' a unidade fisica que apresentou a falha, quando houver uma vinculada. */}
+            <Info label="Equipamento instalado" value={workOrder.rotableEquipment ? `${workOrder.rotableEquipment.code} (${workOrder.rotableEquipment.type})` : "-"} />
             <Info label="Centro de custo" value={centroDeCustoComDescricao(workOrder.costCenter)} />
             <Info label="Janela planejada" value={janelaPlanejada} />
             {/* Decisao do planejador na conversao da solicitacao: quem executa precisa
@@ -1415,6 +1427,17 @@ export default function WorkOrderDetail() {
           </div>
         )}
       </Modal>
+
+      {substituteOpen && (
+        <SubstituteRotableModal
+          workOrder={workOrder}
+          onClose={() => setSubstituteOpen(false)}
+          onDone={() => {
+            setSubstituteOpen(false);
+            queryClient.invalidateQueries({ queryKey: ["maintenance-work-order", id] });
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -1537,5 +1560,146 @@ function WorkOrderTeam({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * "Substituir equipamento": retira o avariado, registra data/motivo/condicao/horimetro,
+ * manda para quarentena (ou estoque se nao precisar de reparo), instala o reserva
+ * compativel no mesmo local funcional e abre a ordem de reparo do retirado - tudo numa
+ * unica operacao transacional no backend (POST /rotable-equipment/substituir), pra nunca
+ * deixar um equipamento "desaparecido" ou instalado em dois lugares ao mesmo tempo.
+ */
+function SubstituteRotableModal({ workOrder, onClose, onDone }: { workOrder: MaintenanceWorkOrder; onClose: () => void; onDone: () => void }) {
+  const { notify } = useToast();
+  // So' pode existir um equipamento instalado por ativo por vez (a instalacao ja bloqueia
+  // isso) - entao nao precisa de selecao, so' o que a consulta abaixo achar.
+  const outgoingRotableId = workOrder.rotableEquipment?.id ?? "";
+  const [incomingRotableId, setIncomingRotableId] = useState("");
+  const [removalReason, setRemovalReason] = useState("");
+  const [conditionAtRemoval, setConditionAtRemoval] = useState("");
+  const [meterReadingAtRemoval, setMeterReadingAtRemoval] = useState("");
+  const [meterReadingAtInstall, setMeterReadingAtInstall] = useState("");
+  const [openRepairOrder, setOpenRepairOrder] = useState(true);
+  const [defectReported, setDefectReported] = useState("");
+  const [failureCodeId, setFailureCodeId] = useState("");
+  const [vendor, setVendor] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const { data: instalados } = useQuery({
+    queryKey: ["rotable-instalados-no-ativo", workOrder.instrumentId],
+    queryFn: () => listRotableEquipment({ instrumentId: workOrder.instrumentId, status: "INSTALLED", pageSize: 10 }),
+  });
+  const outgoing: RotableEquipment | undefined =
+    instalados?.items.find((r) => r.id === outgoingRotableId) ?? instalados?.items[0];
+
+  const { data: reservas } = useQuery({
+    queryKey: ["rotable-em-estoque", workOrder.clientId, outgoing?.type],
+    queryFn: () => listRotableEquipment({ clientId: workOrder.clientId, status: "IN_STOCK", type: outgoing?.type, pageSize: 50 }),
+    enabled: !!outgoing?.type,
+  });
+
+  const { data: failureCodes } = useQuery({ queryKey: ["failure-codes-picker"], queryFn: () => listFailureCodes({ active: true }) });
+
+  async function submit() {
+    if (!outgoing) {
+      notify("error", "Este ativo nao tem equipamento recondicionavel instalado agora.");
+      return;
+    }
+    if (!incomingRotableId) {
+      notify("error", "Falta preencher: Equipamento reserva.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await substituteRotableEquipment({
+        workOrderId: workOrder.id,
+        outgoingRotableId: outgoing.id,
+        incomingRotableId,
+        removalReason: removalReason || null,
+        conditionAtRemoval: conditionAtRemoval || null,
+        meterReadingAtRemoval: meterReadingAtRemoval ? Number(meterReadingAtRemoval) : null,
+        meterReadingAtInstall: meterReadingAtInstall ? Number(meterReadingAtInstall) : null,
+        openRepairOrder,
+        repairOrder: openRepairOrder ? { defectReported: defectReported || null, failureCodeId: failureCodeId || null, vendor: vendor || null } : null,
+      });
+      notify("success", "Equipamento substituido.");
+      onDone();
+    } catch (error) {
+      notify("error", getApiErrorMessage(error));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title="Substituir equipamento"
+      size="lg"
+      footer={
+        <>
+          <button type="button" className="btn-outline" onClick={onClose}>Cancelar</button>
+          <button type="button" className="btn-primary" disabled={saving || !outgoing} onClick={() => void submit()}>
+            {saving ? "Substituindo..." : "Confirmar substituicao"}
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        {!instalados ? (
+          <p className="text-sm text-graphite-500">Carregando...</p>
+        ) : !outgoing ? (
+          <p className="text-sm text-safety-red">Este ativo nao tem equipamento recondicionavel instalado agora - nao ha o que substituir.</p>
+        ) : (
+          <>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm">
+              <p className="text-xs uppercase tracking-wide text-graphite-400">Retirando</p>
+              <p className="font-medium text-navy-900">{outgoing.code} - {outgoing.type}{outgoing.serialNumber ? ` (S/N ${outgoing.serialNumber})` : ""}</p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <TextInput label="Motivo da retirada" placeholder="Ex.: falha, quebra, preventiva" value={removalReason} onChange={(e) => setRemovalReason(e.target.value)} />
+              <TextInput label="Condicao na retirada" placeholder="Ex.: rolamento gripado" value={conditionAtRemoval} onChange={(e) => setConditionAtRemoval(e.target.value)} />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <TextInput label="Horimetro na retirada" type="number" value={meterReadingAtRemoval} onChange={(e) => setMeterReadingAtRemoval(e.target.value)} />
+              <TextInput label="Horimetro do reserva na instalacao" type="number" value={meterReadingAtInstall} onChange={(e) => setMeterReadingAtInstall(e.target.value)} />
+            </div>
+
+            <SelectInput
+              label="Equipamento reserva (compativel)"
+              required
+              placeholder={reservas && reservas.items.length === 0 ? "Nenhum equipamento em estoque deste tipo" : "Selecione"}
+              options={(reservas?.items ?? []).map((r) => ({ value: r.id, label: `${r.code}${r.serialNumber ? ` - S/N ${r.serialNumber}` : ""}` }))}
+              value={incomingRotableId}
+              onChange={(e) => setIncomingRotableId(e.target.value)}
+            />
+
+            <CheckboxInput
+              label="Abrir ordem de reparo para o equipamento retirado"
+              checked={openRepairOrder}
+              onChange={(e) => setOpenRepairOrder(e.target.checked)}
+            />
+            {openRepairOrder && (
+              <div className="space-y-4 rounded-lg border border-gray-200 p-4">
+                <TextareaInput label="Defeito informado" rows={2} value={defectReported} onChange={(e) => setDefectReported(e.target.value)} />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <SelectInput
+                    label="Codigo de falha (opcional)"
+                    placeholder="Nao especificar"
+                    options={(failureCodes ?? []).map((f) => ({ value: f.id, label: `${f.code} - ${f.description}` }))}
+                    value={failureCodeId}
+                    onChange={(e) => setFailureCodeId(e.target.value)}
+                  />
+                  <TextInput label="Empresa reparadora (opcional)" value={vendor} onChange={(e) => setVendor(e.target.value)} />
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </Modal>
   );
 }

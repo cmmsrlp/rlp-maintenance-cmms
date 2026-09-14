@@ -55,6 +55,8 @@ const MaintenancePlansList = lazyPagina(() => import("./pages/admin/maintenance/
 const MaintenancePlanForm = lazyPagina(() => import("./pages/admin/maintenance/MaintenancePlanForm"));
 const MaintenancePlanDetail = lazyPagina(() => import("./pages/admin/maintenance/MaintenancePlanDetail"));
 const MaintenancePlanTemplatesList = lazyPagina(() => import("./pages/admin/maintenance/MaintenancePlanTemplatesList"));
+const RotableEquipmentList = lazyPagina(() => import("./pages/admin/maintenance/RotableEquipmentList"));
+const RotableEquipmentDetail = lazyPagina(() => import("./pages/admin/maintenance/RotableEquipmentDetail"));
 const WorkOrdersList = lazyPagina(() => import("./pages/admin/maintenance/WorkOrdersList"));
 const KanbanBoard = lazyPagina(() => import("./pages/admin/maintenance/KanbanBoard"));
 const SchedulingBoard = lazyPagina(() => import("./pages/admin/maintenance/SchedulingBoard"));
@@ -137,6 +139,8 @@ export default function App() {
               <Route path="manutencao/planos/:id/editar" element={<MaintenancePlanForm />} />
               <Route path="manutencao/planos/:id" element={<MaintenancePlanDetail />} />
               <Route path="manutencao/modelos-de-plano" element={<MaintenancePlanTemplatesList />} />
+              <Route path="manutencao/equipamentos-recondicionaveis" element={<RotableEquipmentList />} />
+              <Route path="manutencao/equipamentos-recondicionaveis/:id" element={<RotableEquipmentDetail />} />
               <Route path="manutencao/ordens" element={<WorkOrdersList />} />
               <Route path="manutencao/kanban" element={<KanbanBoard />} />
               <Route path="manutencao/programacao" element={<SchedulingBoard />} />
@@ -223,6 +227,8 @@ export default function App() {
                 <Route path="manutencao/planos/:id/editar" element={<MaintenancePlanForm />} />
                 <Route path="manutencao/planos/:id" element={<MaintenancePlanDetail />} />
                 <Route path="manutencao/modelos-de-plano" element={<MaintenancePlanTemplatesList />} />
+                <Route path="manutencao/equipamentos-recondicionaveis" element={<RotableEquipmentList />} />
+                <Route path="manutencao/equipamentos-recondicionaveis/:id" element={<RotableEquipmentDetail />} />
                 <Route path="manutencao/ordens/novo" element={<WorkOrderForm />} />
                 <Route path="manutencao/ordens/:id/editar" element={<WorkOrderForm />} />
                 <Route path="manutencao/programacao" element={<SchedulingBoard />} />

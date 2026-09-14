@@ -319,6 +319,8 @@ enum AttachmentEntityType {
   SERVICE_REQUEST
   ROOT_CAUSE_ANALYSIS
   MAINTENANCE_PLAN
+  ROTABLE_EQUIPMENT
+  ROTABLE_REPAIR_ORDER
 }
 
 // Classifica o registro fotografico feito pelo tecnico em campo. As fotos entram
@@ -457,6 +459,7 @@ model Client {
   contacts         ClientContact[]
   users            User[]
   instruments      Instrument[]
+  rotableEquipments RotableEquipment[]
   maintenancePlans      MaintenancePlan[]
   maintenanceWorkOrders MaintenanceWorkOrder[]
   spareParts            SparePart[]
@@ -619,6 +622,10 @@ model Instrument {
   assetParts            AssetPart[]
   serviceRequests       ServiceRequest[]
   rootCauseAnalyses     RootCauseAnalysis[]
+  // Equipamento recondicionavel instalado aqui agora (0 ou 1 na pratica - a unicidade nao
+  // e' forcada no banco, e' regra de aplicacao, igual a outras relacoes "atual" deste schema).
+  installedRotables     RotableEquipment[]
+  rotableInstallations  RotableInstallation[]
 
   @@index([clientId])
   @@index([status])
@@ -1025,6 +1032,7 @@ model FailureCode {
   createdAt   DateTime @default(now())
 
   workOrders MaintenanceWorkOrder[]
+  rotableRepairOrders RotableRepairOrder[]
 
   @@unique([clientId, code])
   @@index([clientId])
@@ -1470,6 +1478,14 @@ model MaintenanceWorkOrder {
   // e' o que torna "Preditiva" uma manutencao de verdade, nao so uma opcao no formulario.
   triggeredByMeterId String?
   triggeredByMeter    Meter?              @relation(fields: [triggeredByMeterId], references: [id])
+  // Vinculo duplo: instrumentId acima e' o local funcional (onde o problema ocorreu -
+  // mantem o historico de paradas daquele ponto); rotableEquipmentId e' a unidade fisica
+  // que apresentou a falha (motor, redutor...), quando o ativo tem um equipamento
+  // recondicionavel instalado - mantem o historico de falha/reparo/custo da peca, mesmo
+  // depois dela mudar de maquina. Nao transferir o historico todo para o equipamento: a
+  // fabrica tambem precisa saber quantas falhas aconteceram naquele local.
+  rotableEquipmentId String?
+  rotableEquipment    RotableEquipment?   @relation(fields: [rotableEquipmentId], references: [id])
   // Rastreabilidade preventiva -> corretiva: preenchido quando esta OS (corretiva) foi
   // aberta automaticamente porque um item do checklist de outra OS (a preventiva/preditiva)
   // foi marcado "Nao OK". originChecklistItemId e' unico - no maximo uma corretiva por
@@ -1499,6 +1515,9 @@ model MaintenanceWorkOrder {
   // combinar quem entra no servico, nao para bloquear o apontamento.
   assignees WorkOrderAssignee[]
   materialLogs WorkOrderMaterialLog[]
+  // Trocas de equipamento recondicionavel (motor, redutor, rolo...) feitas durante esta OS.
+  rotableInstallations RotableInstallation[]
+  rotableRepairOrders  RotableRepairOrder[]
 
   @@unique([clientId, number])
   @@index([clientId])
@@ -1666,6 +1685,172 @@ model AssetPart {
   @@index([instrumentId])
   @@index([sparePartId])
   @@map("asset_parts")
+}
+
+// ---------------------------------------------------------------------------
+// Equipamentos recondicionaveis (rotativos/reparaveis: motor, redutor, rolo...)
+//
+// O Ativo (Instrument) e' o local/posicao no parque - uma maquina, um mancal. Motor,
+// redutor e rolo sao pecas fisicas com identidade propria (numero de serie, historico de
+// falha, quantas vezes ja foram recondicionadas) que se movem: saem de uma maquina, vao
+// pro estoque ou pra um fornecedor de recondicionamento, e podem reaparecer instalados
+// numa maquina diferente meses depois. Prender esse historico ao Instrument (a posicao)
+// perderia a identidade fisica no primeiro swap - por isso o equipamento rotavel vive numa
+// ficha propria, com o Ativo atual guardado como estado (currentInstrumentId), nao como dono.
+// ---------------------------------------------------------------------------
+
+enum RotableEquipmentStatus {
+  IN_STOCK          // em estoque, disponivel para instalar
+  INSTALLED         // instalado em algum ativo agora
+  QUARANTINE        // retirado, aguardando decisao (avaliar/descartar/mandar para reparo)
+  IN_RECONDITIONING // no fornecedor, sendo reparado
+  SCRAPPED          // baixado, nao volta mais
+}
+
+model RotableEquipment {
+  id       String @id @default(uuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id])
+  // Tag interna do equipamento fisico (ex.: "MOT-ROT-014") - diferente do TAG do Ativo onde
+  // ele esta instalado agora, que e' da posicao, nao da peca.
+  code     String
+  // Reaproveita o mesmo catalogo de Tipos de ativo (Motor, Redutor, Rolo...) usado hoje
+  // pelo Instrument nos niveis Subconjunto/Parte - sem duplicar catalogo.
+  type         String
+  manufacturer String?
+  model        String?
+  serialNumber String?
+  // Mesmo padrao do Instrument.specificAttributes: par chave/valor solto por tipo
+  // (potencia, rotacao, relacao de reducao...), sem uma coluna fixa por atributo.
+  specificAttributes Json?
+  status              RotableEquipmentStatus @default(IN_STOCK)
+  // Ativo onde esta instalado agora - null quando em estoque, em recondicionamento ou
+  // sucateado. E' so' o estado atual; o historico de verdade fica em RotableInstallation.
+  currentInstrumentId String?
+  currentInstrument   Instrument?            @relation(fields: [currentInstrumentId], references: [id])
+  acquisitionDate  DateTime?
+  acquisitionCost  Float?
+  photoKey         String?
+  photoFileName    String?
+  notes            String?
+  active           Boolean   @default(true)
+  createdById      String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  installations RotableInstallation[]
+  repairOrders  RotableRepairOrder[]
+  // OS abertas com este equipamento como o que falhou (vinculo duplo: local x equipamento).
+  workOrders    MaintenanceWorkOrder[]
+
+  @@unique([clientId, code])
+  @@index([clientId])
+  @@index([status])
+  @@index([currentInstrumentId])
+  @@map("rotable_equipments")
+}
+
+// Historico de instalacao: cada linha e' uma passagem do equipamento por um Ativo. Ao
+// instalar de novo em outro lugar, a linha aberta (removedAt null) e' fechada e uma nova
+// comeca - assim da pra responder tanto "o que ja passou por esta maquina" quanto "onde
+// este motor ja rodou", sem reconstruir nada a partir de outra tabela.
+model RotableInstallation {
+  id            String                @id @default(uuid())
+  rotableId     String
+  rotable       RotableEquipment      @relation(fields: [rotableId], references: [id])
+  instrumentId  String
+  instrument    Instrument            @relation(fields: [instrumentId], references: [id])
+  installedAt   DateTime              @default(now())
+  // Horimetro do equipamento no momento da instalacao/retirada - a base para saber quanto
+  // rodou nesta passagem sem depender de um Meter proprio (o rotavel pode nao ter medidor
+  // proprio cadastrado, e o do Ativo mede o local, nao a peca que passou por ele).
+  meterReadingAtInstall Float?
+  meterReadingAtRemoval Float?
+  removedAt     DateTime?
+  installedById String?
+  removedById   String?
+  // Por que saiu (falha, preventiva, troca programada...) e em que condicao - so'
+  // preenchidos na remocao.
+  removalReason    String?
+  conditionAtRemoval String?
+  // OS em que a troca aconteceu, quando aconteceu durante uma - nem toda troca vem de OS
+  // (pode ser cadastro retroativo, ou instalacao na entrada em operacao do ativo).
+  workOrderId   String?
+  workOrder     MaintenanceWorkOrder? @relation(fields: [workOrderId], references: [id])
+  notes         String?
+
+  @@index([rotableId])
+  @@index([instrumentId])
+  @@index([workOrderId])
+  @@map("rotable_installations")
+}
+
+enum RepairBudgetStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum RotableRepairOutcome {
+  REPAIRED
+  PARTIALLY_REPAIRED
+  SCRAPPED
+}
+
+// Ordem de reparo do equipamento retirado: do defeito informado ate o laudo final. Nasce
+// junto com a substituicao (retirada abre a ordem), mas pode ser criada avulsa para um
+// equipamento que ja estava em estoque/quarentena.
+model RotableRepairOrder {
+  id          String @id @default(uuid())
+  rotableId   String
+  rotable     RotableEquipment @relation(fields: [rotableId], references: [id])
+  // OS em que o equipamento foi retirado, quando a ordem nasceu de uma substituicao.
+  workOrderId String?
+  workOrder   MaintenanceWorkOrder? @relation(fields: [workOrderId], references: [id])
+
+  // Abertura: o que foi visto na retirada e o que a oficina apurou depois.
+  defectReported String?
+  diagnosis      String?
+  // Reaproveita o catalogo de Codigos de falha (o mesmo campo "Modo" que ele ja tem cobre
+  // "modo de falha" sem duplicar taxonomia).
+  failureCodeId  String?
+  failureCode    FailureCode? @relation(fields: [failureCodeId], references: [id])
+
+  // Fornecedor e orcamento. O PDF do orcamento e o laudo final entram como Attachment
+  // (entityType ROTABLE_REPAIR_ORDER), igual ao resto do sistema - nao precisam de coluna
+  // propria aqui.
+  vendor           String?
+  sentAt           DateTime  @default(now())
+  budgetNumber     String?
+  budgetValue      Float?
+  budgetStatus     RepairBudgetStatus @default(PENDING)
+  approvedById     String?
+  approvedAt       DateTime?
+  promisedReturnAt DateTime?
+
+  // Retorno e execucao.
+  returnedAt           DateTime?
+  serviceDone          String?
+  partsReplacedNotes   String?
+  laborNotes           String?
+  testsPerformed       String?
+  finalReport          String?
+  warrantyMonths       Int?
+  warrantyNotes        String?
+  finalCost            Float?
+  conditionAfterRepair String?
+  outcome              RotableRepairOutcome?
+
+  notes       String?
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([rotableId])
+  @@index([workOrderId])
+  @@index([failureCodeId])
+  @@map("rotable_repair_orders")
 }
 
 // ---------------------------------------------------------------------------

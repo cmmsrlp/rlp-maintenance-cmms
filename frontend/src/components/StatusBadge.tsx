@@ -63,6 +63,16 @@ const STATUS_MAP: Record<string, { label: string; tone: Tone }> = {
   // pontos de calibracao
   PASS: { label: "Aprovado", tone: "green" },
   FAIL: { label: "Reprovado", tone: "red" },
+  // equipamento recondicionavel
+  IN_STOCK: { label: "Em estoque", tone: "navy" },
+  INSTALLED: { label: "Instalado", tone: "green" },
+  QUARANTINE: { label: "Quarentena", tone: "yellow" },
+  IN_RECONDITIONING: { label: "Em reparo", tone: "yellow" },
+  SCRAPPED: { label: "Sucateado", tone: "red" },
+  // ordem de reparo - resultado (PENDING/APPROVED/REJECTED do orcamento reaproveitam as
+  // entradas ja existentes acima)
+  REPAIRED: { label: "Reparado", tone: "green" },
+  PARTIALLY_REPAIRED: { label: "Reparo parcial", tone: "yellow" },
   // criticidade do ativo / prioridade da OS (mesma escala nos dois)
   LOW: { label: "Baixa", tone: "graphite" },
   MEDIUM: { label: "Media", tone: "navy" },

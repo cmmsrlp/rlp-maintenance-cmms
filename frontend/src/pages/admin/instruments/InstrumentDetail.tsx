@@ -19,6 +19,7 @@ import { TECNICAS_PREDITIVAS } from "../../../lib/maintenanceLabels";
 import { AssetPhoto } from "../../../components/AssetPhoto";
 import { AssetSetupAlerts } from "../../../components/AssetSetupAlerts";
 import { AssetLubricationCard } from "../../../components/AssetLubricationCard";
+import { AssetRotableCard } from "../../../components/AssetRotableCard";
 import { InstrumentAttachments } from "../../../components/InstrumentAttachments";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { AssetQrModal } from "../../../components/AssetQrModal";
@@ -329,6 +330,7 @@ export default function InstrumentDetail() {
 
       {tab === "maintenance" && (
         <div className="space-y-6">
+          <AssetRotableCard instrumentId={instrument.id} clientId={instrument.clientId} base="/gestao/manutencao" />
           <AssetLubricationCard instrumentId={instrument.id} clientId={instrument.clientId} raiz="/gestao" />
           <div className="card p-5">
             <div className="mb-3 flex items-center justify-between">

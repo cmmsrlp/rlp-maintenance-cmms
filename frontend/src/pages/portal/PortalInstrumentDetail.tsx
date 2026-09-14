@@ -24,6 +24,7 @@ import { InstrumentAttachments } from "../../components/InstrumentAttachments";
 import { AssetPhoto } from "../../components/AssetPhoto";
 import { AssetSetupAlerts } from "../../components/AssetSetupAlerts";
 import { AssetLubricationCard } from "../../components/AssetLubricationCard";
+import { AssetRotableCard } from "../../components/AssetRotableCard";
 import { useAuth } from "../../auth/AuthContext";
 import { useToast } from "../../components/Toast";
 import { getApiErrorMessage } from "../../api/client";
@@ -329,6 +330,7 @@ export default function PortalInstrumentDetail() {
 
       {tab === "maintenance" && hasCmms && (
         <div className="space-y-6">
+          <AssetRotableCard instrumentId={instrument.id} clientId={instrument.clientId} base="/portal/manutencao" />
           <AssetLubricationCard instrumentId={instrument.id} clientId={instrument.clientId} raiz="/portal" />
           <div className="card p-5">
             <div className="mb-3 flex items-center justify-between">
