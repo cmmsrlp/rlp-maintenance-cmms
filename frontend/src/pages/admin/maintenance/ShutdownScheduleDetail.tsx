@@ -2,6 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Gantt from "frappe-gantt";
+// O "exports" do package.json da frappe-gantt so declara o "." (JS) - o subcaminho
+// "./dist/frappe-gantt.css" nao esta la, entao o bundler recusa importa-lo direto do
+// pacote ("Missing specifier"). Por isso o CSS foi copiado para ca (frappe-gantt 1.2.2);
+// sem ele as barras/grade do SVG ficam sem cor nenhuma (preenchimento preto padrao do
+// SVG), que e' exatamente a "barra preta gigante" cobrindo o grafico inteiro.
+import "../../../styles/vendor/frappe-gantt.css";
 import {
   ArrowDown,
   ArrowRight,
