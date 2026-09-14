@@ -29,15 +29,15 @@ import { getApiErrorMessage } from "../../../api/client";
 import { clientDisplayName, formatDate, formatDateTime, formatCurrency } from "../../../lib/format";
 import { EmptyState } from "../../../components/EmptyState";
 
-const PRIORITY_LABELS: Record<string, string> = { LOW: "Baixa", MEDIUM: "Media", HIGH: "Alta", CRITICAL: "Critica" };
+const PRIORITY_LABELS: Record<string, string> = { LOW: "Baixa", MEDIUM: "Média", HIGH: "Alta", CRITICAL: "Crítica" };
 
 const TABS = [
-  { id: "overview", label: "Visao geral" },
+  { id: "overview", label: "Visão geral" },
   { id: "structure", label: "Estrutura" },
-  { id: "maintenance", label: "Manutencao" },
+  { id: "maintenance", label: "Manutenção" },
   { id: "costs", label: "Custos" },
   { id: "documents", label: "Documentos" },
-  { id: "history", label: "Historico" },
+  { id: "history", label: "Histórico" },
 ];
 
 export default function InstrumentDetail() {
@@ -210,7 +210,7 @@ export default function InstrumentDetail() {
       {instrument.type === "A definir" && canManage && (
         <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-safety-yellow/40 bg-safety-yellow/10 px-4 py-3">
           <p className="text-sm text-graphite-700">
-            Este ativo foi cadastrado pelo caminho rapido e ainda nao tem tipo definido.
+            Este ativo foi cadastrado pelo caminho rápido e ainda não tem tipo definido.
           </p>
           <button className="btn-outline ml-auto text-sm" onClick={() => setEditOpen(true)}>
             Completar ficha
@@ -226,27 +226,27 @@ export default function InstrumentDetail() {
         <div className="card p-5">
           <dl className="grid gap-4 sm:grid-cols-3">
             <Info label="Fabricante" value={instrument.manufacturer ?? "-"} />
-            <Info label="Numero de serie" value={instrument.serialNumber ?? "-"} />
-            <Info label="Faixa de medicao" value={instrument.measurementRange ?? "-"} />
-            <Info label="Resolucao" value={instrument.resolution ?? "-"} />
+            <Info label="Número de série" value={instrument.serialNumber ?? "-"} />
+            <Info label="Faixa de medição" value={instrument.measurementRange ?? "-"} />
+            <Info label="Resolução" value={instrument.resolution ?? "-"} />
             <Info label="Unidade" value={instrument.unit ?? "-"} />
-            <Info label="Local de instalacao" value={instrument.installationLocation ?? "-"} />
+            <Info label="Local de instalação" value={instrument.installationLocation ?? "-"} />
             {/* Herdados do ativo raiz - o rotulo diz isso para ninguem procurar onde editar
                 num ativo filho. "Sistema" saiu: era um nivel da propria arvore repetido aqui. */}
             <Info label={instrument.parentId ? "Planta (herdada)" : "Planta"} value={instrument.plant?.name ?? "-"} />
             <Info
               label={
                 instrument.costCenterOverride
-                  ? "Area / Centro de custo (excecao no centro)"
+                  ? "Área / Centro de custo (exceção no centro)"
                   : instrument.parentId
-                    ? "Area / Centro de custo (herdado do pai)"
-                    : "Area / Centro de custo"
+                    ? "Área / Centro de custo (herdado do pai)"
+                    : "Área / Centro de custo"
               }
               value={areaComCentroDeCusto(instrument.area, instrument.costCenter)}
             />
-            <Info label="Periodicidade" value={instrument.calibrationFrequencyMonths ? `${instrument.calibrationFrequencyMonths} meses` : "Nao rastreada"} />
-            <Info label="Ultima calibracao" value={formatDate(instrument.lastCalibrationDate)} />
-            <Info label="Proxima calibracao" value={formatDate(instrument.nextDueDate)} />
+            <Info label="Periodicidade" value={instrument.calibrationFrequencyMonths ? `${instrument.calibrationFrequencyMonths} meses` : "Não rastreada"} />
+            <Info label="Última calibração" value={formatDate(instrument.lastCalibrationDate)} />
+            <Info label="Próxima calibração" value={formatDate(instrument.nextDueDate)} />
           </dl>
         </div>
       )}
@@ -263,7 +263,7 @@ export default function InstrumentDetail() {
               )}
             </div>
             {!instrument.children || instrument.children.length === 0 ? (
-              <EmptyState title="Nenhum componente" description="Ex.: motor, valvula, painel - componentes deste ativo com ficha propria." />
+              <EmptyState title="Nenhum componente" description="Ex.: motor, válvula, painel - componentes deste ativo com ficha própria." />
             ) : (
               <ul className="divide-y divide-gray-100">
                 {instrument.children.map((c) => (
@@ -279,7 +279,7 @@ export default function InstrumentDetail() {
           </div>
 
           <div className="card p-5">
-            <h2 className="mb-3 font-semibold text-navy-900">Pecas compativeis (BOM)</h2>
+            <h2 className="mb-3 font-semibold text-navy-900">Peças compatíveis (BOM)</h2>
             {canManage && (
               <div className="mb-3 flex gap-2">
                 <SparePartPicker
@@ -328,7 +328,7 @@ export default function InstrumentDetail() {
               )}
             </div>
             {!meters || meters.length === 0 ? (
-              <EmptyState title="Nenhum medidor" description="Cadastre um horimetro ou odometro para manutencao por uso ou condicao (preditiva)." />
+              <EmptyState title="Nenhum medidor" description="Cadastre um horímetro ou odômetro para manutenção por uso ou condição (preditiva)." />
             ) : (
               <ul className="divide-y divide-gray-100">
                 {meters.map((m) => {
@@ -370,7 +370,7 @@ export default function InstrumentDetail() {
               )}
             </div>
             {(!plans || plans.items.length === 0) && (!workOrders || workOrders.items.length === 0) ? (
-              <EmptyState title="Nenhuma manutencao" description="Nenhum plano ou ordem de manutencao para este ativo ainda." />
+              <EmptyState title="Nenhuma manutenção" description="Nenhum plano ou ordem de manutenção para este ativo ainda." />
             ) : (
               <>
                 {plans && plans.items.length > 0 && (
@@ -387,7 +387,7 @@ export default function InstrumentDetail() {
                 )}
                 {workOrders && workOrders.items.length > 0 && (
                   <>
-                    <p className="mt-3 text-xs uppercase tracking-wide text-graphite-400">Ordens de manutencao recentes</p>
+                    <p className="mt-3 text-xs uppercase tracking-wide text-graphite-400">Ordens de manutenção recentes</p>
                     <ul className="divide-y divide-gray-100">
                       {workOrders.items.map((w) => (
                         <li key={w.id}>
@@ -412,12 +412,12 @@ export default function InstrumentDetail() {
             <div className="card p-5">
               <h2 className="mb-3 font-semibold text-navy-900">Gastos deste ativo</h2>
               <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Info label="Pecas" value={costSummary.partsCost != null ? formatCurrency(costSummary.partsCost) : "Nao rastreado"} />
+                <Info label="Peças" value={costSummary.partsCost != null ? formatCurrency(costSummary.partsCost) : "Não rastreado"} />
                 <Info
-                  label="Mao de obra"
-                  value={costSummary.laborCost != null ? `${formatCurrency(costSummary.laborCost)} (${costSummary.totalLaborHours}h)` : `Nao rastreado (${costSummary.totalLaborHours}h)`}
+                  label="Mão de obra"
+                  value={costSummary.laborCost != null ? `${formatCurrency(costSummary.laborCost)} (${costSummary.totalLaborHours}h)` : `Não rastreado (${costSummary.totalLaborHours}h)`}
                 />
-                <Info label="Terceiros" value={costSummary.thirdPartyCost != null ? formatCurrency(costSummary.thirdPartyCost) : "Nao rastreado"} />
+                <Info label="Terceiros" value={costSummary.thirdPartyCost != null ? formatCurrency(costSummary.thirdPartyCost) : "Não rastreado"} />
                 <Info label="Total" value={costSummary.totalCost != null ? formatCurrency(costSummary.totalCost) : "-"} />
               </dl>
             </div>
@@ -426,8 +426,8 @@ export default function InstrumentDetail() {
           )}
 
           <div className="card p-5">
-            <h2 className="mb-1 font-semibold text-navy-900">Historico de pecas consumidas</h2>
-            <p className="mb-3 text-xs text-graphite-500">O que ja foi baixado do almoxarifado nas OS deste ativo - diferente do BOM (aba Estrutura), que so lista o que e' compativel.</p>
+            <h2 className="mb-1 font-semibold text-navy-900">Histórico de peças consumidas</h2>
+            <p className="mb-3 text-xs text-graphite-500">O que já foi baixado do almoxarifado nas OS deste ativo - diferente do BOM (aba Estrutura), que só lista o que é compatível.</p>
             {!partsHistory || partsHistory.length === 0 ? (
               <EmptyState title="Nenhum consumo registrado" description="Aparece aqui assim que uma OS deste ativo consumir uma peca do almoxarifado." />
             ) : (
@@ -462,7 +462,7 @@ export default function InstrumentDetail() {
 
       {tab === "history" && isAdmin && (
         <div className="card p-5">
-          <h2 className="mb-3 font-semibold text-navy-900">Historico de alteracoes</h2>
+          <h2 className="mb-3 font-semibold text-navy-900">Histórico de alterações</h2>
           {!history || history.items.length === 0 ? (
             <EmptyState title="Nenhum registro" description="Alteracoes neste ativo aparecem aqui conforme forem feitas." />
           ) : (
@@ -516,7 +516,7 @@ export default function InstrumentDetail() {
       <ConfirmDialog
         open={confirmDelete}
         title="Remover ativo"
-        description="Tem certeza que deseja remover este ativo? O historico de manutencao sera preservado."
+        description="Tem certeza que deseja remover este ativo? O histórico de manutenção será preservado."
         confirmLabel="Remover"
         danger
         loading={deleting}

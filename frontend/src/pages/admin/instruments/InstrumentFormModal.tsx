@@ -23,7 +23,7 @@ import { getApiErrorMessage } from "../../../api/client";
 const schema = z.object({
   clientId: z.string().uuid("Selecione o cliente."),
   tag: z.string().min(1, "Informe o TAG do ativo."),
-  description: z.string().min(2, "Informe a descricao do ativo."),
+  description: z.string().min(2, "Informe a descrição do ativo."),
   // O cadastro inicial nao pergunta o tipo - ele entra depois, na ficha do ativo.
   type: z.string().optional(),
   criticality: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
@@ -167,7 +167,7 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
       if (foto) saved = await uploadInstrumentPhoto(saved.id, foto);
       else if (fotoRemovida && instrument?.photoUrl) await deleteInstrumentPhoto(saved.id);
 
-      notify("success", instrument ? "Ativo atualizado." : "Ativo cadastrado. Complete a ficha tecnica quando quiser.");
+      notify("success", instrument ? "Ativo atualizado." : "Ativo cadastrado. Complete a ficha técnica quando quiser.");
       onSaved(saved);
     } catch (error) {
       notify("error", getApiErrorMessage(error));
@@ -192,12 +192,12 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
             label="TAG"
             required
             placeholder="Ex.: VTP-VOT-L4-CP01"
-            hint="Codigo unico do ativo dentro da empresa."
+            hint="Código único do ativo dentro da empresa."
             error={errors.tag?.message}
             {...register("tag")}
           />
           <TextInput
-            label="Descricao"
+            label="Descrição"
             placeholder="Ex.: Compressor de ar da Linha 4"
             hint="Nome do ativo em linguagem de gente."
             error={errors.description?.message}
@@ -246,7 +246,7 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
         <InstrumentPicker
           label="Faz parte de (ativo pai)"
           required={!modoRapido && !isRoot}
-          hint="Estrutura: Planta > Area > Ativo/Sistema > Equipamento > Componente. Vazio = ativo no topo."
+          hint="Estrutura: Planta > Área > Ativo/Sistema > Equipamento > Componente. Vazio = ativo no topo."
           clientId={clientId}
           excludeId={instrument?.id}
           error={errors.parentId?.message}
@@ -257,7 +257,7 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
           <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-graphite-400">Contexto herdado</p>
             <p className="mt-0.5 text-xs text-graphite-500">
-              Vem do ativo pai e do centro de custo padrao da area - nao se edita aqui.
+              Vem do ativo pai e do centro de custo padrão da área - não se edita aqui.
             </p>
             <dl className="mt-2 grid gap-3 text-sm sm:grid-cols-2">
               <div>
@@ -265,7 +265,7 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
                 <dd className="font-medium text-graphite-800">{parent?.plant?.name ?? "-"}</dd>
               </div>
               <div>
-                <dt className="text-xs text-graphite-400">Area / Centro de custo</dt>
+                <dt className="text-xs text-graphite-400">Área / Centro de custo</dt>
                 <dd className="font-medium text-graphite-800">{areaComCentroDeCusto(parent?.area, parent?.costCenter)}</dd>
               </div>
             </dl>
@@ -285,20 +285,20 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
             hint="Quanto uma parada pesa pra empresa."
             options={[
               { value: "LOW", label: "Baixa" },
-              { value: "MEDIUM", label: "Media" },
+              { value: "MEDIUM", label: "Média" },
               { value: "HIGH", label: "Alta" },
-              { value: "CRITICAL", label: "Critica" },
+              { value: "CRITICAL", label: "Crítica" },
             ]}
             {...register("criticality")}
           />
           <SelectInput
-            label="Condicao"
+            label="Condição"
             options={[
-              { value: "IN_OPERATION", label: "Em operacao" },
+              { value: "IN_OPERATION", label: "Em operação" },
               { value: "STOPPED", label: "Parado" },
               { value: "STANDBY", label: "Reserva" },
               { value: "DEACTIVATED", label: "Desativado" },
-              { value: "IN_MAINTENANCE", label: "Em manutencao" },
+              { value: "IN_MAINTENANCE", label: "Em manutenção" },
             ]}
             {...register("operationalStatus")}
           />
@@ -308,14 +308,14 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
           <div className="grid gap-4 sm:grid-cols-3">
             <TextInput label="Fabricante" {...register("manufacturer")} />
             <TextInput label="Modelo" {...register("model")} />
-            <TextInput label="Numero de serie" {...register("serialNumber")} />
+            <TextInput label="Número de série" {...register("serialNumber")} />
           </div>
-          <TextInput label="Ponto de instalacao" placeholder="Ex.: Casa de maquinas, painel 3" {...register("installationLocation")} />
+          <TextInput label="Ponto de instalação" placeholder="Ex.: Casa de máquinas, painel 3" {...register("installationLocation")} />
         </SecaoRecolhivel>
 
-        <SecaoRecolhivel titulo="Calibracao e lubrificacao" dica="a que este ativo esta sujeito">
+        <SecaoRecolhivel titulo="Calibração e lubrificação" dica="a que este ativo está sujeito">
           <CheckboxInput
-            label="Ativo calibravel - rastreia frequencia e vencimento de calibracao"
+            label="Ativo calibrável - rastreia frequência e vencimento de calibração"
             {...register("calibratable")}
           />
           <p className="text-xs text-graphite-500">
@@ -323,31 +323,31 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
             calibrar e' definido no plano de manutencao deste ativo, nao aqui.
           </p>
           <CheckboxInput
-            label="Ativo lubrificavel - tem ponto de lubrificacao"
+            label="Ativo lubrificável - tem ponto de lubrificação"
             {...register("lubricatable")}
           />
           <p className="text-xs text-graphite-500">
-            Ao marcar, a ficha do ativo passa a cobrar o cadastro do ponto (lubrificante, quantidade, metodo e
-            periodicidade), que entra em Lubrificacao ja ligado a este ativo.
+            Ao marcar, a ficha do ativo passa a cobrar o cadastro do ponto (lubrificante, quantidade, método e
+            periodicidade), que entra em Lubrificação já ligado a este ativo.
           </p>
           <div className="grid gap-4 sm:grid-cols-3">
-            <TextInput label="Ultima calibracao" type="date" {...register("lastCalibrationDate")} />
+            <TextInput label="Última calibração" type="date" {...register("lastCalibrationDate")} />
             {instrument && tracksCalibration && (
               <SelectInput
                 label="Status do certificado"
                 options={[
-                  { value: "VALID", label: "Valido" },
-                  { value: "DUE_SOON", label: "Proximo do vencimento" },
+                  { value: "VALID", label: "Válido" },
+                  { value: "DUE_SOON", label: "Próximo do vencimento" },
                   { value: "EXPIRED", label: "Vencido" },
-                  { value: "IN_MAINTENANCE", label: "Em manutencao" },
+                  { value: "IN_MAINTENANCE", label: "Em manutenção" },
                 ]}
                 {...register("status")}
               />
             )}
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
-            <TextInput label="Faixa de medicao" {...register("measurementRange")} />
-            <TextInput label="Resolucao" {...register("resolution")} />
+            <TextInput label="Faixa de medição" {...register("measurementRange")} />
+            <TextInput label="Resolução" {...register("resolution")} />
             <TextInput label="Unidade" {...register("unit")} />
           </div>
         </SecaoRecolhivel>
@@ -358,7 +358,7 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
           <div className="rounded-lg border border-gray-200 p-4">
             <p className="text-sm font-medium text-graphite-700">Onde fica</p>
             <p className="mt-0.5 text-xs text-graphite-500">
-              Sem ativo pai, e' aqui que a planta e a area sao definidas - e todo ativo abaixo deste na arvore
+              Sem ativo pai, é aqui que a planta e a área são definidas - e todo ativo abaixo deste na árvore
               herda esse contexto.
             </p>
             <div className="mt-3">
@@ -366,18 +366,18 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
             </div>
             {areaId && (
               <p className="mt-3 text-xs text-graphite-500">
-                Centro de custo: <span className="font-medium text-graphite-800">{centroDeCustoDaArea ?? "a area escolhida ainda nao tem um numero"}</span>
-                {" "}- vem da area, nao se digita aqui.
+                Centro de custo: <span className="font-medium text-graphite-800">{centroDeCustoDaArea ?? "a área escolhida ainda não tem um número"}</span>
+                {" "}- vem da área, não se digita aqui.
               </p>
             )}
           </div>
         )}
 
         {user?.role === "ADMIN" && !modoRapido && (
-          <SecaoRecolhivel titulo="Excecao de centro de custo" dica="somente administrador">
+          <SecaoRecolhivel titulo="Exceção de centro de custo" dica="somente administrador">
             <p className="text-xs text-graphite-500">
-              Por padrao o centro de custo vem da area. Preencha aqui apenas se este ativo especifico precisa
-              ser rateado em outro centro de custo - a heranca deixa de sobrescrever este ativo.
+              Por padrão o centro de custo vem da área. Preencha aqui apenas se este ativo específico precisa
+              ser rateado em outro centro de custo - a herança deixa de sobrescrever este ativo.
             </p>
             <LocationPicker clientId={clientId} register={register} watch={watch} setValue={setValue} onlyCostCenter />
           </SecaoRecolhivel>
@@ -387,7 +387,7 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
             o que ele cadastra e' o parque dele. */}
         {modoRapido && user?.role !== "CLIENT" && (
           <CheckboxInput
-            label="Ativo calibravel - rastreia frequencia e vencimento de calibracao"
+            label="Ativo calibrável - rastreia frequência e vencimento de calibração"
             {...register("calibratable")}
           />
         )}
