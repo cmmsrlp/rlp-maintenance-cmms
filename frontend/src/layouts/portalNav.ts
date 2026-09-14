@@ -27,6 +27,7 @@ import {
   FileSpreadsheet,
   Sparkles,
   FileSearch,
+  RefreshCw,
 } from "lucide-react";
 import type { Role, ServiceCategory } from "../api/types";
 
@@ -116,6 +117,7 @@ const PORTAL_NAV_SECTIONS: PortalNavSection[] = [
       // para cadastrar o parque so descobria os catalogos depois de tropecar neles.
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/ativos/cadastros", label: "Cadastros tecnicos", icon: SlidersHorizontal, requires: ["CMMS_MAINTENANCE"] },
       { to: "/portal/ativos", label: "Meus ativos", icon: Gauge, requires: ["CMMS_MAINTENANCE"] },
+      { to: "/portal/manutencao/equipamentos-recondicionaveis", label: "Equipamentos recondicionaveis", icon: RefreshCw, requires: ["CMMS_MAINTENANCE"] },
       { to: "/portal/almoxarifado", label: "Almoxarifado", icon: Boxes, requires: ["CMMS_MAINTENANCE"] },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/pareto", label: "Falhas e RCA", icon: BarChart3, requires: ["CMMS_MAINTENANCE"] },
     ],

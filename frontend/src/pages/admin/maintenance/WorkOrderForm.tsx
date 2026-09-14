@@ -14,6 +14,7 @@ import { UserPicker } from "../../../components/UserPicker";
 import { LaborResourcePicker } from "../../../components/LaborResourcePicker";
 import { SecaoRecolhivel } from "../../../components/SecaoRecolhivel";
 import { listFailureCodes } from "../../../api/failureCodes";
+import { listRotableEquipment } from "../../../api/rotableEquipment";
 import { getInstrument } from "../../../api/instruments";
 import { createMaintenanceWorkOrder, getMaintenanceWorkOrder, updateMaintenanceWorkOrder } from "../../../api/maintenanceWorkOrders";
 import { useToast } from "../../../components/Toast";
@@ -28,6 +29,10 @@ import type { FieldErrors } from "react-hook-form";
 const schema = z.object({
   clientId: z.string().uuid("Selecione o cliente."),
   instrumentId: z.string().uuid("Selecione o ativo."),
+  // Vinculo duplo: instrumentId acima e' o local funcional; isto e' a unidade fisica
+  // (motor, redutor...) que apresentou a falha. Em branco na criacao = deixa o backend
+  // auto-sugerir o equipamento instalado no ativo agora (ver onSubmit).
+  rotableEquipmentId: z.string().uuid().optional().or(z.literal("")),
   // Um seletor so, ja separando a corretiva em operacao da de quebra - o par (tipo,
   // tipo de corretiva) e' remontado no envio.
   tipoSelecionado: z.string().min(1, "Selecione o tipo de servico."),
@@ -111,6 +116,23 @@ export default function WorkOrderForm() {
   const ehCorretiva = opcaoDeTipo?.type === "CORRECTIVE";
   const ehQuebra = opcaoDeTipo?.correctiveType === "BREAKDOWN";
   const instrumentId = watch("instrumentId");
+  // Equipamentos disponiveis pra vincular: o(s) instalado(s) no ativo agora, mais o que ja
+  // estava vinculado (se a OS for de edicao e o vinculo tiver mudado desde entao - ex.:
+  // uma substituicao levou o antigo pra quarentena, mas a OS antiga continua contando a
+  // historia dele).
+  const { data: rotaveisDoAtivo } = useQuery({
+    queryKey: ["rotable-equipment-do-ativo-form", instrumentId],
+    queryFn: () => listRotableEquipment({ instrumentId, status: "INSTALLED", pageSize: 10 }),
+    enabled: !!instrumentId,
+  });
+  const opcoesDeEquipamento = (rotaveisDoAtivo?.items ?? []).map((r) => ({
+    value: r.id,
+    label: `${r.code} - ${r.type}${r.serialNumber ? ` (S/N ${r.serialNumber})` : ""}`,
+  }));
+  if (existing?.rotableEquipment && !opcoesDeEquipamento.some((o) => o.value === existing.rotableEquipment!.id)) {
+    const re = existing.rotableEquipment;
+    opcoesDeEquipamento.push({ value: re.id, label: `${re.code} - ${re.type} (vinculo atual da OS)` });
+  }
   const situacaoDaQuebra = watch("breakdownSituation");
   const situacaoDaOs = watch("status");
   const descricao = watch("description");
@@ -158,6 +180,7 @@ export default function WorkOrderForm() {
       reset({
         clientId: existing.clientId,
         instrumentId: existing.instrumentId,
+        rotableEquipmentId: existing.rotableEquipmentId ?? "",
         tipoSelecionado: valorDoTipo(existing.type, existing.correctiveType),
         priority: existing.priority,
         title: existing.title ?? "",
@@ -216,8 +239,16 @@ export default function WorkOrderForm() {
           }
         : {};
 
+      // Se ninguem mexeu no campo na criacao, nem manda ele - assim o backend continua
+      // auto-sugerindo o equipamento instalado no ativo (mandar "" vira null explicito,
+      // que desliga essa sugestao mesmo sem a pessoa ter decidido nada sobre isso).
+      const { rotableEquipmentId: _reqRaw, ...restoSemEquipamento } = resto;
+      const vinculoDeEquipamento =
+        isEdit || dirtyFields.rotableEquipmentId ? { rotableEquipmentId: values.rotableEquipmentId || null } : {};
+
       const payload = {
-        ...resto,
+        ...restoSemEquipamento,
+        ...vinculoDeEquipamento,
         type: opcao!.type,
         correctiveType: opcao!.correctiveType,
         ...registroDeFalha,
@@ -286,6 +317,22 @@ export default function WorkOrderForm() {
             )}
             <InstrumentPicker clientId={clientId} required error={errors.instrumentId?.message} {...register("instrumentId")} />
           </div>
+          {/* Vinculo duplo: o Ativo acima e' o local funcional; isto e' a unidade fisica
+              (motor, redutor...) que apresentou a falha. Sem escolha explicita na criacao,
+              o backend auto-sugere o equipamento instalado no ativo agora - aqui da pra
+              corrigir isso manualmente (ex.: o diagnostico revelou outro equipamento) sem
+              precisar passar pela substituicao fisica de verdade (isso continua sendo o
+              botao "Substituir equipamento" na propria OS, que troca o equipamento no
+              ativo de verdade). */}
+          {temAtivo && (
+            <SelectInput
+              label="Equipamento (unidade fisica que falhou)"
+              placeholder={opcoesDeEquipamento.length ? "Detecta automaticamente" : "Nenhum equipamento instalado neste ativo"}
+              hint="So' corrige o vinculo da OS. Para trocar o equipamento fisico de verdade, use 'Substituir equipamento' na ficha da OS."
+              options={opcoesDeEquipamento}
+              {...register("rotableEquipmentId")}
+            />
+          )}
           {/* Titulo curto: e' o que aparece na lista de OS e no quadro de programacao. A
               descricao abaixo continua sendo o relato completo do sintoma/servico. */}
           {mostrar(temTipo) && (
