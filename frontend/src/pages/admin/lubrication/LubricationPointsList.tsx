@@ -491,8 +491,13 @@ export default function LubricationPointsList() {
                 Continuar neste ativo (para lancar o proximo ponto)
               </label>
             )}
+            {/* "Concluir" sugeria "salvar e terminar", mas o botao so' fecha o modal sem
+                salvar o que estiver preenchido na tela (quem quer salvar tem que clicar em
+                "Salvar e adicionar outro", mesmo no ultimo ponto) - armadilha de rotulo do
+                mesmo tipo ja achada nesta auditoria (etapa do assistente de plano). Nome
+                trocado para deixar claro que fecha sem salvar. */}
             <button type="button" className="btn-outline" onClick={() => setFormOpen(false)}>
-              {continuarNoAtivo && !editando ? "Concluir" : "Cancelar"}
+              {continuarNoAtivo && !editando ? "Fechar sem salvar" : "Cancelar"}
             </button>
             <button type="submit" form="ponto-form" className="btn-primary" disabled={pointForm.formState.isSubmitting}>
               {pointForm.formState.isSubmitting

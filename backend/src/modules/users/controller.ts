@@ -134,13 +134,24 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
     clientId?: string;
   };
 
+  // Listar nao tinha o mesmo cerco que criar/editar/desativar ja tinham (assertPodeAdministrar) -
+  // qualquer perfil autenticado da empresa (ate Solicitante) conseguia enumerar nome, e-mail e
+  // ultimo acesso do time inteiro, Administrador incluso (achado numa varredura de perfis de
+  // acesso). A visibilidade segue a mesma hierarquia de quem-administra-quem: ve a si mesmo e
+  // quem esta autorizado a gerenciar. Cruza com o filtro ?role= pedido, em vez de deixar o
+  // filtro pedido sobrepor o cerco (um Planejador pedindo ?role=CLIENT nao pode voltar a ver
+  // Administrador so' porque perguntou por esse perfil especifico).
+  const perfisVisiveis =
+    ehDaEmpresa(req) && req.user ? [req.user.role, ...perfisQuePodeGerenciar(req.user.role)] : null;
+  const perfisPermitidos = perfisVisiveis && role ? perfisVisiveis.filter((p) => p === role) : (perfisVisiveis ?? (role ? [role] : null));
+
   const where = {
     deletedAt: null,
     // A equipe do cliente enxerga a propria empresa; a OptiProcess enxerga todos, e pode
     // filtrar por uma empresa quando a tela precisa (ex.: ligar pessoa da mao de obra ao
     // acesso dela).
     ...(ehDaEmpresa(req) ? { clientId: req.user?.clientId ?? "" } : clientId ? { clientId } : {}),
-    ...(role ? { role } : {}),
+    ...(perfisPermitidos ? { role: { in: perfisPermitidos } } : {}),
     ...(active !== undefined ? { active: active === "true" } : {}),
     ...(search
       ? {
@@ -166,6 +177,11 @@ export const getUser = asyncHandler(async (req: Request, res: Response) => {
     select: userSelect,
   });
   if (!user) throw new NotFoundError("Usuario");
+  // Mesmo cerco do listUsers: so ve a ficha de quem esta autorizado a gerenciar (ou a si
+  // mesmo), nao qualquer colega so' por saber o id.
+  if (ehDaEmpresa(req) && req.user && user.id !== req.user.sub && !podeGerenciarPerfil(req.user.role, user.role)) {
+    throw new ForbiddenError();
+  }
   res.json(user);
 });
 
