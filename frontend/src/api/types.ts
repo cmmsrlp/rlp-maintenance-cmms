@@ -419,6 +419,9 @@ export interface AssetType {
   clientId: string | null;
   name: string;
   level: AssetHierarchyLevel | null;
+  // Prefixo do codigo serializado (ex.: "MOT") - usado so' pelo cadastro de Equipamentos
+  // recondicionaveis, pra sugerir o proximo codigo.
+  codePrefix: string | null;
   active: boolean;
 }
 

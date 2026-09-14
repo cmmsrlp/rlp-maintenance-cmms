@@ -19,6 +19,7 @@ import { z } from "zod";
 const schema = z.object({
   name: z.string().min(2, "Informe o nome do tipo."),
   level: z.enum(["PLANT", "AREA", "MACHINE", "SUBASSEMBLY", "PART"]).optional().or(z.literal("")),
+  codePrefix: z.string().trim().max(10, "No maximo 10 caracteres.").optional(),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -48,19 +49,19 @@ export default function AssetTypesList() {
   }
 
   function openCreate() {
-    reset({ name: "", level: "" });
+    reset({ name: "", level: "", codePrefix: "" });
     setEditingType(null);
     setCreateOpen(true);
   }
 
   function openEdit(type: AssetType) {
-    reset({ name: type.name, level: type.level ?? "" });
+    reset({ name: type.name, level: type.level ?? "", codePrefix: type.codePrefix ?? "" });
     setEditingType(type);
     setCreateOpen(true);
   }
 
   async function onSubmit(values: FormValues) {
-    const payload = { name: values.name, level: values.level || null };
+    const payload = { name: values.name, level: values.level || null, codePrefix: values.codePrefix?.toUpperCase() || null };
     try {
       if (editingType) {
         await updateAssetType(editingType.id, payload);
@@ -128,6 +129,10 @@ export default function AssetTypesList() {
             accessor: (t) => <span className="text-xs text-graphite-500">{t.level ? ASSET_LEVEL_LABELS[t.level] : "-"}</span>,
           },
           {
+            header: "Prefixo do codigo",
+            accessor: (t) => <span className="font-mono text-xs text-graphite-500">{t.codePrefix ?? "-"}</span>,
+          },
+          {
             header: "Origem",
             accessor: (t) => <span className="text-xs text-graphite-500">{t.clientId ? "Meu catalogo" : "Padrao RLP Maintenance"}</span>,
           },
@@ -182,6 +187,13 @@ export default function AssetTypesList() {
             options={ASSET_LEVEL_OPTIONS}
             error={errors.level?.message}
             {...register("level")}
+          />
+          <TextInput
+            label="Prefixo do codigo (opcional)"
+            placeholder="Ex.: MOT"
+            hint='Usado so pelo cadastro de Equipamentos recondicionaveis - com isso preenchido, o codigo (ex.: "MOT-001") e sugerido sozinho ao escolher este tipo.'
+            error={errors.codePrefix?.message}
+            {...register("codePrefix")}
           />
         </form>
       </Modal>

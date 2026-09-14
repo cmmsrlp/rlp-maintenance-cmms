@@ -1,22 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { listRotableEquipment, createRotableEquipment } from "../../../api/rotableEquipment";
+import { listRotableEquipment, createRotableEquipment, getNextRotableCode } from "../../../api/rotableEquipment";
 import type { RotableEquipmentStatus } from "../../../api/types";
 import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import { PageHeader } from "../../../components/PageHeader";
 import { DataTable } from "../../../components/DataTable";
 import { StatusBadge } from "../../../components/StatusBadge";
 import { Modal } from "../../../components/Modal";
-import { TextInput } from "../../../components/form/Field";
+import { TextInput, SelectInput } from "../../../components/form/Field";
+import { RotableTypeInput } from "../../../components/RotableTypeInput";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
 import { useCmms } from "../../../lib/cmms";
 import { numeroOpcional } from "../../../lib/zodHelpers";
+import { camposDoTipo } from "../../../lib/camposPorTipoDeAtivo";
 
 const schema = z.object({
   code: z.string().min(1, "Informe o codigo do equipamento."),
@@ -26,6 +28,7 @@ const schema = z.object({
   serialNumber: z.string().optional(),
   acquisitionCost: numeroOpcional(z.coerce.number().nonnegative()),
   notes: z.string().optional(),
+  specificAttributes: z.record(z.string(), z.string()).optional(),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -61,11 +64,33 @@ export default function RotableEquipmentList() {
     enabled: !!clientId,
   });
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting, dirtyFields } } = useForm<FormValues>({ resolver: zodResolver(schema) });
+
+  const tipoEscolhido = watch("type");
+  const camposEspecificos = camposDoTipo(tipoEscolhido);
+
+  // Sugere o proximo codigo (ex.: "MOT-004") ao escolher um tipo com prefixo cadastrado -
+  // so enquanto a pessoa nao tiver digitado um codigo na mao, pra nao sobrescrever o que
+  // ela ja escreveu.
+  useEffect(() => {
+    if (!tipoEscolhido || !clientId || dirtyFields.code) return;
+    let cancelado = false;
+    getNextRotableCode({ type: tipoEscolhido, clientId }).then(({ code }) => {
+      if (!cancelado && code && !dirtyFields.code) setValue("code", code);
+    }).catch(() => {});
+    return () => { cancelado = true; };
+  }, [tipoEscolhido, clientId, dirtyFields.code, setValue]);
 
   async function onSubmit(values: FormValues) {
     try {
-      const created = await createRotableEquipment({ ...values, clientId });
+      const attrsPreenchidos = Object.fromEntries(
+        Object.entries(values.specificAttributes ?? {}).filter(([, v]) => v?.trim()),
+      );
+      const created = await createRotableEquipment({
+        ...values,
+        clientId,
+        specificAttributes: Object.keys(attrsPreenchidos).length > 0 ? attrsPreenchidos : null,
+      });
       notify("success", `Equipamento ${created.code} cadastrado.`);
       reset();
       setCreateOpen(false);
@@ -175,8 +200,15 @@ export default function RotableEquipmentList() {
       >
         <form id="rotable-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="grid gap-4 sm:grid-cols-2">
-            <TextInput label="Codigo" required placeholder="Ex.: MOT-ROT-014" error={errors.code?.message} {...register("code")} />
-            <TextInput label="Tipo" required placeholder="Ex.: Motor eletrico, Redutor, Rolo" error={errors.type?.message} {...register("type")} />
+            <RotableTypeInput label="Tipo" required clientId={clientId} error={errors.type?.message} {...register("type")} />
+            <TextInput
+              label="Codigo"
+              required
+              placeholder="Ex.: MOT-ROT-014"
+              hint={tipoEscolhido ? "Sugerido a partir do prefixo do tipo - pode editar." : undefined}
+              error={errors.code?.message}
+              {...register("code")}
+            />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <TextInput label="Fabricante" placeholder="Opcional" {...register("manufacturer")} />
@@ -187,6 +219,33 @@ export default function RotableEquipmentList() {
             <TextInput label="Custo de aquisicao (opcional)" type="number" step="any" {...register("acquisitionCost")} />
           </div>
           <TextInput label="Observacoes (opcional)" {...register("notes")} />
+
+          {camposEspecificos.length > 0 && (
+            <div className="rounded-lg border border-gray-200 p-4">
+              <p className="text-sm font-medium text-graphite-700">Ficha tecnica de {tipoEscolhido}</p>
+              <p className="mt-0.5 text-xs text-graphite-500">Campos proprios deste tipo de equipamento - todos opcionais.</p>
+              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                {camposEspecificos.map((campo) =>
+                  campo.tipo === "select" ? (
+                    <SelectInput
+                      key={campo.chave}
+                      label={campo.rotulo}
+                      options={(campo.opcoes ?? []).map((o) => ({ value: o, label: o }))}
+                      {...register(`specificAttributes.${campo.chave}` as "specificAttributes.string")}
+                    />
+                  ) : (
+                    <TextInput
+                      key={campo.chave}
+                      label={campo.rotulo}
+                      placeholder={campo.placeholder}
+                      {...register(`specificAttributes.${campo.chave}` as "specificAttributes.string")}
+                    />
+                  ),
+                )}
+              </div>
+            </div>
+          )}
+
           <p className="text-xs text-graphite-500">O equipamento nasce em estoque - instale num ativo na propria ficha dele, depois de salvar.</p>
         </form>
       </Modal>

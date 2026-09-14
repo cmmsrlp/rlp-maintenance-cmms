@@ -16,14 +16,16 @@ import {
   approveRepairBudget,
   rejectRepairBudget,
   returnFromRepair,
+  getNextRotableCode,
 } from "./controller";
 
 export const rotableEquipmentRouter = Router();
 
 rotableEquipmentRouter.use(requireAuth, requireRole(...CMMS_ROLES));
 
-// Antes de "/:id" para "substituir" nao ser lido como um id de equipamento.
+// Antes de "/:id" para essas rotas nao serem lidas como um id de equipamento.
 rotableEquipmentRouter.post("/substituir", substituteRotableEquipment);
+rotableEquipmentRouter.get("/proximo-codigo", getNextRotableCode);
 
 rotableEquipmentRouter.get("/", listRotableEquipment);
 rotableEquipmentRouter.get("/:id", getRotableEquipment);

@@ -13,7 +13,7 @@ import {
   returnFromRepair,
 } from "../../../api/rotableEquipment";
 import { listFailureCodes } from "../../../api/failureCodes";
-import type { RotableRepairOutcome } from "../../../api/types";
+import type { RotableEquipment, RotableRepairOutcome } from "../../../api/types";
 import { PageHeader } from "../../../components/PageHeader";
 import { FullPageSpinner } from "../../../components/Spinner";
 import { StatusBadge } from "../../../components/StatusBadge";
@@ -21,10 +21,12 @@ import { Modal } from "../../../components/Modal";
 import { Tabs } from "../../../components/Tabs";
 import { TextInput, SelectInput, TextareaInput } from "../../../components/form/Field";
 import { InstrumentPicker } from "../../../components/InstrumentPicker";
+import { RotableTypeInput } from "../../../components/RotableTypeInput";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
 import { useCmms } from "../../../lib/cmms";
 import { formatDate, formatDateTime, formatCurrency } from "../../../lib/format";
+import { camposDoTipo } from "../../../lib/camposPorTipoDeAtivo";
 
 const OPCOES_DE_RESULTADO: { value: RotableRepairOutcome; label: string }[] = [
   { value: "REPAIRED", label: "Reparado" },
@@ -289,7 +291,7 @@ export default function RotableEquipmentDetail() {
   );
 }
 
-function EditModal({ rotable, onClose, onSaved }: { rotable: { id: string; code: string; type: string; manufacturer: string | null; model: string | null; serialNumber: string | null; notes: string | null }; onClose: () => void; onSaved: () => void }) {
+function EditModal({ rotable, onClose, onSaved }: { rotable: RotableEquipment; onClose: () => void; onSaved: () => void }) {
   const { notify } = useToast();
   const [values, setValues] = useState({
     code: rotable.code,
@@ -299,7 +301,15 @@ function EditModal({ rotable, onClose, onSaved }: { rotable: { id: string; code:
     serialNumber: rotable.serialNumber ?? "",
     notes: rotable.notes ?? "",
   });
+  const [specificAttributes, setSpecificAttributes] = useState<Record<string, string>>(
+    (rotable.specificAttributes as Record<string, string> | null) ?? {},
+  );
   const [saving, setSaving] = useState(false);
+  const camposEspecificos = camposDoTipo(values.type);
+
+  function setAtributo(chave: string, valor: string) {
+    setSpecificAttributes((prev) => ({ ...prev, [chave]: valor }));
+  }
 
   async function submit() {
     if (!values.code.trim() || !values.type.trim()) {
@@ -308,7 +318,11 @@ function EditModal({ rotable, onClose, onSaved }: { rotable: { id: string; code:
     }
     setSaving(true);
     try {
-      await updateRotableEquipment(rotable.id, values);
+      const attrsPreenchidos = Object.fromEntries(Object.entries(specificAttributes).filter(([, v]) => v?.trim()));
+      await updateRotableEquipment(rotable.id, {
+        ...values,
+        specificAttributes: Object.keys(attrsPreenchidos).length > 0 ? attrsPreenchidos : null,
+      });
       notify("success", "Equipamento atualizado.");
       onSaved();
     } catch (error) {
@@ -328,8 +342,16 @@ function EditModal({ rotable, onClose, onSaved }: { rotable: { id: string; code:
     >
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
+          <RotableTypeInput
+            label="Tipo"
+            required
+            name="type"
+            clientId={rotable.clientId}
+            currentValue={rotable.type}
+            value={values.type}
+            onChange={(e) => setValues({ ...values, type: e.target.value })}
+          />
           <TextInput label="Codigo" required value={values.code} onChange={(e) => setValues({ ...values, code: e.target.value })} />
-          <TextInput label="Tipo" required value={values.type} onChange={(e) => setValues({ ...values, type: e.target.value })} />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <TextInput label="Fabricante" value={values.manufacturer} onChange={(e) => setValues({ ...values, manufacturer: e.target.value })} />
@@ -337,6 +359,34 @@ function EditModal({ rotable, onClose, onSaved }: { rotable: { id: string; code:
         </div>
         <TextInput label="Numero de serie" value={values.serialNumber} onChange={(e) => setValues({ ...values, serialNumber: e.target.value })} />
         <TextInput label="Observacoes" value={values.notes} onChange={(e) => setValues({ ...values, notes: e.target.value })} />
+
+        {camposEspecificos.length > 0 && (
+          <div className="rounded-lg border border-gray-200 p-4">
+            <p className="text-sm font-medium text-graphite-700">Ficha tecnica de {values.type}</p>
+            <p className="mt-0.5 text-xs text-graphite-500">Campos proprios deste tipo de equipamento - todos opcionais.</p>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              {camposEspecificos.map((campo) =>
+                campo.tipo === "select" ? (
+                  <SelectInput
+                    key={campo.chave}
+                    label={campo.rotulo}
+                    options={(campo.opcoes ?? []).map((o) => ({ value: o, label: o }))}
+                    value={specificAttributes[campo.chave] ?? ""}
+                    onChange={(e) => setAtributo(campo.chave, e.target.value)}
+                  />
+                ) : (
+                  <TextInput
+                    key={campo.chave}
+                    label={campo.rotulo}
+                    placeholder={campo.placeholder}
+                    value={specificAttributes[campo.chave] ?? ""}
+                    onChange={(e) => setAtributo(campo.chave, e.target.value)}
+                  />
+                ),
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </Modal>
   );

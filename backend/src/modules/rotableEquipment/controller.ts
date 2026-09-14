@@ -40,6 +40,50 @@ const rotableSelect = {
   createdAt: true,
 } as const;
 
+/**
+ * Sugere o proximo codigo (ex.: "MOT-004") a partir do prefixo cadastrado no Tipo de
+ * ativo escolhido - mesmo raciocinio do proximo-codigo de ponto de lubrificacao: numera a
+ * partir do maior sufixo ja usado (nao da contagem), pra apagar um meio da lista nao
+ * devolver um codigo que ja existiu. Sem prefixo cadastrado para o tipo, devolve null - a
+ * pessoa digita o codigo na mao, como ja funcionava antes desta sugestao existir.
+ */
+async function sugerirCodigoDeEquipamento(clientId: string, tipo: string): Promise<string | null> {
+  const assetType = await prisma.assetType.findFirst({
+    where: { name: { equals: tipo, mode: "insensitive" }, OR: [{ clientId }, { clientId: null }] },
+    orderBy: { clientId: "desc" }, // o cadastro proprio da empresa (clientId preenchido) vence o padrao
+    select: { codePrefix: true },
+  });
+  const prefixo = assetType?.codePrefix?.trim();
+  if (!prefixo) return null;
+
+  const doTipo = await prisma.rotableEquipment.findMany({
+    where: { clientId, deletedAt: null, code: { startsWith: `${prefixo}-` } },
+    select: { code: true },
+  });
+  const prefixoEscapado = prefixo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const padrao = new RegExp(`^${prefixoEscapado}-(\\d+)$`, "i");
+  let proximo = 1;
+  for (const { code } of doTipo) {
+    const achado = padrao.exec(code);
+    if (achado) proximo = Math.max(proximo, Number(achado[1]) + 1);
+  }
+
+  for (let tentativa = 0; tentativa < 200; tentativa += 1) {
+    const codigo = `${prefixo}-${String(proximo).padStart(3, "0")}`;
+    const existe = await prisma.rotableEquipment.findFirst({ where: { clientId, code: codigo, deletedAt: null }, select: { id: true } });
+    if (!existe) return codigo;
+    proximo += 1;
+  }
+  return null;
+}
+
+export const getNextRotableCode = asyncHandler(async (req: Request, res: Response) => {
+  const { type, clientId: bodyClientId } = req.query as { type?: string; clientId?: string };
+  if (!type) throw new ValidationError("Informe o tipo.");
+  const clientId = resolveClientId(req, bodyClientId);
+  res.json({ code: await sugerirCodigoDeEquipamento(clientId, type) });
+});
+
 export const listRotableEquipment = asyncHandler(async (req: Request, res: Response) => {
   const pageParams = parsePageParams(req.query as Record<string, unknown>);
   const { clientId, status, type, search, instrumentId, active } = req.query as {

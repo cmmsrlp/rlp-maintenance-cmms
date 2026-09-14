@@ -10,6 +10,7 @@ export interface AssetTypeInput {
   name: string;
   clientId?: string | null;
   level?: AssetHierarchyLevel | null;
+  codePrefix?: string | null;
 }
 
 export async function createAssetType(input: AssetTypeInput): Promise<AssetType> {

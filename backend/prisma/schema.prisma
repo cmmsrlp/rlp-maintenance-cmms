@@ -904,6 +904,11 @@ model AssetType {
   // Opcional: tipos antigos (Motor, Compressor...) ja cadastrados nao tem nivel definido -
   // a arvore so troca o icone quando sabe o nivel, sem bloquear nada por falta dele.
   level    AssetHierarchyLevel?
+  // Prefixo do codigo serializado (ex.: "MOT") - usado ao cadastrar um Equipamento
+  // recondicionavel deste tipo, para sugerir o proximo codigo (MOT-001, MOT-002...) sem
+  // a pessoa ter que inventar um numero. So faz sentido para tipos usados em rotaveis;
+  // um tipo de nivel Planta/Area, por exemplo, nunca teria isso preenchido.
+  codePrefix String?
   active   Boolean @default(true)
   createdAt DateTime @default(now())
 

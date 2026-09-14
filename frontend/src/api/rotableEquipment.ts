@@ -36,6 +36,11 @@ export async function listRotableEquipment(params: {
   return data;
 }
 
+export async function getNextRotableCode(params: { type: string; clientId?: string }): Promise<{ code: string | null }> {
+  const { data } = await api.get<{ code: string | null }>("/rotable-equipment/proximo-codigo", { params });
+  return data;
+}
+
 export async function getRotableEquipment(id: string): Promise<RotableEquipment> {
   const { data } = await api.get<RotableEquipment>(`/rotable-equipment/${id}`);
   return data;

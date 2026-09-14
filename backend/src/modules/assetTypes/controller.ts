@@ -47,6 +47,9 @@ const assetTypeSchema = z.object({
   // de ativos escolher o icone certo. Opcional: tipos antigos (Motor, Compressor...) nao
   // precisam disso pra continuar funcionando.
   level: z.nativeEnum(AssetHierarchyLevel).nullish(),
+  // Prefixo do codigo serializado (ex.: "MOT") - usado so' pelo cadastro de Equipamentos
+  // recondicionaveis, pra sugerir o proximo codigo.
+  codePrefix: z.string().trim().max(10).nullish(),
 });
 
 export const createAssetType = asyncHandler(async (req: Request, res: Response) => {
