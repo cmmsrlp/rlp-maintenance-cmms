@@ -92,39 +92,56 @@ export async function consumeSparePartReservation(
   reservationId: string,
   opcoes: { quantity?: number; createdById?: string } = {},
 ) {
-  const reservation = await prisma.sparePartReservation.findFirst({ where: { id: reservationId, status: "RESERVED" } });
-  if (!reservation) throw new NotFoundError("Reserva");
+  // Tudo dentro de UMA transacao: antes eram duas separadas (o movimento de estoque numa,
+  // o status da reserva + liberacao do reservedQty noutra) - uma falha entre as duas
+  // deixava o estoque ja baixado mas a reserva ainda "Reservada" e o reservedQty intacto,
+  // um estado inconsistente que so um ajuste manual no banco corrigia. E' o mesmo motivo
+  // pelo qual um segundo clique tinha que ser bloqueado: sem isso, um duplo-clique (ou um
+  // reenvio depois de um timeout) consumia a mesma reserva duas vezes.
+  return prisma.$transaction(async (tx) => {
+    const reservation = await tx.sparePartReservation.findFirst({ where: { id: reservationId, status: "RESERVED" } });
+    if (!reservation) throw new NotFoundError("Reserva (ja consumida, liberada, ou nao encontrada).");
 
-  const consumida = opcoes.quantity ?? reservation.quantity;
-  if (consumida <= 0) throw new ValidationError("Informe a quantidade utilizada.");
-  if (consumida > reservation.quantity) {
-    throw new ValidationError(
-      `A quantidade utilizada (${consumida}) e' maior que a reservada (${reservation.quantity}). Reserve mais antes de consumir.`,
-    );
-  }
-  const devolvida = reservation.quantity - consumida;
+    const consumida = opcoes.quantity ?? reservation.quantity;
+    if (consumida <= 0) throw new ValidationError("Informe a quantidade utilizada.");
+    if (consumida > reservation.quantity) {
+      throw new ValidationError(
+        `A quantidade utilizada (${consumida}) e' maior que a reservada (${reservation.quantity}). Reserve mais antes de consumir.`,
+      );
+    }
+    const devolvida = reservation.quantity - consumida;
 
-  const movement = await applySparePartMovement({
-    sparePartId: reservation.sparePartId,
-    type: "OUT",
-    quantity: consumida,
-    maintenanceWorkOrderId: reservation.workOrderId,
-    reason: devolvida > 0 ? `Consumo de reserva (${devolvida} devolvido ao estoque)` : "Consumo de reserva",
-    createdById: opcoes.createdById,
-  });
+    const sparePart = await tx.sparePart.findFirst({ where: { id: reservation.sparePartId, deletedAt: null } });
+    if (!sparePart) throw new NotFoundError("Peca do almoxarifado");
 
-  await prisma.$transaction([
-    prisma.sparePartReservation.update({
-      where: { id: reservation.id },
-      data: { status: "CONSUMED", consumedQuantity: consumida, resolvedAt: new Date() },
-    }),
+    const newStock = sparePart.stockQty - consumida;
+    if (newStock < 0) throw new ValidationError("Estoque nao pode ficar negativo.");
+
+    const movement = await tx.sparePartMovement.create({
+      data: {
+        sparePartId: reservation.sparePartId,
+        type: "OUT",
+        quantity: consumida,
+        unitCost: sparePart.unitCost,
+        maintenanceWorkOrderId: reservation.workOrderId,
+        reason: devolvida > 0 ? `Consumo de reserva (${devolvida} devolvido ao estoque)` : "Consumo de reserva",
+        createdById: opcoes.createdById,
+      },
+    });
+
+    await tx.sparePart.update({ where: { id: sparePart.id }, data: { stockQty: newStock } });
+
     // Libera a reserva INTEIRA: a parte consumida ja saiu do estoque no movimento acima, e
     // a parte devolvida volta a ficar disponivel para outra OS.
-    prisma.sparePart.update({
+    await tx.sparePartReservation.update({
+      where: { id: reservation.id },
+      data: { status: "CONSUMED", consumedQuantity: consumida, resolvedAt: new Date() },
+    });
+    await tx.sparePart.update({
       where: { id: reservation.sparePartId },
       data: { reservedQty: { decrement: reservation.quantity } },
-    }),
-  ]);
+    });
 
-  return { movement, consumida, devolvida };
+    return { movement, consumida, devolvida };
+  });
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Modal } from "../../../components/Modal";
 import { TextInput, SelectInput, CheckboxInput } from "../../../components/form/Field";
 import { OPCOES_DE_TIPO } from "../../../lib/maintenanceLabels";
+import { useToast } from "../../../components/Toast";
 import type { ConversaoDaSolicitacao, ServiceRequest } from "../../../api/types";
 
 interface Props {
@@ -24,6 +25,7 @@ interface Props {
  * rodando, na proxima parada de oportunidade ou so na parada programada.
  */
 export function ConvertRequestModal({ open, request, salvando, onClose, onConfirm }: Props) {
+  const { notify } = useToast();
   const [dados, setDados] = useState<ConversaoDaSolicitacao>({});
   const [tipo, setTipo] = useState("CORRECTIVE_BREAKDOWN");
 
@@ -43,7 +45,25 @@ export function ConvertRequestModal({ open, request, salvando, onClose, onConfir
   }, [open, request]);
 
   const opcao = OPCOES_DE_TIPO.find((o) => o.valor === tipo);
-  const podeSalvar = (dados.title ?? "").trim().length >= 3 && (dados.description ?? "").trim().length >= 5;
+
+  // O botao so ficava desabilitado, sem dizer o motivo - quem testava via nao acontecer
+  // nada e nao sabia se era trava de validacao ou falha silenciosa (achado em auditoria).
+  // Em vez de so desabilitar, o clique sempre reage: com o formulario incompleto, avisa
+  // exatamente o que falta em vez de nao fazer nada.
+  function handleConfirmClick() {
+    if (!request.instrumentId) {
+      notify("error", "Esta solicitacao nao tem um ativo selecionado - defina o ativo antes de gerar a OS.");
+      return;
+    }
+    const faltando: string[] = [];
+    if ((dados.title ?? "").trim().length < 3) faltando.push("Titulo da OS (minimo 3 caracteres)");
+    if ((dados.description ?? "").trim().length < 5) faltando.push("Descricao do servico (minimo 5 caracteres)");
+    if (faltando.length > 0) {
+      notify("error", `Falta preencher: ${faltando.join(", ")}.`);
+      return;
+    }
+    onConfirm({ ...dados, type: opcao?.type, correctiveType: opcao?.correctiveType ?? null });
+  }
 
   return (
     <Modal
@@ -54,14 +74,7 @@ export function ConvertRequestModal({ open, request, salvando, onClose, onConfir
       footer={
         <>
           <button type="button" className="btn-outline" onClick={onClose} disabled={salvando}>Cancelar</button>
-          <button
-            type="button"
-            className="btn-primary"
-            disabled={salvando || !podeSalvar}
-            onClick={() =>
-              onConfirm({ ...dados, type: opcao?.type, correctiveType: opcao?.correctiveType ?? null })
-            }
-          >
+          <button type="button" className="btn-primary" disabled={salvando} onClick={handleConfirmClick}>
             {salvando ? "Gerando..." : "Gerar OS"}
           </button>
         </>

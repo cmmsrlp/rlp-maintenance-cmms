@@ -38,6 +38,8 @@ import { SparePartPicker } from "../../../components/SparePartPicker";
 import { LaborResourcePicker } from "../../../components/LaborResourcePicker";
 import { Tabs } from "../../../components/Tabs";
 import { WorkOrderAttachments } from "./WorkOrderAttachments";
+import { Modal } from "../../../components/Modal";
+import { TextInput } from "../../../components/form/Field";
 import { useCmms } from "../../../lib/cmms";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
@@ -64,6 +66,7 @@ export default function WorkOrderDetail() {
 
   const [tab, setTab] = useState("geral");
   const [busy, setBusy] = useState(false);
+  const [consumeModal, setConsumeModal] = useState<{ reservationId: string; reservado: number; peca: string; valor: string } | null>(null);
   const [closureNotes, setClosureNotes] = useState("");
   const [partSparePartId, setPartSparePartId] = useState("");
   const [partQty, setPartQty] = useState(1);
@@ -375,31 +378,33 @@ export default function WorkOrderDetail() {
     }
   }
 
-  /** Consumir a reserva pergunta QUANTO foi usado. Baixar a reserva inteira quando se usou
-   * menos tira do saldo pecas que continuam na prateleira - e o proximo a precisar delas
-   * recebe "sem saldo" com a peca na mao. O que sobra volta ao estoque no mesmo ato. */
-  async function handleConsumeReservation(reservationId: string, reservado: number, peca: string) {
-    const resposta = window.prompt(
-      `Quanto de "${peca}" foi realmente utilizado? (reservado: ${reservado})
-O que sobrar volta para o estoque.`,
-      String(reservado),
-    );
-    if (resposta === null) return;
-    const usado = Number(resposta);
-    if (!Number.isFinite(usado) || usado <= 0 || usado > reservado) {
-      notify("error", `Informe um numero entre 1 e ${reservado}.`);
+  /** Consumir a reserva pergunta QUANTO foi usado, num modal (window.prompt e' um dialogo
+   * nativo e bloqueante - travava a aba inteira em alguns ambientes/navegadores, achado numa
+   * auditoria funcional). Baixar a reserva inteira quando se usou menos tira do saldo pecas
+   * que continuam na prateleira - e o proximo a precisar delas recebe "sem saldo" com a peca
+   * na mao. O que sobra volta ao estoque no mesmo ato. */
+  function handleConsumeReservation(reservationId: string, reservado: number, peca: string) {
+    setConsumeModal({ reservationId, reservado, peca, valor: String(reservado) });
+  }
+
+  async function submitConsumeReservation() {
+    if (!consumeModal) return;
+    const usado = Number(consumeModal.valor);
+    if (!Number.isFinite(usado) || usado <= 0 || usado > consumeModal.reservado) {
+      notify("error", `Informe um numero entre 1 e ${consumeModal.reservado}.`);
       return;
     }
 
     setBusy(true);
     try {
-      const r = await consumeWorkOrderReservation(id, reservationId, usado);
+      const r = await consumeWorkOrderReservation(id, consumeModal.reservationId, usado);
       notify(
         "success",
         r.devolvida > 0
           ? `Baixa de ${r.consumida} registrada - ${r.devolvida} devolvido ao estoque.`
           : "Reserva consumida - baixa registrada no estoque.",
       );
+      setConsumeModal(null);
       invalidate();
       queryClient.invalidateQueries({ queryKey: ["spare-parts-picker"] });
     } catch (error) {
@@ -1378,6 +1383,38 @@ O que sobrar volta para o estoque.`,
 
       {tab === "anexos" && <WorkOrderAttachments workOrderId={id} canEdit={!!canManage} />}
 
+      <Modal
+        open={!!consumeModal}
+        onClose={() => setConsumeModal(null)}
+        title="Consumir reserva"
+        size="sm"
+        footer={
+          <>
+            <button type="button" className="btn-outline" onClick={() => setConsumeModal(null)}>Cancelar</button>
+            <button type="button" className="btn-primary" onClick={() => void submitConsumeReservation()} disabled={busy}>
+              {busy ? "Registrando..." : "Confirmar baixa"}
+            </button>
+          </>
+        }
+      >
+        {consumeModal && (
+          <div className="space-y-3">
+            <p className="text-sm text-graphite-600">
+              Quanto de <span className="font-medium text-navy-900">"{consumeModal.peca}"</span> foi realmente utilizado? O que sobrar da
+              reserva (de {consumeModal.reservado}) volta para o estoque automaticamente.
+            </p>
+            <TextInput
+              label="Quantidade utilizada"
+              type="number"
+              min={1}
+              max={consumeModal.reservado}
+              value={consumeModal.valor}
+              onChange={(e) => setConsumeModal({ ...consumeModal, valor: e.target.value })}
+              autoFocus
+            />
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

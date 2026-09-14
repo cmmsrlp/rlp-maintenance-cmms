@@ -3,16 +3,37 @@ export function formatCurrency(value: number | null | undefined): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+// Fuso fixo de exibicao: o sistema e' usado por empresas no Brasil, e depender do fuso do
+// SISTEMA OPERACIONAL de quem esta olhando a tela (em vez de sempre mostrar horario de
+// Brasilia) foi exatamente a causa de uma data/hora aparecer deslocada em 3h numa auditoria
+// - o navegador de quem testava nao estava com o relogio em America/Sao_Paulo. Fixando aqui,
+// a exibicao fica correta em qualquer maquina, sem depender de configuracao alheia.
+const FUSO_BRASIL = "America/Sao_Paulo";
+
 export function formatDate(value: string | Date | null | undefined): string {
   if (!value) return "-";
   const date = typeof value === "string" ? new Date(value) : value;
-  return date.toLocaleDateString("pt-BR");
+  return date.toLocaleDateString("pt-BR", { timeZone: FUSO_BRASIL });
 }
 
 export function formatDateTime(value: string | Date | null | undefined): string {
   if (!value) return "-";
   const date = typeof value === "string" ? new Date(value) : value;
-  return date.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+  return date.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: FUSO_BRASIL });
+}
+
+/** Componentes YYYY-MM-DD / HH:mm de um instante (ISO ou Date) na hora de Sao Paulo - para
+ * pre-preencher <input type="date"> / <input type="datetime-local"> ao editar um registro.
+ * Esses inputs nao entendem fuso horario (sao "hora de parede" pura); usar os getters de
+ * UTC depois de deslocar o relogio em -3h da exatamente essa hora de parede, sem depender
+ * do fuso do navegador de quem esta editando. */
+export function paraInputDeDataSaoPaulo(value: string | Date | null | undefined): { data: string; horaMinuto: string } {
+  if (!value) return { data: "", horaMinuto: "" };
+  const instante = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(instante.getTime())) return { data: "", horaMinuto: "" };
+  const deslocado = new Date(instante.getTime() - 3 * 60 * 60 * 1000);
+  const iso = deslocado.toISOString();
+  return { data: iso.slice(0, 10), horaMinuto: iso.slice(0, 16) };
 }
 
 export function formatFileSize(bytes: number): string {

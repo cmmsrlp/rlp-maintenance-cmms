@@ -1003,6 +1003,7 @@ export interface MaintenanceDashboardData {
     corrective: number;
     preventive: number;
     predictive: number;
+    other: number;
     predictiveAutoOpened: number;
     canceled: number;
   };

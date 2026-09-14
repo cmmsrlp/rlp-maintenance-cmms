@@ -18,6 +18,30 @@ function withDerivedStatus<T extends { status: InstrumentStatus; nextDueDate: Da
   return { ...instrument, derivedStatus: derived };
 }
 
+/** IDs de ativos efetivamente dentro de uma area: quem tem areaId proprio igual a ela, MAIS
+ * quem descende (por parentId, em qualquer profundidade) de um desses - ver comentario no
+ * chamador sobre por que nao basta o campo denormalizado sozinho. */
+async function resolveInstrumentIdsInArea(areaId: string, clientScope: { clientId?: string }): Promise<string[]> {
+  const raiz = await prisma.instrument.findMany({
+    where: { areaId, deletedAt: null, ...clientScope },
+    select: { id: true },
+  });
+  const idsEncontrados = new Set(raiz.map((i) => i.id));
+  let fronteira = [...idsEncontrados];
+  // Arvore de ativos raramente passa de poucos niveis (planta > maquina > subconjunto >
+  // parte) - expandir nivel a nivel ate' nao achar filho novo cobre qualquer profundidade
+  // real sem precisar de uma CTE recursiva em SQL bruto.
+  while (fronteira.length > 0) {
+    const filhos = await prisma.instrument.findMany({
+      where: { parentId: { in: fronteira }, deletedAt: null },
+      select: { id: true },
+    });
+    fronteira = filhos.map((f) => f.id).filter((id) => !idsEncontrados.has(id));
+    fronteira.forEach((id) => idsEncontrados.add(id));
+  }
+  return [...idsEncontrados];
+}
+
 /** A arvore de ativos usa o nivel so pra escolher o icone de cada item. O nivel mora no
  * proprio ativo desde que "Tipo de ativo" saiu do cadastro; este apelido existe pra nao
  * quebrar as telas que ja liam "assetTypeLevel". */
@@ -120,6 +144,16 @@ export const listInstruments = asyncHandler(async (req: Request, res: Response) 
     rootOnly?: string;
   };
 
+  // Um componente que herda a area do pai (areaOverride=false) normalmente tem o proprio
+  // areaId denormalizado na escrita (resolveInheritedContext/propagateContextToDescendants),
+  // mas um gap nessa propagacao deixa o filho com areaId desatualizado ou nulo mesmo estando
+  // visualmente dentro da area na arvore (que resolve por parentId, nao por areaId) - achado
+  // numa auditoria funcional: filtrar por area escondia um ativo que existia e aparecia na
+  // arvore, so' porque o proprio registro dele nao tinha o areaId em dia. Aqui o filtro por
+  // area inclui tambem quem descende (por parentId) de um ativo com aquela area, robusto a
+  // esse tipo de gap em vez de depender so' do campo denormalizado.
+  const idsDaAreaComDescendentes = areaId ? await resolveInstrumentIdsInArea(areaId, resolveClientScope(req, clientId)) : null;
+
   const where = {
     deletedAt: null,
     ...resolveClientScope(req, clientId),
@@ -127,7 +161,7 @@ export const listInstruments = asyncHandler(async (req: Request, res: Response) 
     ...(rootOnly === "true" ? { parentId: null } : parentId ? { parentId } : {}),
     ...(criticality ? { criticality } : {}),
     ...(plantId ? { plantId } : {}),
-    ...(areaId ? { areaId } : {}),
+    ...(idsDaAreaComDescendentes ? { id: { in: idsDaAreaComDescendentes } } : {}),
     ...(systemId ? { systemId } : {}),
     ...(costCenterId ? { costCenterId } : {}),
     ...(operationalStatus ? { operationalStatus } : {}),

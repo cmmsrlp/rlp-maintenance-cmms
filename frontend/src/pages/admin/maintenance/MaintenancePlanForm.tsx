@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -203,6 +203,14 @@ export default function MaintenancePlanForm() {
     ["triggerType", "frequencyEvery", "frequencyUnit", "meterId", "meterInterval", "conditionMeterId", "toleranceDaysBefore", "toleranceDaysAfter"],
     ["estimatedLaborHours", "procedure", "parts", "checklistTemplate"],
   ];
+  // O botao "Salvar plano" da etapa 3 ocupa o mesmo lugar na tela onde estava o "Continuar"
+  // da etapa 2 - sem nada marcando visualmente a troca, um clique logo em seguida (ou um
+  // duplo-clique na mesma posicao) podia acertar "Salvar" antes de a pessoa ver que a etapa
+  // mudou, salvando o plano sem materiais nem checklist (achado em auditoria). Rolar de
+  // volta ao topo do assistente a cada troca de etapa forca a pessoa a ver o conteudo novo
+  // antes de poder clicar em qualquer botao daquela etapa.
+  const topoDoAssistenteRef = useRef<HTMLDivElement>(null);
+
   async function goToStep(next: number) {
     if (next > step) {
       const ok = await trigger(STEP_FIELDS[step]);
@@ -215,6 +223,7 @@ export default function MaintenancePlanForm() {
       }
     }
     setStep(next);
+    topoDoAssistenteRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   useEffect(() => {
@@ -373,7 +382,7 @@ export default function MaintenancePlanForm() {
         ]}
       />
       {/* Assistente em 3 etapas: nem todo campo de uma vez. */}
-      <div className="mb-6 flex flex-wrap items-center gap-2">
+      <div ref={topoDoAssistenteRef} className="mb-6 flex flex-wrap items-center gap-2">
         {["Identificacao", "Disparo e geracao da OS", "Execucao, materiais e checklist"].map((label, index) => {
           const done = index < step;
           const current = index === step;

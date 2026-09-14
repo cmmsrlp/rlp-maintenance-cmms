@@ -59,6 +59,7 @@ const COR_TIPO_OS = {
   preventive: "#0F9D58",
   corrective: "#F5B400",
   predictive: "#335684",
+  other: "#8a92a3",
   canceled: "#cbcfd5",
 } as const;
 
@@ -214,7 +215,11 @@ export default function MaintenanceDashboard() {
                         { name: "Preventiva", value: data.totals.preventive, color: COR_TIPO_OS.preventive },
                         { name: "Corretiva", value: data.totals.corrective, color: COR_TIPO_OS.corrective },
                         { name: "Preditiva", value: data.totals.predictive, color: COR_TIPO_OS.predictive },
-                        { name: "Cancelada", value: data.totals.canceled, color: COR_TIPO_OS.canceled },
+                        // Lubrificacao/inspecao/projeto tambem contam pra totals.workOrders mas
+                        // nao tem cor propria no painel - agrupadas aqui pra fatia bater com o
+                        // total mostrado no centro (achado testando: sem isso a pizza somava
+                        // menos que o total real quando existiam OS desses tipos).
+                        { name: "Outras", value: data.totals.other, color: COR_TIPO_OS.other },
                       ]}
                       dataKey="value"
                       nameKey="name"
@@ -225,7 +230,13 @@ export default function MaintenanceDashboard() {
                       stroke="none"
                       isAnimationActive={false}
                     >
-                      {[COR_TIPO_OS.preventive, COR_TIPO_OS.corrective, COR_TIPO_OS.predictive, COR_TIPO_OS.canceled].map((cor) => (
+                      {/* Cancelada fica de fora da pizza de proposito: ela "nao executou nada"
+                          (mesma regra do backend para MTTR/MTBF/custo) - somar ela aqui
+                          inflava os percentuais de composicao sem representar trabalho real,
+                          e o total no centro (que exclui cancelada) parecia nao bater com a
+                          soma das fatias. Continua visivel na legenda ao lado, so' nao entra
+                          na conta do circulo. */}
+                      {[COR_TIPO_OS.preventive, COR_TIPO_OS.corrective, COR_TIPO_OS.predictive, COR_TIPO_OS.other].map((cor) => (
                         <Cell key={cor} fill={cor} />
                       ))}
                     </Pie>
@@ -258,6 +269,15 @@ export default function MaintenanceDashboard() {
                     </span>
                     <span className="font-semibold text-navy-900">{data.totals.predictive}</span>
                   </li>
+                  {data.totals.other > 0 && (
+                    <li className="flex items-center justify-between gap-2">
+                      <span className="flex items-center gap-1.5 text-graphite-600">
+                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: COR_TIPO_OS.other }} />
+                        Outras
+                      </span>
+                      <span className="font-semibold text-navy-900">{data.totals.other}</span>
+                    </li>
+                  )}
                   <li className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-1.5 text-graphite-600">
                       <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: COR_TIPO_OS.canceled }} />

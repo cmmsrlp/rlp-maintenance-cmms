@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
-import { dataOpcional } from "../../utils/zod";
+import { dataOpcional, dataObrigatoria } from "../../utils/zod";
 import { BreakdownSituation, MaintenanceOrderType, MaintenancePriority, MaintenanceOrderStatus, ChecklistItemResult, AttachmentCategory, LaborHourType, FailureSeverity, CorrectiveType } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { asyncHandler } from "../../utils/asyncHandler";
@@ -1110,7 +1110,7 @@ export const consumeWorkOrderReservation = asyncHandler(async (req: Request, res
 
 const stoppageSchema = z.object({
   reasonId: z.string().uuid().nullish(),
-  startedAt: z.coerce.date(),
+  startedAt: dataObrigatoria,
   endedAt: dataOpcional,
   notes: z.string().nullish(),
 });
@@ -1488,6 +1488,11 @@ export const getMaintenanceDashboard = asyncHandler(async (req: Request, res: Re
       corrective: workOrders.filter((w) => w.type === "CORRECTIVE").length,
       preventive: workOrders.filter((w) => w.type === "PREVENTIVE").length,
       predictive: workOrders.filter((w) => w.type === "PREDICTIVE").length,
+      // Lubrificacao, inspecao e projeto tambem sao tipos validos de OS, mas nao tem grafico
+      // proprio no painel - agrupados aqui para que o total do grafico de composicao bata com
+      // o total real (achado ao testar: preventiva+corretiva+preditiva sozinhas ficavam abaixo
+      // de totals.workOrders, distorcendo os percentuais da pizza).
+      other: workOrders.filter((w) => !["PREVENTIVE", "CORRECTIVE", "PREDICTIVE"].includes(w.type)).length,
       // Quantas dessas preditivas foram abertas sozinhas por uma leitura fora da faixa
       // (em vez de escolhidas a mao) - mede se a preditiva esta funcionando de verdade.
       predictiveAutoOpened: workOrders.filter((w) => w.type === "PREDICTIVE" && w.triggeredByMeterId).length,

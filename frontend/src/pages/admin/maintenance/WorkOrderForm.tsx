@@ -20,6 +20,7 @@ import { getApiErrorMessage } from "../../../api/client";
 import { FullPageSpinner } from "../../../components/Spinner";
 import { useCmms } from "../../../lib/cmms";
 import { OPCOES_DE_TIPO, GRAVIDADES_DE_FALHA, valorDoTipo, SITUACOES_DE_ABERTURA } from "../../../lib/maintenanceLabels";
+import { paraInputDeDataSaoPaulo } from "../../../lib/format";
 import type { FailureSeverity, MaintenanceOrderStatus } from "../../../api/types";
 import type { FieldErrors } from "react-hook-form";
 
@@ -164,14 +165,14 @@ export default function WorkOrderForm() {
         assignedResourceId: existing.assignedResourceId ?? "",
         breakdownSituation: existing.breakdownSituation ?? "",
         status: existing.status ?? "OPEN",
-        scheduledDate: existing.scheduledDate?.slice(0, 10) ?? "",
-        plannedStart: existing.plannedStart?.slice(0, 16) ?? "",
-        plannedEnd: existing.plannedEnd?.slice(0, 16) ?? "",
+        scheduledDate: paraInputDeDataSaoPaulo(existing.scheduledDate).data,
+        plannedStart: paraInputDeDataSaoPaulo(existing.plannedStart).horaMinuto,
+        plannedEnd: paraInputDeDataSaoPaulo(existing.plannedEnd).horaMinuto,
         estimatedHours: existing.estimatedHours ?? undefined,
         failureCodeId: existing.failureCodeId ?? "",
         observations: existing.observations ?? "",
-        failureStartedAt: existing.failureStartedAt?.slice(0, 16) ?? "",
-        failureEndedAt: existing.failureEndedAt?.slice(0, 16) ?? "",
+        failureStartedAt: paraInputDeDataSaoPaulo(existing.failureStartedAt).horaMinuto,
+        failureEndedAt: paraInputDeDataSaoPaulo(existing.failureEndedAt).horaMinuto,
         failureSeverity: existing.failureSeverity ?? "",
         failureDescription: existing.failureDescription ?? "",
         failureRootCause: existing.failureRootCause ?? "",
