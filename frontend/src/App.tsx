@@ -223,6 +223,7 @@ export default function App() {
                   executa o que foi programado, entao nao reestrutura nada disto. */}
               <Route element={<ProtectedRoute roles={["CLIENT", "CLIENT_PLANNER"]} />}>
                 <Route path="insights" element={<PortalInsights />} />
+                <Route path="auditoria" element={<AuditLog own />} />
                 <Route path="ativos/cadastros" element={<TechnicalCatalogsHub />} />
                 <Route path="ativos/tipos" element={<AssetTypesList />} />
                 <Route path="ativos/plantas" element={<PlantsList />} />

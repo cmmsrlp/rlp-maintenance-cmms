@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { listAuditLogs } from "../../../api/audit";
+import { listAuditLogs, listOwnAuditLogs } from "../../../api/audit";
 import { PageHeader } from "../../../components/PageHeader";
 import { DataTable } from "../../../components/DataTable";
 import { formatDateTime } from "../../../lib/format";
@@ -16,30 +16,37 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 const ENTITY_OPTIONS = [
-  "Client",
   "Instrument",
-  "Calibration",
-  "TechnicalReport",
-  "ServiceOrder",
-  "ServiceContract",
-  "Product",
-  "Quote",
-  "Order",
+  "MaintenanceWorkOrder",
+  "MaintenancePlan",
+  "ServiceRequest",
+  "RotableEquipment",
+  "ShutdownSchedule",
+  "SparePart",
   "User",
 ];
 
-export default function AuditLog() {
+interface AuditLogProps {
+  /** true = so' a auditoria da propria empresa (portal do cliente). Mesma tela, endpoint
+   * diferente - o backend e' quem garante o escopo, aqui e' so' qual chamar. */
+  own?: boolean;
+}
+
+export default function AuditLog({ own = false }: AuditLogProps) {
   const [entityType, setEntityType] = useState("");
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["audit-logs", entityType, page],
-    queryFn: () => listAuditLogs({ entityType: entityType || undefined, page, pageSize: 20 }),
+    queryKey: [own ? "audit-logs-minha-empresa" : "audit-logs", entityType, page],
+    queryFn: () => (own ? listOwnAuditLogs : listAuditLogs)({ entityType: entityType || undefined, page, pageSize: 20 }),
   });
 
   return (
     <div>
-      <PageHeader title="Auditoria" description="Registro de acoes relevantes no sistema" />
+      <PageHeader
+        title="Auditoria"
+        description={own ? "Registro de acoes feitas pela sua equipe no sistema" : "Registro de acoes relevantes no sistema"}
+      />
 
       <div className="mb-4 max-w-xs">
         <select className="input" value={entityType} onChange={(e) => { setEntityType(e.target.value); setPage(1); }}>

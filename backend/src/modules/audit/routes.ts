@@ -1,9 +1,12 @@
 import { Router } from "express";
 import { requireAuth } from "../../middleware/auth";
 import { requireRole } from "../../middleware/rbac";
-import { listAuditLogs } from "./controller";
+import { listAuditLogs, listOwnAuditLogs } from "./controller";
 
 export const auditRouter = Router();
+auditRouter.use(requireAuth);
 
-auditRouter.use(requireAuth, requireRole("ADMIN"));
-auditRouter.get("/", listAuditLogs);
+auditRouter.get("/", requireRole("ADMIN"), listAuditLogs);
+// Rota literal antes de nenhuma parametrizada existir aqui - nao ha risco de colisao hoje,
+// mas segue o mesmo cuidado usado no resto do backend.
+auditRouter.get("/minha-empresa", requireRole("CLIENT", "CLIENT_PLANNER"), listOwnAuditLogs);

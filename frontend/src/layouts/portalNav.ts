@@ -130,6 +130,7 @@ const PORTAL_NAV_SECTIONS: PortalNavSection[] = [
     items: [
       { perfis: ["CLIENT"], to: "/portal/manutencao/importar", label: "Importar dados", icon: FileSpreadsheet, requires: ["CMMS_MAINTENANCE"] },
       { perfis: ["CLIENT"], to: "/portal/contrato", label: "Meu contrato", icon: ReceiptText },
+      { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/auditoria", label: "Auditoria", icon: History },
       { to: "/portal/perfil", label: "Meu perfil", icon: User },
     ],
   },
