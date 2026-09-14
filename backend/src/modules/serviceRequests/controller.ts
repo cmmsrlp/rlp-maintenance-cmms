@@ -289,6 +289,14 @@ export const convertServiceRequest = asyncHandler(async (req: Request, res: Resp
     throw new ValidationError("Selecione um ativo na solicitacao antes de gerar a OS.");
   }
 
+  // A OS criada por conversao nunca herdava o centro de custo do ativo (ao contrario da
+  // criacao direta de OS, que ja fazia isso) - a OS nascia sempre com centro de custo vazio,
+  // mesmo quando o ativo tinha um definido (achado na auditoria, ex.: OS-5).
+  const instrument = await prisma.instrument.findFirst({
+    where: { id: existing.instrumentId, deletedAt: null },
+    select: { costCenterId: true },
+  });
+
   const type = dados.type ?? MaintenanceOrderType.CORRECTIVE;
   if (type === "CORRECTIVE" && !dados.correctiveType) {
     throw new ValidationError("Informe se a corretiva e' com a maquina em operacao ou de quebra.");
@@ -310,6 +318,7 @@ export const convertServiceRequest = asyncHandler(async (req: Request, res: Resp
       number,
       clientId: existing.clientId,
       instrumentId: existing.instrumentId,
+      costCenterId: instrument?.costCenterId ?? null,
       type,
       correctiveType: type === "CORRECTIVE" ? dados.correctiveType : null,
       priority: dados.priority ?? existing.suggestedPriority,

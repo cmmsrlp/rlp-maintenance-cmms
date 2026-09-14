@@ -16,6 +16,37 @@ export interface InsightGerado {
   summary: string;
 }
 
+const ORDEM_SEVERIDADE = { OK: 0, ATTENTION: 1, CRITICAL: 2 } as const;
+type Severidade = keyof typeof ORDEM_SEVERIDADE;
+
+/** A IA classificava a severidade sozinha, e podia escrever "operacao em dia" com OS
+ * atrasada e plano vencido na frente dela - o texto contradizia o estado real do CMMS
+ * (achado em auditoria). Aqui a severidade e' calculada primeiro por regra fixa sobre os
+ * mesmos numeros que vao no prompt; o resultado final usa a mais grave entre essa regra e
+ * a da IA, nunca uma mais branda - a IA pode piorar a classificacao (ela ve nuance que o
+ * numero sozinho nao capta), mas nao pode mascarar um problema que os dados ja mostram. */
+function calcularSeveridadeDeterministica(c: DadosClienteParaInsight): Severidade {
+  const usoCritico = (c.usoUsuariosPct ?? 0) >= 100 || (c.usoAtivosPct ?? 0) >= 100;
+  if (c.planosAtrasados >= 5 || c.ordensAbertas >= 30 || usoCritico) return "CRITICAL";
+
+  const usoEmAtencao = (c.usoUsuariosPct ?? 0) >= 80 || (c.usoAtivosPct ?? 0) >= 80;
+  if (c.planosAtrasados > 0 || c.pecasEmFalta > 0 || c.ordensAbertas >= 10 || usoEmAtencao) return "ATTENTION";
+
+  return "OK";
+}
+
+/** As evidencias numericas ficam sempre no fim do texto, na mesma ordem em que entraram no
+ * prompt - assim quem le o insight consegue conferir de onde veio a conclusao, em vez de
+ * confiar cegamente na frase da IA. */
+function comEvidencias(summary: string, c: DadosClienteParaInsight): string {
+  const partes = [
+    `${c.planosAtrasados} plano(s) atrasado(s)`,
+    `${c.ordensAbertas} OS aberta(s)`,
+    `${c.pecasEmFalta} peca(s) em falta`,
+  ];
+  return `${summary.trim()} (Evidencias: ${partes.join(", ")}.)`;
+}
+
 const MODEL = "gemini-3.6-flash";
 
 function montarPrompt(clientes: DadosClienteParaInsight[]): string {
@@ -75,13 +106,23 @@ export async function gerarInsightsDeClientes(clientes: DadosClienteParaInsight[
   const texto = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
 
   const bruto = JSON.parse(texto) as { clientId?: string; severity?: string; summary?: string }[];
-  const idsValidos = new Set(clientes.map((c) => c.clientId));
+  const porCliente = new Map(clientes.map((c) => [c.clientId, c]));
   const severidadesValidas = new Set(["OK", "ATTENTION", "CRITICAL"]);
 
-  return bruto.filter(
-    (item): item is InsightGerado =>
-      !!item.clientId && idsValidos.has(item.clientId) && !!item.severity && severidadesValidas.has(item.severity) && !!item.summary,
-  );
+  return bruto
+    .filter(
+      (item): item is InsightGerado =>
+        !!item.clientId && porCliente.has(item.clientId) && !!item.severity && severidadesValidas.has(item.severity) && !!item.summary,
+    )
+    .map((item) => {
+      const dadosDoCliente = porCliente.get(item.clientId)!;
+      const severidadeDeterministica = calcularSeveridadeDeterministica(dadosDoCliente);
+      const severity =
+        ORDEM_SEVERIDADE[severidadeDeterministica] > ORDEM_SEVERIDADE[item.severity as Severidade]
+          ? severidadeDeterministica
+          : (item.severity as Severidade);
+      return { ...item, severity, summary: comEvidencias(item.summary, dadosDoCliente) };
+    });
 }
 
 export interface AnaliseDeLaudo {

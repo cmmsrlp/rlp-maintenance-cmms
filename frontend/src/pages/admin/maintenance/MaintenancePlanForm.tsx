@@ -831,6 +831,30 @@ export default function MaintenancePlanForm() {
           </div>
         )}
 
+        {/* estimatedLaborHours e procedure ja existiam no schema e eram validados/enviados
+            nesta etapa, mas nunca tinham campo de formulario - o plano so' guardava HH
+            prevista e procedimento se viessem de uma importacao, nunca pelo assistente
+            (achado em auditoria: PM-0003 tinha estimatedShutdownHours mas nao HH prevista). */}
+        <div className="card space-y-4 p-5">
+          <h2 className="font-semibold text-navy-900">Execucao</h2>
+          <TextInput
+            label="HH prevista (horas)"
+            type="number"
+            step="any"
+            hint="Total de horas de mao de obra estimadas para executar o plano - usado para comparar previsto x realizado."
+            {...register("estimatedLaborHours")}
+          />
+          <div>
+            <label className="mb-1 block text-sm font-medium text-graphite-700">Procedimento</label>
+            <textarea
+              className="input"
+              rows={4}
+              placeholder="Passo a passo da execucao, ou referencia ao documento anexado abaixo."
+              {...register("procedure")}
+            />
+          </div>
+        </div>
+
         <div className="card space-y-4 p-5">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-navy-900">Materiais previstos</h2>

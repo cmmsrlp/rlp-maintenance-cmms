@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Tags, Factory, Workflow, ChevronRight, ListChecks, OctagonPause, LayoutTemplate, HardHat, ClipboardPlus, IdCard } from "lucide-react";
+import { Tags, Factory, Workflow, ChevronRight, ListChecks, OctagonPause, LayoutTemplate, HardHat, ClipboardPlus, IdCard, FolderKanban } from "lucide-react";
 import { PageHeader } from "../../../components/PageHeader";
 import { useCmms } from "../../../lib/cmms";
 
@@ -28,6 +28,7 @@ export default function TechnicalCatalogsHub() {
         { to: `${base}/modelos-de-plano`, icon: LayoutTemplate, title: "Modelos de plano", description: "Planos reutilizaveis por familia de ativo" },
         { to: `${base}/falhas`, icon: ListChecks, title: "Codigos de falha", description: "Causas usadas nas ordens corretivas e no Pareto" },
         { to: `${base}/paradas`, icon: OctagonPause, title: "Motivos de parada", description: "Por que a maquina ficou parada durante o servico" },
+        { to: `${base}/categorias-solicitacao`, icon: FolderKanban, title: "Categorias de solicitacao", description: "Classificacao usada ao abrir uma solicitacao de servico" },
       ],
     },
     {

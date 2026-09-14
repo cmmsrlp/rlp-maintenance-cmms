@@ -80,6 +80,7 @@ const ServiceRequestForm = lazyPagina(() => import("./pages/admin/maintenance/Se
 const ServiceRequestDetail = lazyPagina(() => import("./pages/admin/maintenance/ServiceRequestDetail"));
 const FailureCodesList = lazyPagina(() => import("./pages/admin/maintenance/FailureCodesList"));
 const StoppageReasonsList = lazyPagina(() => import("./pages/admin/maintenance/StoppageReasonsList"));
+const ServiceRequestCategoriesList = lazyPagina(() => import("./pages/admin/maintenance/ServiceRequestCategoriesList"));
 const LaborTypesList = lazyPagina(() => import("./pages/admin/maintenance/LaborTypesList"));
 const SparePartsList = lazyPagina(() => import("./pages/admin/maintenance/SparePartsList"));
 const LaborResourcesList = lazyPagina(() => import("./pages/admin/maintenance/LaborResourcesList"));
@@ -147,6 +148,7 @@ export default function App() {
               <Route path="manutencao/solicitacoes" element={<ServiceRequestsList />} />
               <Route path="manutencao/solicitacoes/novo" element={<ServiceRequestForm />} />
               <Route path="manutencao/solicitacoes/:id" element={<ServiceRequestDetail />} />
+              <Route path="manutencao/categorias-solicitacao" element={<ServiceRequestCategoriesList />} />
               <Route path="manutencao/falhas" element={<FailureCodesList />} />
               <Route path="manutencao/pareto" element={<FailureAnalysis />} />
               <Route path="manutencao/rca" element={<RcaList />} />
@@ -226,6 +228,7 @@ export default function App() {
                 <Route path="manutencao/programacao" element={<SchedulingBoard />} />
                 <Route path="manutencao/planejamento" element={<PlanningBoard />} />
                 <Route path="manutencao/preditiva" element={<PredictivePanel />} />
+                <Route path="manutencao/categorias-solicitacao" element={<ServiceRequestCategoriesList />} />
                 <Route path="manutencao/falhas" element={<FailureCodesList />} />
                 <Route path="manutencao/pareto" element={<FailureAnalysis />} />
                 <Route path="manutencao/rca" element={<RcaList />} />

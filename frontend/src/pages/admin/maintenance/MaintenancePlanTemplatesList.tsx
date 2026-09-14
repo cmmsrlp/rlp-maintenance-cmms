@@ -66,11 +66,17 @@ export default function MaintenancePlanTemplatesList() {
   const {
     register,
     control,
+    watch,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<TemplateFormValues>({ resolver: zodResolver(templateSchema) });
   const { fields, append, remove } = useFieldArray({ control, name: "checklistItems" });
+  // Periodicidade e intervalo do medidor sao mutuamente exclusivos (o backend so exige o do
+  // tipo de disparo escolhido), mas os dois campos ficavam sempre visiveis - quem preenchia
+  // o modelo via o campo do outro disparo junto e nao sabia se precisava dele tambem
+  // (achado em auditoria: "campo irrelevante exigido"). Mostrar so o que se aplica.
+  const templateTriggerType = watch("triggerType");
 
   function canEdit(t: MaintenancePlanTemplate) {
     if (!canManage) return false;
@@ -245,8 +251,11 @@ export default function MaintenancePlanTemplatesList() {
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
-            <TextInput label="Periodicidade (dias)" type="number" hint="Para disparo por tempo." error={errors.frequencyDays?.message} {...register("frequencyDays")} />
-            <TextInput label="Intervalo do medidor" type="number" step="any" hint="Para disparo por medidor." error={errors.meterInterval?.message} {...register("meterInterval")} />
+            {templateTriggerType === "METER" ? (
+              <TextInput label="Intervalo do medidor" required type="number" step="any" hint="Para disparo por medidor." error={errors.meterInterval?.message} {...register("meterInterval")} />
+            ) : (
+              <TextInput label="Periodicidade (dias)" required type="number" hint="Para disparo por tempo." error={errors.frequencyDays?.message} {...register("frequencyDays")} />
+            )}
             <TextInput label="HH prevista (opcional)" type="number" step="any" error={errors.estimatedLaborHours?.message} {...register("estimatedLaborHours")} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
