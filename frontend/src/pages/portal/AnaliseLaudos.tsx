@@ -7,7 +7,6 @@ import {
   type DocumentAnalysisItem,
 } from "../../api/documentAnalysis";
 import type { InsightSeverity } from "../../api/insights";
-import { PageHeader } from "../../components/PageHeader";
 import { FullPageSpinner } from "../../components/Spinner";
 import { EmptyState } from "../../components/EmptyState";
 import { FileUpload } from "../../components/FileUpload";
@@ -25,8 +24,12 @@ const SEVERITY_META: Record<InsightSeverity, { label: string; icon: typeof Check
  * Analise de laudos tecnicos (vibracao, oleo, termografia etc.) por IA: o cliente anexa o
  * PDF e recebe um resumo pratico com severidade, direto da leitura do documento. Fica
  * historico - cada laudo novo vira uma linha, sem apagar as analises anteriores.
+ *
+ * Vive como aba dentro de Preditiva (PredictivePanel.tsx) - as duas telas respondem a
+ * mesma pergunta ("qual a condicao do ativo, antes da falha"), uma por sensor e outra por
+ * laudo em PDF, entao nao precisam de item proprio no menu.
  */
-export default function AnaliseLaudos() {
+export function AnaliseLaudosConteudo() {
   const queryClient = useQueryClient();
   const { notify } = useToast();
 
@@ -52,11 +55,9 @@ export default function AnaliseLaudos() {
 
   return (
     <div>
-      <PageHeader
-        title="Analise de laudos"
-        description="Anexe um laudo tecnico (vibracao, analise de oleo, termografia...) e receba um resumo pratico gerado por IA. Revise antes de agir, nada aqui e' automatico."
-        breadcrumbs={[{ label: "Analise de laudos" }]}
-      />
+      <p className="mb-4 text-sm text-graphite-500">
+        Anexe um laudo tecnico (vibracao, analise de oleo, termografia...) e receba um resumo pratico gerado por IA. Revise antes de agir, nada aqui e' automatico.
+      </p>
 
       <div className="mb-6">
         <FileUpload

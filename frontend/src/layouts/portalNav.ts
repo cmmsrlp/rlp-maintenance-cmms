@@ -26,7 +26,6 @@ import {
   Settings,
   FileSpreadsheet,
   Sparkles,
-  FileSearch,
   RefreshCw,
   CalendarRange,
   ShieldAlert,
@@ -90,7 +89,6 @@ const PORTAL_NAV_SECTIONS: PortalNavSection[] = [
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/cronogramas-parada", label: "Cronogramas de parada", icon: CalendarRange, requires: ["CMMS_MAINTENANCE"] },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/planos", label: "Planos preventivos", icon: ShieldCheck, requires: ["CMMS_MAINTENANCE"] },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/preditiva", label: "Preditiva", icon: Radar, requires: ["CMMS_MAINTENANCE"] },
-      { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/analise-laudos", label: "Analise de laudos", icon: FileSearch, requires: ["CMMS_MAINTENANCE"] },
     ],
   },
   {

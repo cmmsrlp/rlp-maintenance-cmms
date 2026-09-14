@@ -30,28 +30,28 @@ const FAIXAS = [
     titulo: "Sem responsavel",
     explicacao: "Ninguem assumiu e ninguem foi atribuido - e' por aqui que o dia comeca.",
     icone: UserPlus,
-    tom: "border-safety-yellow/50 bg-safety-yellow/5",
+    badge: "bg-amber-50 text-safety-yellow-dark",
   },
   {
     id: "pendente",
     titulo: "Pendente",
     explicacao: "Tem responsavel, mas ainda nao pode ser executada (aguardando material, parada, liberacao...).",
     icone: Clock,
-    tom: "border-gray-200",
+    badge: "bg-graphite-100 text-graphite-500",
   },
   {
     id: "liberada",
     titulo: "Liberada",
     explicacao: "Pode ser executada agora - ou ja esta em execucao.",
     icone: PlayCircle,
-    tom: "border-navy-200 bg-navy-50/40",
+    badge: "bg-navy-50 text-navy-600",
   },
   {
     id: "concluida",
     titulo: "Concluida",
     explicacao: "Encerrada. Fica aqui como o que saiu da fila no periodo.",
     icone: CheckCircle2,
-    tom: "border-green-200 bg-green-50/40",
+    badge: "bg-green-50 text-safety-green-dark",
   },
 ] as const;
 
@@ -89,18 +89,18 @@ function Cartao({
           onAbrir();
         }
       }}
-      className="block cursor-pointer rounded-lg border border-gray-200 bg-white p-3 hover:border-navy-300 hover:shadow-sm active:cursor-grabbing"
+      className="block cursor-pointer rounded-xl border border-gray-100 bg-white p-3.5 shadow-card transition-all hover:-translate-y-0.5 hover:border-navy-200 hover:shadow-md active:cursor-grabbing active:translate-y-0"
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="font-medium text-navy-900">{os.number}</span>
+        <span className="font-semibold text-navy-900">{os.number}</span>
         <StatusBadge status={os.priority} />
       </div>
-      <p className="mt-0.5 line-clamp-2 text-sm text-graphite-700">{os.title || os.description}</p>
-      <p className="mt-1 text-xs text-graphite-400">
-        {os.instrument?.tag ?? os.instrument?.description ?? "sem ativo"} - {TIPOS_DE_OS[os.type] ?? os.type}
+      <p className="mt-1 line-clamp-2 text-sm text-graphite-700">{os.title || os.description}</p>
+      <p className="mt-1.5 text-xs text-graphite-400">
+        {os.instrument?.tag ?? os.instrument?.description ?? "sem ativo"} · {TIPOS_DE_OS[os.type] ?? os.type}
       </p>
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
-        <span className={os.assignedResource ? "text-graphite-600" : "font-medium text-safety-yellow-dark"}>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-gray-50 pt-2.5 text-xs">
+        <span className={os.assignedResource ? "font-medium text-graphite-600" : "font-medium text-safety-yellow-dark"}>
           {os.assignedResource?.name ?? "sem responsavel"}
         </span>
         <span className="text-graphite-400">
@@ -208,7 +208,7 @@ export default function PlanningBoard() {
         // Quatro colunas lado a lado: a fila inteira cabe numa olhada, e a altura de cada
         // coluna ja diz onde o trabalho esta empilhado. Em tela estreita elas empilham,
         // porque quatro colunas de 200px nao seriam colunas, seriam tiras.
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {FAIXAS.map((faixa) => {
             const lista = porFaixa.get(faixa.id) ?? [];
             const Icone = faixa.icone;
@@ -222,21 +222,23 @@ export default function PlanningBoard() {
                 }}
                 onDragLeave={() => setSobre((atual) => (atual === faixa.id ? null : atual))}
                 onDrop={() => soltar(faixa.id)}
-                className={`flex flex-col rounded-xl border p-3 transition-colors ${faixa.tom} ${
-                  sobre === faixa.id ? "border-navy-500 ring-2 ring-navy-200" : ""
+                className={`flex flex-col rounded-xl border bg-white p-3.5 shadow-card transition-colors ${
+                  sobre === faixa.id ? "border-navy-400 ring-2 ring-navy-100" : "border-gray-100"
                 }`}
               >
-                <h2 className="flex items-center gap-2 font-semibold text-navy-900">
-                  <Icone className="h-4 w-4 shrink-0 text-navy-600" />
-                  <span className="min-w-0 truncate">{faixa.titulo}</span>
-                  <span className="ml-auto shrink-0 rounded-full bg-white px-2 py-0.5 text-xs font-medium text-graphite-600">
+                <h2 className="flex items-center gap-2.5">
+                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${faixa.badge}`}>
+                    <Icone className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0 truncate font-semibold text-navy-900">{faixa.titulo}</span>
+                  <span className="ml-auto shrink-0 rounded-full bg-graphite-50 px-2 py-0.5 text-xs font-semibold text-graphite-600">
                     {lista.length}
                   </span>
                 </h2>
-                <p className="mt-1 text-xs text-graphite-500">{faixa.explicacao}</p>
+                <p className="mt-2 text-xs leading-relaxed text-graphite-400">{faixa.explicacao}</p>
 
                 {lista.length === 0 ? (
-                  <p className="mt-3 text-sm text-graphite-400">Nenhuma ordem aqui.</p>
+                  <p className="mt-3 rounded-lg border border-dashed border-gray-200 py-4 text-center text-sm text-graphite-400">Nenhuma ordem aqui.</p>
                 ) : (
                   // A coluna rola sozinha: uma fila de 80 ordens nao pode empurrar as
                   // outras tres para fora da tela.

@@ -9,6 +9,8 @@ import { PageHeader } from "../../../components/PageHeader";
 import { StatCard } from "../../../components/StatCard";
 import { FullPageSpinner } from "../../../components/Spinner";
 import { EmptyState } from "../../../components/EmptyState";
+import { Tabs } from "../../../components/Tabs";
+import { AnaliseLaudosConteudo } from "../../portal/AnaliseLaudos";
 import { formatDate } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 
@@ -54,10 +56,12 @@ const SEVERITY: Record<ConditionSeverity, { label: string; chip: string; bar: st
 export default function PredictivePanel() {
   const { isClient, base, assetsBase } = useCmms();
   const [clientId, setClientId] = useState("");
+  const [aba, setAba] = useState<"pontos" | "laudos">("pontos");
 
   const { data, isLoading } = useQuery({
     queryKey: ["predictive-panel", clientId],
     queryFn: () => getPredictivePanel({ clientId: clientId || undefined }),
+    enabled: aba === "pontos",
   });
 
   return (
@@ -68,6 +72,19 @@ export default function PredictivePanel() {
         breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Preditiva" }]}
       />
 
+      <Tabs
+        tabs={[
+          { id: "pontos", label: "Pontos monitorados" },
+          { id: "laudos", label: "Analise de laudos" },
+        ]}
+        active={aba}
+        onChange={(id) => setAba(id as "pontos" | "laudos")}
+      />
+
+      {aba === "laudos" ? (
+        <AnaliseLaudosConteudo />
+      ) : (
+        <>
       {!isClient && (
         <div className="mb-4">
           <ClientFilterSelect
@@ -150,6 +167,8 @@ export default function PredictivePanel() {
               <PointCard key={p.id} point={p} assetsBase={assetsBase} compact />
             ))}
           </div>
+        </>
+      )}
         </>
       )}
     </div>

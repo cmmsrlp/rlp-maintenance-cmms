@@ -31,17 +31,17 @@ export function AdminSidebar({ mobileOpen, onCloseMobile }: { mobileOpen: boolea
     return (
       <>
         <div className={`flex h-16 items-center ${isCollapsed ? "justify-center px-2" : "px-5"}`}>
-          {!isCollapsed && <CmmsLogo variant="light" size="sm" />}
+          {!isCollapsed && <CmmsLogo variant="dark" size="sm" />}
           <button
             type="button"
             onClick={() => setCollapsed((c) => !c)}
-            className={`hidden text-navy-300 hover:text-white lg:block ${isCollapsed ? "" : "ml-auto"}`}
+            className={`hidden text-graphite-400 hover:text-navy-700 lg:block ${isCollapsed ? "" : "ml-auto"}`}
             aria-label={isCollapsed ? "Expandir menu" : "Recolher menu"}
             title={isCollapsed ? "Expandir menu" : "Recolher menu"}
           >
             <Menu className="h-5 w-5" />
           </button>
-          <button type="button" className="ml-auto text-navy-300 lg:hidden" onClick={onCloseMobile} aria-label="Fechar menu">
+          <button type="button" className="ml-auto text-graphite-400 lg:hidden" onClick={onCloseMobile} aria-label="Fechar menu">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -55,7 +55,7 @@ export function AdminSidebar({ mobileOpen, onCloseMobile }: { mobileOpen: boolea
               title={isCollapsed ? item.label : undefined}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${isCollapsed ? "justify-center" : ""} ${
-                  isActive ? "bg-navy-800 text-safety-yellow" : "text-navy-200 hover:bg-navy-800/60 hover:text-white"
+                  isActive ? "bg-navy-50 text-navy-700" : "text-graphite-600 hover:bg-graphite-50 hover:text-navy-800"
                 }`
               }
             >
@@ -70,14 +70,14 @@ export function AdminSidebar({ mobileOpen, onCloseMobile }: { mobileOpen: boolea
 
   return (
     <>
-      <aside className={`hidden shrink-0 bg-navy-950 transition-[width] duration-150 lg:block ${collapsed ? "w-16" : "w-64"}`}>
+      <aside className={`hidden shrink-0 border-r border-gray-200 bg-white transition-[width] duration-150 lg:block ${collapsed ? "w-16" : "w-64"}`}>
         <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">{content(collapsed)}</div>
       </aside>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-navy-950/60" onClick={onCloseMobile} />
-          <aside className="absolute inset-y-0 left-0 w-72 overflow-y-auto bg-navy-950 shadow-xl">{content(false)}</aside>
+          <aside className="absolute inset-y-0 left-0 w-72 overflow-y-auto bg-white shadow-xl">{content(false)}</aside>
         </div>
       )}
     </>

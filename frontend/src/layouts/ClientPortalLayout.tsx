@@ -66,10 +66,10 @@ export function ClientPortalLayout() {
   // sempre foi.
   const brand = (size: "sm" | "md") => (
     <span className="flex min-w-0 items-center gap-2.5">
-      <CmmsLogo variant="light" size={size} />
+      <CmmsLogo variant="dark" size={size} />
       {contrato?.logoUrl && (
         <>
-          <span className="h-6 w-px shrink-0 bg-navy-700" aria-hidden="true" />
+          <span className="h-6 w-px shrink-0 bg-gray-200" aria-hidden="true" />
           <img
             src={contrato.logoUrl}
             alt={clientDisplayName(user?.client)}
@@ -109,16 +109,16 @@ export function ClientPortalLayout() {
                    de cima a baixo. O que o distingue e' o peso do texto e a seta a direita;
                    o anel de foco so aparece para quem navega por teclado, porque o outline
                    amarelo padrao no clique fazia o titulo parecer um campo quebrado. */
-                className="mb-0.5 flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-semibold tracking-wide text-navy-200 outline-none transition-colors hover:bg-navy-800/60 hover:text-white focus-visible:ring-1 focus-visible:ring-navy-500"
+                className="mb-0.5 flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-semibold tracking-wide text-graphite-500 outline-none transition-colors hover:bg-graphite-50 hover:text-navy-800 focus-visible:ring-1 focus-visible:ring-navy-500"
               >
-                {section.icon && <section.icon className="h-4.5 w-4.5 shrink-0 text-navy-400" />}
+                {section.icon && <section.icon className="h-4.5 w-4.5 shrink-0 text-graphite-400" />}
                 <span className="min-w-0 truncate">{section.title}</span>
                 {!aberta && (
-                  <span className="shrink-0 rounded-full bg-navy-800 px-1.5 py-0.5 text-[10px] font-medium tracking-normal text-navy-300">
+                  <span className="shrink-0 rounded-full bg-graphite-100 px-1.5 py-0.5 text-[10px] font-medium tracking-normal text-graphite-500">
                     {section.items.length}
                   </span>
                 )}
-                <ChevronDown className={`ml-auto h-4 w-4 shrink-0 text-navy-500 transition-transform ${aberta ? "" : "-rotate-90"}`} />
+                <ChevronDown className={`ml-auto h-4 w-4 shrink-0 text-graphite-400 transition-transform ${aberta ? "" : "-rotate-90"}`} />
               </button>
             ))}
           {/* Itens de uma secao entram recuados, com um fio a esquerda: sem isso ficavam
@@ -127,7 +127,7 @@ export function ClientPortalLayout() {
               visivel para marcar. */}
           <div
             className={`flex flex-col gap-0.5 ${aberta ? "" : "hidden"} ${
-              section.title && !isCollapsed ? "ml-[18px] border-l border-navy-800 pl-1.5" : ""
+              section.title && !isCollapsed ? "ml-[18px] border-l border-graphite-100 pl-1.5" : ""
             }`}
           >
             {section.items.map((item) => (
@@ -139,7 +139,7 @@ export function ClientPortalLayout() {
                 title={isCollapsed ? item.label : undefined}
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${isCollapsed ? "justify-center" : ""} ${
-                    isActive ? "bg-navy-800 text-safety-yellow" : "text-navy-200 hover:bg-navy-800/60 hover:text-white"
+                    isActive ? "bg-navy-50 text-navy-700" : "text-graphite-600 hover:bg-graphite-50 hover:text-navy-800"
                   }`
                 }
               >
@@ -155,7 +155,7 @@ export function ClientPortalLayout() {
         type="button"
         onClick={() => logout()}
         title={isCollapsed ? "Sair" : undefined}
-        className={`mt-4 flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-red-300 hover:bg-navy-800/60 ${isCollapsed ? "justify-center" : ""}`}
+        className={`mt-4 flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-safety-red hover:bg-red-50 ${isCollapsed ? "justify-center" : ""}`}
       >
         <LogOut className="h-4.5 w-4.5 shrink-0" /> {!isCollapsed && "Sair"}
       </button>
@@ -164,7 +164,7 @@ export function ClientPortalLayout() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <aside className={`hidden shrink-0 bg-navy-950 transition-[width] duration-150 lg:block ${collapsed ? "w-16" : "w-64"}`}>
+      <aside className={`hidden shrink-0 border-r border-gray-200 bg-white transition-[width] duration-150 lg:block ${collapsed ? "w-16" : "w-64"}`}>
         <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
           <div className={`flex h-16 items-center ${collapsed ? "justify-center px-2" : "px-5"}`}>
             {!collapsed && (
@@ -175,7 +175,7 @@ export function ClientPortalLayout() {
             <button
               type="button"
               onClick={() => setCollapsed((c) => !c)}
-              className={`text-navy-300 hover:text-white ${collapsed ? "" : "ml-auto"}`}
+              className={`text-graphite-400 hover:text-navy-700 ${collapsed ? "" : "ml-auto"}`}
               aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
               title={collapsed ? "Expandir menu" : "Recolher menu"}
             >
@@ -189,10 +189,10 @@ export function ClientPortalLayout() {
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-navy-950/60" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-72 overflow-y-auto bg-navy-950 shadow-xl">
-            <div className="flex h-16 items-center px-5">
+          <aside className="absolute inset-y-0 left-0 w-72 overflow-y-auto bg-white shadow-xl">
+            <div className="flex h-16 items-center border-b border-gray-200 px-5">
               {brand("sm")}
-              <button type="button" className="ml-auto text-navy-300" onClick={() => setMobileOpen(false)} aria-label="Fechar menu">
+              <button type="button" className="ml-auto text-graphite-400" onClick={() => setMobileOpen(false)} aria-label="Fechar menu">
                 <X className="h-5 w-5" />
               </button>
             </div>
