@@ -156,7 +156,12 @@ export default function LubricationForecast() {
                     <td className="px-4 py-2.5 text-right">
                       {item.aComprar > 0 ? (
                         <span className="font-semibold text-safety-yellow-dark">
-                          {item.aComprar} {item.unidade}
+                          {/* Rastreado por embalagem: "a comprar" em kg/L nao e' uma decisao
+                              de compra direta (ninguem compra 2,3 kg avulso) - embalagem
+                              fechada e'. */}
+                          {item.embalagensACobrar != null
+                            ? `${item.embalagensACobrar} embalagem(ns)`
+                            : `${item.aComprar} ${item.unidade}`}
                         </span>
                       ) : (
                         <span className="text-safety-green-dark">ok</span>

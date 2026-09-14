@@ -1151,6 +1151,13 @@ export interface Lubricant {
   application: string | null;
   notes: string | null;
   active: boolean;
+  // O lubrificador tira a embalagem fechada do estoque (ex.: 1,8 kg) e usa aos poucos -
+  // packageSize e' o conteudo da embalagem; openPackageRemaining e' quanto sobra da que
+  // esta aberta agora (null = nenhuma embalagem aberta ou lubrificante nao rastreado por
+  // embalagem). Null em packageSize = comportamento antigo, baixa direta por aplicacao.
+  packageSize: number | null;
+  openPackageRemaining: number | null;
+  openPackageOpenedAt: string | null;
 }
 
 export interface LubricantInput {
@@ -1163,6 +1170,7 @@ export interface LubricantInput {
   application?: string | null;
   notes?: string | null;
   active?: boolean;
+  packageSize?: number | null;
 }
 
 export interface LubricationPoint {
@@ -1290,6 +1298,8 @@ export interface LubricationForecastItem {
   estoqueMinimo: number;
   aComprar: number;
   diasDeCobertura: number | null;
+  packageSize: number | null;
+  embalagensACobrar: number | null;
 }
 
 export interface LubricationForecast {

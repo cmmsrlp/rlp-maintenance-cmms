@@ -2013,6 +2013,17 @@ model Lubricant {
   manufacturer  String?
   application   String?
   notes         String?
+  // O lubrificador nao tira do almoxarifado a cada aplicacao (0,05 kg por vez) - ele tira
+  // a embalagem fechada inteira (ex.: 1,8 kg) e vai usando aos poucos ao longo do mes. A
+  // baixa no estoque (SparePart.stockQty, contado em embalagens - por isso Int) so acontece
+  // quando uma embalagem NOVA e' aberta; o que sai em cada aplicacao desconta do saldo da
+  // embalagem ja aberta, guardado aqui, nao do estoque de novo (achado numa varredura:
+  // registrar aplicacao baixava a fracao direto do estoque, e Int arredondava isso para uma
+  // embalagem inteira por aplicacao). packageSize nulo = lubrificante nao rastreado por
+  // embalagem (mantem o comportamento antigo, baixa direta por aplicacao).
+  packageSize          Float?
+  openPackageRemaining Float?
+  openPackageOpenedAt  DateTime?
   active        Boolean        @default(true)
   createdById   String?
   createdAt     DateTime       @default(now())

@@ -31,6 +31,11 @@ const lubricantSchema = z.object({
   application: z.string().nullish(),
   notes: z.string().nullish(),
   active: z.boolean().optional(),
+  // Quanto vem numa embalagem fechada (na unidade da peca do almoxarifado, ex.: 1,8 kg).
+  // Em branco = lubrificante nao rastreado por embalagem (cada aplicacao baixa o estoque
+  // direto, comportamento antigo - ok para quem dispensa de um tambor/reservatorio, sem
+  // embalagem individual para abrir).
+  packageSize: z.coerce.number().positive().nullish(),
 });
 
 const lubricantInclude = {
@@ -365,16 +370,53 @@ export const createLubricationRecord = asyncHandler(async (req: Request, res: Re
 
   const executedAt = data.executedAt ?? new Date();
 
-  // Aplicar e consumir sao o mesmo evento: a baixa no almoxarifado sai junto do registro,
-  // e nao num lancamento manual que alguem teria que lembrar de fazer depois.
-  const movement = await applySparePartMovement({
-    sparePartId: lubricante.sparePartId,
-    type: "OUT",
-    quantity: data.quantity,
-    reason: `Lubrificacao do ponto ${point.code} (${point.name})`,
-    maintenanceWorkOrderId: data.workOrderId ?? null,
-    createdById: req.user?.sub,
-  });
+  // O lubrificador nao tira do almoxarifado a cada aplicacao - ele tira a embalagem
+  // fechada (ex.: 1,8 kg) e vai usando aos poucos ao longo do mes. So' baixa o estoque
+  // (SparePart.stockQty, contado em embalagens) quando falta saldo na embalagem ja aberta
+  // e uma nova precisa ser retirada; o resto do tempo, a aplicacao so' desconta do saldo
+  // guardado no proprio Lubricant. Sem packageSize cadastrado, mantem o comportamento
+  // antigo (baixa direta por aplicacao) - caso do lubrificante dispensado de um tambor/
+  // reservatorio, sem embalagem individual para abrir.
+  let movementId: string | null = null;
+  if (lubricante.packageSize != null) {
+    let saldo = lubricante.openPackageRemaining ?? 0;
+    let abriuNovaEmbalagem = false;
+    if (saldo < data.quantity) {
+      const movement = await applySparePartMovement({
+        sparePartId: lubricante.sparePartId,
+        type: "OUT",
+        quantity: 1,
+        reason: `Embalagem aberta para lubrificacao do ponto ${point.code} (${point.name})`,
+        maintenanceWorkOrderId: data.workOrderId ?? null,
+        createdById: req.user?.sub,
+      });
+      movementId = movement.id;
+      abriuNovaEmbalagem = true;
+      saldo += lubricante.packageSize;
+      if (saldo < data.quantity) {
+        throw new ValidationError(
+          `A quantidade aplicada (${data.quantity}) e' maior que uma embalagem inteira (${lubricante.packageSize}). Confira a quantidade.`,
+        );
+      }
+    }
+    saldo -= data.quantity;
+    await prisma.lubricant.update({
+      where: { id: lubricante.id },
+      data: { openPackageRemaining: saldo, ...(abriuNovaEmbalagem ? { openPackageOpenedAt: executedAt } : {}) },
+    });
+  } else {
+    // Aplicar e consumir sao o mesmo evento: a baixa no almoxarifado sai junto do registro,
+    // e nao num lancamento manual que alguem teria que lembrar de fazer depois.
+    const movement = await applySparePartMovement({
+      sparePartId: lubricante.sparePartId,
+      type: "OUT",
+      quantity: data.quantity,
+      reason: `Lubrificacao do ponto ${point.code} (${point.name})`,
+      maintenanceWorkOrderId: data.workOrderId ?? null,
+      createdById: req.user?.sub,
+    });
+    movementId = movement.id;
+  }
 
   const record = await prisma.lubricationRecord.create({
     data: {
@@ -388,7 +430,7 @@ export const createLubricationRecord = asyncHandler(async (req: Request, res: Re
       conditionBefore: data.conditionBefore ?? null,
       conditionAfter: data.conditionAfter ?? null,
       notes: data.notes ?? null,
-      movementId: movement.id,
+      movementId,
       createdById: req.user?.sub,
     },
     include: { lubricant: { include: lubricantInclude }, laborResource: { select: { id: true, name: true } } },
@@ -766,6 +808,10 @@ export const getLubricationForecast = asyncHandler(async (req: Request, res: Res
     aComprar: number;
     // Em quantos dias o saldo acaba no ritmo previsto - null quando nao ha consumo previsto.
     diasDeCobertura: number | null;
+    // Presente so' quando o lubrificante e' rastreado por embalagem - "a comprar" em kg/L
+    // nao e' uma decisao de compra direta (nao se compra 2,3 kg avulso), embalagem fechada e'.
+    packageSize: number | null;
+    embalagensACobrar: number | null;
   };
 
   const porLubrificante = new Map<string, Linha>();
@@ -797,6 +843,16 @@ export const getLubricationForecast = asyncHandler(async (req: Request, res: Res
       atual.aplicacoes += aplicacoes;
       atual.pontos += 1;
     } else {
+      // Com embalagem rastreada, o consumo previsto e' calculado no conteudo (kg/L) da
+      // aplicacao, mas o saldo em estoque conta EMBALAGENS FECHADAS - comparar os dois sem
+      // converter compararia coisas diferentes (achado ao revisar a previsao depois de
+      // separar embalagem fechada de saldo em uso). O saldo disponivel de verdade tambem
+      // inclui o que ja sobrou na embalagem aberta, que nao aparece no estoque.
+      const saldoAtual =
+        lub.packageSize != null
+          ? lub.sparePart.stockQty * lub.packageSize + (lub.openPackageRemaining ?? 0)
+          : lub.sparePart.stockQty;
+      const estoqueMinimo = lub.packageSize != null ? lub.sparePart.minStock * lub.packageSize : lub.sparePart.minStock;
       porLubrificante.set(lub.id, {
         lubricantId: lub.id,
         nome: lub.sparePart.name,
@@ -806,10 +862,12 @@ export const getLubricationForecast = asyncHandler(async (req: Request, res: Res
         consumoPrevisto: consumo,
         aplicacoes,
         pontos: 1,
-        saldoAtual: lub.sparePart.stockQty,
-        estoqueMinimo: lub.sparePart.minStock,
+        saldoAtual,
+        estoqueMinimo,
         aComprar: 0,
         diasDeCobertura: null,
+        packageSize: lub.packageSize,
+        embalagensACobrar: null,
       });
     }
   }
@@ -818,11 +876,15 @@ export const getLubricationForecast = asyncHandler(async (req: Request, res: Res
   const itens = [...porLubrificante.values()].map((linha) => {
     const faltando = linha.consumoPrevisto + linha.estoqueMinimo - linha.saldoAtual;
     const consumoDiario = linha.consumoPrevisto / diasDaJanela;
+    const aComprar = faltando > 0 ? Number(faltando.toFixed(3)) : 0;
     return {
       ...linha,
-      aComprar: faltando > 0 ? Number(faltando.toFixed(3)) : 0,
+      aComprar,
       consumoPrevisto: Number(linha.consumoPrevisto.toFixed(3)),
+      saldoAtual: Number(linha.saldoAtual.toFixed(3)),
+      estoqueMinimo: Number(linha.estoqueMinimo.toFixed(3)),
       diasDeCobertura: consumoDiario > 0 ? Math.floor(linha.saldoAtual / consumoDiario) : null,
+      embalagensACobrar: linha.packageSize != null && aComprar > 0 ? Math.ceil(aComprar / linha.packageSize) : null,
     };
   });
   itens.sort((a, b) => b.consumoPrevisto - a.consumoPrevisto);
