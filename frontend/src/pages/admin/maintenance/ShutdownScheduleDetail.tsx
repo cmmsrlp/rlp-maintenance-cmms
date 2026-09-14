@@ -542,7 +542,11 @@ export default function ShutdownScheduleDetail() {
           readonly_dates: true,
           readonly_progress: true,
           bar_height: 28,
-          container_height: "auto",
+          // Numero fixo (nao "auto") em vez de deixar a lib encolher pro tamanho exato do
+          // conteudo - com poucas tarefas isso deixava a caixa minusucula. Uma tela cheia de
+          // altura da espaco de sobra sempre; com muitas tarefas o grid cresce alem disso
+          // mesmo assim (a lib usa o MAIOR entre os dois), entao nada fica cortado.
+          container_height: Math.max(500, Math.floor(window.innerHeight * 0.75)),
         });
       }
     } catch {
@@ -682,10 +686,7 @@ export default function ShutdownScheduleDetail() {
           </div>
         ) : (
           <div className="card overflow-x-auto p-4">
-            {/* frappe-gantt calcula a altura sozinho (container_height:"auto"), mas so' na
-                altura EXATA do conteudo - min-height evita a caixa nascer baixinha (2
-                linhas) num piscar de tela antes desse calculo terminar. */}
-            <div ref={ganttRef} style={{ minHeight: Math.max(200, ganttFlat.length * 40 + 80) }} />
+            <div ref={ganttRef} />
           </div>
         )}
       </div>
