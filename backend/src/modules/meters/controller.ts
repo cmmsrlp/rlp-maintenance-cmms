@@ -7,6 +7,7 @@ import { NotFoundError, ForbiddenError, ValidationError } from "../../utils/erro
 import { writeAuditLog } from "../../utils/audit";
 import { assertServiceAccess } from "../../middleware/rbac";
 import { nextClientMaintenanceOrderNumber } from "../../utils/sequence";
+import { recalcularCriticidade } from "../../lib/assetCriticality";
 
 /** Meter nao tem clientId proprio (pertence a um Instrument) - o escopo do cliente
  * e' aplicado via filtro na relacao instrument.clientId. */
@@ -255,6 +256,12 @@ export const addMeterReading = asyncHandler(async (req: Request, res: Response) 
       entityId: triggeredWorkOrder.id,
       description: `OS ${triggeredWorkOrder.number} aberta automaticamente - zona ${policy.label} em "${meter.name}" (${data.value} ${meter.unit})`,
     });
+  }
+
+  // Horimetro (COUNTER) e' o que alimenta "horas operadas" do MTBF em Criticidade de
+  // ativos - uma leitura nova pode mudar o calculo mesmo sem falha nenhuma ter acontecido.
+  if (meter.technique === "COUNTER") {
+    await recalcularCriticidade(meter.instrument.id, "HOURS_UPDATED");
   }
 
   res.status(201).json({ ...reading, severity, severityLabel: policy.label, recommendedAction: policy.action, triggeredWorkOrder });

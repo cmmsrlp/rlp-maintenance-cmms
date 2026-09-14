@@ -7,6 +7,7 @@ import { parsePageParams, toSkipTake, buildPagedResult } from "../../utils/pagin
 import { NotFoundError, ValidationError } from "../../utils/errors";
 import { writeAuditLog } from "../../utils/audit";
 import { clientScopeFilter, assertOwnClient, resolveClientId } from "../../middleware/rbac";
+import { recalcularCriticidade } from "../../lib/assetCriticality";
 
 function paraJson(valor: Record<string, string> | null | undefined): Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined {
   if (valor === undefined) return undefined;
@@ -272,6 +273,7 @@ export const installRotableEquipment = asyncHandler(async (req: Request, res: Re
     entityId: rotable.id,
     description: `Equipamento ${rotable.code} instalado em ${instrument.tag ?? instrument.description ?? instrument.id}`,
   });
+  await recalcularCriticidade(instrument.id, "EQUIPMENT_MOVED");
 
   res.status(201).json(resultado);
 });
@@ -297,6 +299,7 @@ export const removeRotableEquipment = asyncHandler(async (req: Request, res: Res
     orderBy: { installedAt: "desc" },
   });
   if (!instalacaoAberta) throw new NotFoundError("Registro de instalacao aberto");
+  const instrumentoAnterior = rotable.currentInstrumentId;
 
   await prisma.$transaction(async (tx) => {
     await tx.rotableInstallation.update({
@@ -323,6 +326,7 @@ export const removeRotableEquipment = asyncHandler(async (req: Request, res: Res
     entityId: rotable.id,
     description: `Equipamento ${rotable.code} removido do ativo`,
   });
+  if (instrumentoAnterior) await recalcularCriticidade(instrumentoAnterior, "EQUIPMENT_MOVED");
 
   res.status(204).send();
 });
@@ -457,6 +461,7 @@ export const substituteRotableEquipment = asyncHandler(async (req: Request, res:
     entityId: workOrder.id,
     description: `Substituicao de equipamento na OS ${workOrder.number}: ${outgoing.code} saiu, ${incoming.code} entrou`,
   });
+  await recalcularCriticidade(workOrder.instrumentId, "EQUIPMENT_MOVED");
 
   res.status(201).json(resultado);
 });

@@ -39,6 +39,8 @@ const InsightsList = lazyPagina(() => import("./pages/admin/InsightsList"));
 const ClientDetail = lazyPagina(() => import("./pages/admin/clients/ClientDetail"));
 const InstrumentsList = lazyPagina(() => import("./pages/admin/instruments/InstrumentsList"));
 const InstrumentDetail = lazyPagina(() => import("./pages/admin/instruments/InstrumentDetail"));
+const AssetCriticalityList = lazyPagina(() => import("./pages/admin/instruments/AssetCriticalityList"));
+const AssetCriticalityDetail = lazyPagina(() => import("./pages/admin/instruments/AssetCriticalityDetail"));
 const InstrumentsTree = lazyPagina(() => import("./pages/admin/instruments/InstrumentsTree"));
 const AssetTypesList = lazyPagina(() => import("./pages/admin/instruments/AssetTypesList"));
 const TechnicalCatalogsHub = lazyPagina(() => import("./pages/admin/instruments/TechnicalCatalogsHub"));
@@ -129,6 +131,8 @@ export default function App() {
               <Route path="ativos/plantas" element={<PlantsList />} />
               <Route path="ativos/areas" element={<AreasList />} />
               <Route path="ativos/sistemas" element={<AssetSystemsList />} />
+              <Route path="ativos/criticidade" element={<AssetCriticalityList />} />
+              <Route path="ativos/criticidade/:instrumentId" element={<AssetCriticalityDetail />} />
               <Route path="ativos/:id" element={<InstrumentDetail />} />
               {/* Compatibilidade com links/QR codes gerados antes do rename "instrumentos" -> "ativos". */}
               <Route path="instrumentos" element={<Navigate to="/gestao/ativos" replace />} />
@@ -226,6 +230,8 @@ export default function App() {
                 <Route path="ativos/plantas" element={<PlantsList />} />
                 <Route path="ativos/areas" element={<AreasList />} />
                 <Route path="ativos/sistemas" element={<AssetSystemsList />} />
+                <Route path="ativos/criticidade" element={<AssetCriticalityList />} />
+                <Route path="ativos/criticidade/:instrumentId" element={<AssetCriticalityDetail />} />
                 <Route path="manutencao/planos" element={<MaintenancePlansList />} />
                 <Route path="manutencao/planos/novo" element={<MaintenancePlanForm />} />
                 <Route path="manutencao/planos/:id/editar" element={<MaintenancePlanForm />} />

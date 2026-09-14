@@ -1530,3 +1530,61 @@ export interface ShutdownTask {
   notes: string | null;
   sortOrder: number;
 }
+
+// ---------------------------------------------------------------------------
+// Criticidade de ativos
+// ---------------------------------------------------------------------------
+
+export type CriticalityClass = "A" | "B" | "C";
+export type CriticalityOrigin = "AUTO" | "MANUAL";
+export type CriticalityTrend = "UP" | "DOWN" | "STABLE";
+export type CriticalityChangeTrigger = "INITIAL" | "OS_CLOSED_WITH_FAILURE" | "HOURS_UPDATED" | "EQUIPMENT_MOVED" | "MANUAL_REVIEW";
+
+export interface AssetCriticalityLogEntry {
+  id: string;
+  trigger: CriticalityChangeTrigger;
+  origin: CriticalityOrigin;
+  safetyScore: number;
+  productionScore: number;
+  failureScore: number | null;
+  criticalityIndex: number | null;
+  criticalityClass: CriticalityClass | null;
+  reason: string | null;
+  responsible: { id: string; name: string } | null;
+  createdAt: string;
+}
+
+export interface AssetCriticality {
+  id: string;
+  instrumentId: string;
+  safetyScore: number;
+  safetyNotes: string | null;
+  safetyUpdatedAt: string | null;
+  productionScore: number;
+  productionNotes: string | null;
+  productionUpdatedAt: string | null;
+  failureScore: number | null;
+  failureScoreOrigin: CriticalityOrigin;
+  failureOverrideReason: string | null;
+  failureOverrideAt: string | null;
+  previousFailureScore: number | null;
+  consequenceScore: number | null;
+  criticalityIndex: number | null;
+  criticalityClass: CriticalityClass | null;
+  trend: CriticalityTrend | null;
+  mtbfHours: number | null;
+  failureCount12m: number | null;
+  operatingHours12m: number | null;
+  lastCalculatedAt: string | null;
+  logs?: AssetCriticalityLogEntry[];
+}
+
+export interface AssetCriticalityListItem {
+  id: string;
+  tag: string | null;
+  description: string | null;
+  type: string;
+  plant: { id: string; name: string } | null;
+  area: { id: string; name: string } | null;
+  assetCriticality: AssetCriticality | null;
+}

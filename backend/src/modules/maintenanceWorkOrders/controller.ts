@@ -11,6 +11,7 @@ import { clientScopeFilter, assertServiceAccess, assertOwnClient, resolveClientI
 import { nextClientMaintenanceOrderNumber } from "../../utils/sequence";
 import { applySparePartMovement, reserveSparePart, releaseSparePartReservation, consumeSparePartReservation } from "../../lib/inventory";
 import { getStorageProvider } from "../../lib/storage";
+import { recalcularCriticidade } from "../../lib/assetCriticality";
 
 const pecaResumo = {
   select: { id: true, name: true, code: true, unit: true, stockQty: true, reservedQty: true, minStock: true, unitCost: true },
@@ -752,6 +753,12 @@ export const completeMaintenanceWorkOrder = asyncHandler(async (req: Request, re
     where: { workOrderId: workOrder.id, status: { notIn: ["CLOSED", "REJECTED"] } },
     data: { status: "CLOSED" },
   });
+
+  // Falha funcional concluida muda o historico de falha do local - a nota de Q (Criticidade
+  // de ativos) recalcula na hora, sem esperar alguem abrir aquela tela.
+  if (workOrder.type === "CORRECTIVE" && workOrder.correctiveType === "BREAKDOWN") {
+    await recalcularCriticidade(workOrder.instrumentId, "OS_CLOSED_WITH_FAILURE");
+  }
 
   res.json(workOrder);
 });

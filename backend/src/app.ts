@@ -20,6 +20,7 @@ import { localStorageRouter } from "./modules/localStorage/routes";
 import { metersRouter } from "./modules/meters/routes";
 import { rotableEquipmentRouter, rotableRepairOrdersRouter } from "./modules/rotableEquipment/routes";
 import { shutdownSchedulesRouter } from "./modules/shutdownSchedules/routes";
+import { assetCriticalityRouter } from "./modules/assetCriticality/routes";
 import { failureCodesRouter } from "./modules/failureCodes/routes";
 import { assetTypesRouter } from "./modules/assetTypes/routes";
 import { laborTypesRouter } from "./modules/laborTypes/routes";
@@ -98,6 +99,7 @@ export function createApp() {
   app.use("/api/rotable-equipment", rotableEquipmentRouter);
   app.use("/api/rotable-repair-orders", rotableRepairOrdersRouter);
   app.use("/api/shutdown-schedules", shutdownSchedulesRouter);
+  app.use("/api/asset-criticality", assetCriticalityRouter);
   app.use("/api/failure-codes", failureCodesRouter);
   app.use("/api/asset-types", assetTypesRouter);
   app.use("/api/labor-types", laborTypesRouter);

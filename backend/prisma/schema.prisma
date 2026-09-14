@@ -368,6 +368,7 @@ model User {
   serviceRequestsAsRequester    ServiceRequest[]        @relation("ServiceRequestRequester")
   serviceRequestsAsTriage       ServiceRequest[]        @relation("ServiceRequestTriage")
   rcaAsResponsible              RootCauseAnalysis[]     @relation("RcaResponsible")
+  assetCriticalityReviews       AssetCriticalityLog[]   @relation("AssetCriticalityResponsible")
   auditLogs                     AuditLog[]
   notifications                 Notification[]
 
@@ -480,6 +481,7 @@ model Client {
   insight                   ClientInsight?
   documentAnalyses          DocumentAnalysis[]
   shutdownSchedules         ShutdownSchedule[]
+  assetCriticalities        AssetCriticality[]
 
   @@index([status])
   @@index([planId])
@@ -628,6 +630,10 @@ model Instrument {
   installedRotables     RotableEquipment[]
   rotableInstallations  RotableInstallation[]
   shutdownTasks         ShutdownTask[]
+  // Criticidade dinamica (Seguranca/Producao/Falhas) deste local funcional - ver comentario
+  // no model AssetCriticality para o raciocinio completo. 0 ou 1 na pratica (nao forcado no
+  // banco, mesma convencao das outras relacoes "atual" deste schema).
+  assetCriticality      AssetCriticality?
 
   @@index([clientId])
   @@index([status])
@@ -1960,6 +1966,127 @@ model ShutdownTask {
   @@index([instrumentId])
   @@index([workOrderId])
   @@map("shutdown_tasks")
+}
+
+// ---------------------------------------------------------------------------
+// Criticidade de ativos
+// ---------------------------------------------------------------------------
+
+enum CriticalityClass {
+  A
+  B
+  C
+}
+
+// De onde veio o valor: calculado pela formula, ou digitado por alguem por cima do
+// calculo (com justificativa).
+enum CriticalityOrigin {
+  AUTO
+  MANUAL
+}
+
+enum CriticalityTrend {
+  UP
+  DOWN
+  STABLE
+}
+
+// O que disparou o recalculo - fica no historico pra explicar POR QUE a nota mudou sem
+// ninguem ter mexido na tela (ex.: uma OS de quebra foi encerrada em outro dia).
+enum CriticalityChangeTrigger {
+  INITIAL
+  OS_CLOSED_WITH_FAILURE
+  HOURS_UPDATED
+  EQUIPMENT_MOVED
+  MANUAL_REVIEW
+}
+
+// Criticidade dinamica do ATIVO/LOCAL FUNCIONAL (Instrument) - nao confundir com
+// MaintenanceWorkOrder.priority (urgencia de atender ESTA OS especifica, decidida na hora
+// da abertura) nem com Instrument.criticality (o enum simples LOW/MEDIUM/HIGH/CRITICAL,
+// mais antigo, que continua guiando politica de estoque/plano onde ja era usado).
+//
+// S (Seguranca) e P (Producao) sao sempre digitados por alguem (nao ha formula pra
+// consequencia de uma parada - isso e' julgamento de engenharia). Q (Falhas) nasce
+// calculado a partir do historico de falha funcional registrado nas OS deste local
+// (preferencialmente os ultimos 12 meses) e das horas operadas (MTBF) - mas tambem aceita
+// sobrescrita manual, com justificativa.
+//
+// C = maior entre S e P. Indice = 4 x C x Q. Classe: A (60-100), B (25-59), C (<25).
+// Sem historico de falha nem medidor de horas pra calcular Q, o campo fica NULO (mostra
+// "Dados insuficientes" na tela) - nunca assume Q=1 sozinho, isso seria inventar um dado.
+//
+// Pertence ao LOCAL (Instrument), nao ao equipamento fisico instalado nele agora: por
+// causa do vinculo duplo (ver RotableEquipment), o historico de falha do local sobrevive a
+// troca de equipamento - e' exatamente esse historico que alimenta Q aqui.
+model AssetCriticality {
+  id           String     @id @default(uuid())
+  instrumentId String     @unique
+  instrument   Instrument @relation(fields: [instrumentId], references: [id])
+  clientId     String
+  client       Client     @relation(fields: [clientId], references: [id])
+
+  safetyScore     Int     @default(1)
+  safetyNotes     String?
+  safetyUpdatedAt DateTime?
+
+  productionScore     Int     @default(1)
+  productionNotes     String?
+  productionUpdatedAt DateTime?
+
+  // Nulo = "Dados insuficientes". origin diz se o valor atual veio do calculo automatico
+  // ou foi sobrescrito a mao (override* guarda quem/quando/por que da sobrescrita mais
+  // recente; se origin voltar a AUTO num recalculo, esses tres campos sao limpos).
+  failureScore         Int?
+  failureScoreOrigin   CriticalityOrigin @default(AUTO)
+  failureOverrideReason String?
+  failureOverrideAt    DateTime?
+  previousFailureScore Int?
+
+  // Derivados - recalculados junto e guardados pra lista/filtro nao ter que recalcular
+  // tudo a cada leitura.
+  consequenceScore Int?
+  criticalityIndex Int?
+  criticalityClass CriticalityClass?
+  trend            CriticalityTrend?
+
+  // Insumos do ultimo calculo de Q, guardados pra "Calculo utilizado" na tela mostrar de
+  // onde saiu o numero sem precisar refazer a conta.
+  mtbfHours         Float?
+  failureCount12m   Int?
+  operatingHours12m Float?
+
+  lastCalculatedAt DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  logs AssetCriticalityLog[]
+
+  @@index([clientId])
+  @@index([criticalityClass])
+  @@map("asset_criticalities")
+}
+
+// Um retrato completo (S/P/Q/indice/classe) a cada recalculo ou edicao manual - "historico
+// das alteracoes" pedido na tela. reason/responsible so' fazem sentido em origin=MANUAL.
+model AssetCriticalityLog {
+  id             String                    @id @default(uuid())
+  criticalityId  String
+  criticality    AssetCriticality          @relation(fields: [criticalityId], references: [id], onDelete: Cascade)
+  trigger        CriticalityChangeTrigger
+  origin         CriticalityOrigin
+  safetyScore    Int
+  productionScore Int
+  failureScore   Int?
+  criticalityIndex Int?
+  criticalityClass CriticalityClass?
+  reason         String?
+  responsibleId  String?
+  responsible    User?                     @relation("AssetCriticalityResponsible", fields: [responsibleId], references: [id])
+  createdAt      DateTime                  @default(now())
+
+  @@index([criticalityId])
+  @@map("asset_criticality_logs")
 }
 
 // ---------------------------------------------------------------------------
