@@ -30,7 +30,7 @@ export function AdminSidebar({ mobileOpen, onCloseMobile }: { mobileOpen: boolea
   function content(isCollapsed: boolean) {
     return (
       <>
-        <div className={`flex h-16 items-center ${isCollapsed ? "justify-center px-2" : "px-5"}`}>
+        <div className={`flex h-16 items-center border-b border-navy-100 ${isCollapsed ? "justify-center px-2" : "px-5"}`}>
           {!isCollapsed && <CmmsLogo variant="dark" size="sm" />}
           <button
             type="button"
@@ -55,7 +55,9 @@ export function AdminSidebar({ mobileOpen, onCloseMobile }: { mobileOpen: boolea
               title={isCollapsed ? item.label : undefined}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${isCollapsed ? "justify-center" : ""} ${
-                  isActive ? "bg-navy-50 text-navy-700" : "text-graphite-600 hover:bg-graphite-50 hover:text-navy-800"
+                  isActive
+                    ? "bg-white text-navy-800 shadow-sm ring-1 ring-navy-100"
+                    : "text-graphite-600 hover:bg-white/70 hover:text-navy-800"
                 }`
               }
             >
@@ -70,7 +72,7 @@ export function AdminSidebar({ mobileOpen, onCloseMobile }: { mobileOpen: boolea
 
   return (
     <>
-      <aside className={`hidden shrink-0 border-r border-gray-200 bg-white transition-[width] duration-150 lg:block ${collapsed ? "w-16" : "w-64"}`}>
+      <aside className={`hidden shrink-0 border-r border-navy-100 bg-navy-50 transition-[width] duration-150 lg:block ${collapsed ? "w-16" : "w-64"}`}>
         <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">{content(collapsed)}</div>
       </aside>
 

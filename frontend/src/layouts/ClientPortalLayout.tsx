@@ -98,7 +98,7 @@ export function ClientPortalLayout() {
         <div key={section.title ?? `section-${index}`} className={index > 0 ? "mt-4" : ""}>
           {section.title &&
             (isCollapsed ? (
-              <div className="mx-3 mb-1 border-t border-navy-800" />
+              <div className="mx-3 mb-1 border-t border-navy-100" />
             ) : (
               <button
                 type="button"
@@ -109,12 +109,12 @@ export function ClientPortalLayout() {
                    de cima a baixo. O que o distingue e' o peso do texto e a seta a direita;
                    o anel de foco so aparece para quem navega por teclado, porque o outline
                    amarelo padrao no clique fazia o titulo parecer um campo quebrado. */
-                className="mb-0.5 flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-semibold tracking-wide text-graphite-500 outline-none transition-colors hover:bg-graphite-50 hover:text-navy-800 focus-visible:ring-1 focus-visible:ring-navy-500"
+                className="mb-0.5 flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-semibold tracking-wide text-graphite-500 outline-none transition-colors hover:bg-white/70 hover:text-navy-800 focus-visible:ring-1 focus-visible:ring-navy-500"
               >
                 {section.icon && <section.icon className="h-4.5 w-4.5 shrink-0 text-graphite-400" />}
                 <span className="min-w-0 truncate">{section.title}</span>
                 {!aberta && (
-                  <span className="shrink-0 rounded-full bg-graphite-100 px-1.5 py-0.5 text-[10px] font-medium tracking-normal text-graphite-500">
+                  <span className="shrink-0 rounded-full bg-white px-1.5 py-0.5 text-[10px] font-medium tracking-normal text-graphite-500 ring-1 ring-navy-100">
                     {section.items.length}
                   </span>
                 )}
@@ -127,7 +127,7 @@ export function ClientPortalLayout() {
               visivel para marcar. */}
           <div
             className={`flex flex-col gap-0.5 ${aberta ? "" : "hidden"} ${
-              section.title && !isCollapsed ? "ml-[18px] border-l border-graphite-100 pl-1.5" : ""
+              section.title && !isCollapsed ? "ml-[18px] border-l border-navy-100 pl-1.5" : ""
             }`}
           >
             {section.items.map((item) => (
@@ -139,7 +139,9 @@ export function ClientPortalLayout() {
                 title={isCollapsed ? item.label : undefined}
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${isCollapsed ? "justify-center" : ""} ${
-                    isActive ? "bg-navy-50 text-navy-700" : "text-graphite-600 hover:bg-graphite-50 hover:text-navy-800"
+                    isActive
+                      ? "bg-white text-navy-800 shadow-sm ring-1 ring-navy-100"
+                      : "text-graphite-600 hover:bg-white/70 hover:text-navy-800"
                   }`
                 }
               >
@@ -164,9 +166,9 @@ export function ClientPortalLayout() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <aside className={`hidden shrink-0 border-r border-gray-200 bg-white transition-[width] duration-150 lg:block ${collapsed ? "w-16" : "w-64"}`}>
+      <aside className={`hidden shrink-0 border-r border-navy-100 bg-navy-50 transition-[width] duration-150 lg:block ${collapsed ? "w-16" : "w-64"}`}>
         <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
-          <div className={`flex h-16 items-center ${collapsed ? "justify-center px-2" : "px-5"}`}>
+          <div className={`flex h-16 items-center border-b border-navy-100 ${collapsed ? "justify-center px-2" : "px-5"}`}>
             {!collapsed && (
               <Link to="/portal" aria-label="RLP Maintenance">
                 {brand("sm")}
