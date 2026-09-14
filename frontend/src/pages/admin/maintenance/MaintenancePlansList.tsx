@@ -28,8 +28,8 @@ export default function MaintenancePlansList() {
   return (
     <div>
       <PageHeader
-        title="Planos de manutencao"
-        description="Manutencao preventiva por tempo ou por medidor"
+        title="Planos de manutenção"
+        description="Manutenção preventiva por tempo ou por medidor"
         breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Planos" }]}
         actions={
           canManage && (
@@ -53,7 +53,7 @@ export default function MaintenancePlansList() {
         onRowClick={(p) => navigate(`${base}/planos/${p.id}`)}
         pagination={data}
         onPageChange={setPage}
-        emptyTitle="Nenhum plano de manutencao cadastrado"
+        emptyTitle="Nenhum plano de manutenção cadastrado"
         emptyDescription="Monte o primeiro plano preventivo e atribua a um ou mais ativos."
         emptyAction={
           canManage && (
@@ -67,7 +67,7 @@ export default function MaintenancePlansList() {
           ...(isClient ? [] : [{ header: "Cliente", accessor: (p: MaintenancePlan) => clientDisplayName(p.client) }]),
           { header: "Ativo", accessor: (p) => p.instrument?.tag ?? "-" },
           { header: "Disparo", accessor: (p) => (p.triggerType === "TIME" ? `A cada ${p.frequencyDays} dias` : `Medidor: ${p.meter?.name ?? "-"}`) },
-          { header: "Proximo vencimento", accessor: (p) => (p.triggerType === "TIME" ? formatDate(p.nextDueDate) : "-") },
+          { header: "Próximo vencimento", accessor: (p) => (p.triggerType === "TIME" ? formatDate(p.nextDueDate) : "-") },
           { header: "Status", accessor: (p) => <StatusBadge status={p.active ? (p.derivedStatus ?? "VALID") : "INACTIVE"} /> },
         ]}
       />

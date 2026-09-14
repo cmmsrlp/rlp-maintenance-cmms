@@ -377,7 +377,7 @@ export default function MaintenancePlanForm() {
     const campos = Object.keys(erros)
       .map((campo) => ROTULO_DO_CAMPO[campo as keyof FormValues] ?? campo)
       .filter((v, i, arr) => arr.indexOf(v) === i);
-    notify("error", campos.length ? `Falta preencher: ${campos.join(", ")}.` : "Ha campos obrigatorios nao preenchidos.");
+    notify("error", campos.length ? `Falta preencher: ${campos.join(", ")}.` : "Há campos obrigatórios não preenchidos.");
   }
 
   if (isEdit && isLoading) return <FullPageSpinner />;
@@ -385,7 +385,7 @@ export default function MaintenancePlanForm() {
   return (
     <div>
       <PageHeader
-        title={isEdit ? "Editar plano de manutencao" : "Novo plano de manutencao"}
+        title={isEdit ? "Editar plano de manutenção" : "Novo plano de manutenção"}
         breadcrumbs={[
           { label: "RLP Maintenance CMMS", to: base },
           { label: "Planos", to: `${base}/planos` },
@@ -394,7 +394,7 @@ export default function MaintenancePlanForm() {
       />
       {/* Assistente em 3 etapas: nem todo campo de uma vez. */}
       <div ref={topoDoAssistenteRef} className="mb-6 flex flex-wrap items-center gap-2">
-        {["Identificacao", "Disparo e geracao da OS", "Execucao, materiais e checklist"].map((label, index) => {
+        {["Identificação", "Disparo e geração da OS", "Execução, materiais e checklist"].map((label, index) => {
           const done = index < step;
           const current = index === step;
           return (
@@ -437,14 +437,14 @@ export default function MaintenancePlanForm() {
             {isEdit && (
               <InstrumentPicker
                 clientId={clientId}
-                hint="Pode trocar ou limpar aqui - a atribuicao em massa continua na ficha do plano."
+                hint="Pode trocar ou limpar aqui - a atribuição em massa continua na ficha do plano."
                 error={errors.instrumentId?.message}
                 {...register("instrumentId")}
               />
             )}
           </div>
-          <TextInput label="Nome do plano" required placeholder="Ex.: Manutencao preventiva mensal" hint="Descreva do que se trata - e' o que identifica o plano no dia a dia." error={errors.name?.message} {...register("name")} />
-          <TextareaInput label="Descricao (opcional)" rows={2} {...register("description")} />
+          <TextInput label="Nome do plano" required placeholder="Ex.: Manutenção preventiva mensal" hint="Descreva do que se trata - é o que identifica o plano no dia a dia." error={errors.name?.message} {...register("name")} />
+          <TextareaInput label="Descrição (opcional)" rows={2} {...register("description")} />
 
           {/* Dados que o plano carrega mas nao se digita: codigo, origem e a criticidade
               do proprio ativo. So leitura, para nao virar informacao repetida. Sempre
@@ -454,13 +454,13 @@ export default function MaintenancePlanForm() {
             <p className="text-xs font-medium uppercase tracking-wide text-graphite-400">Dados do plano</p>
             <dl className="mt-2 grid gap-3 text-sm sm:grid-cols-3">
               <div>
-                <dt className="text-xs text-graphite-400">Codigo</dt>
+                <dt className="text-xs text-graphite-400">Código</dt>
                 <dd className="font-medium text-graphite-800">{existing?.code ?? "Gerado ao salvar (PM-0001)"}</dd>
               </div>
               <div>
                 <dt className="text-xs text-graphite-400">Origem</dt>
                 <dd className="font-medium text-graphite-800">
-                  {existing?.template ? `Modelo: ${existing.template.name}` : "Plano proprio"}
+                  {existing?.template ? `Modelo: ${existing.template.name}` : "Plano próprio"}
                 </dd>
               </div>
               <div>
@@ -488,7 +488,7 @@ export default function MaintenancePlanForm() {
             <SelectInput
               label="Status"
               required
-              hint="So plano Ativo gera OS."
+              hint="Só plano Ativo gera OS."
               options={[
                 { value: "DRAFT", label: "Rascunho" },
                 { value: "ACTIVE", label: "Ativo" },
@@ -502,9 +502,9 @@ export default function MaintenancePlanForm() {
               required
               options={[
                 { value: "LOW", label: "Baixa" },
-                { value: "MEDIUM", label: "Media" },
+                { value: "MEDIUM", label: "Média" },
                 { value: "HIGH", label: "Alta" },
-                { value: "CRITICAL", label: "Critica" },
+                { value: "CRITICAL", label: "Crítica" },
               ]}
               {...register("defaultPriority")}
             />
@@ -512,19 +512,19 @@ export default function MaintenancePlanForm() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <SelectInput
-              label="Aplicacao"
+              label="Aplicação"
               required
-              hint="Familia sinaliza um plano que serve varios ativos do mesmo tipo."
+              hint="Família sinaliza um plano que serve vários ativos do mesmo tipo."
               options={[
                 { value: "SINGLE_ASSET", label: "Ativo individual" },
-                { value: "ASSET_FAMILY", label: "Familia de ativos" },
+                { value: "ASSET_FAMILY", label: "Família de ativos" },
               ]}
               {...register("scope")}
             />
             <SelectInput
               label="Especialidade sugerida (opcional)"
               placeholder="Nenhuma"
-              hint="Vem do catalogo de tipos de mao de obra."
+              hint="Vem do catálogo de tipos de mão de obra."
               options={(specialties ?? []).map((t) => ({ value: t.id, label: t.name }))}
               {...register("specialtyId")}
             />
@@ -532,27 +532,27 @@ export default function MaintenancePlanForm() {
 
           {!isEdit && (
             <p className="rounded-lg bg-gray-50 px-4 py-3 text-xs text-graphite-500">
-              O ativo (um ou varios) e' escolhido depois de salvar, na ficha do plano - "Familia de ativos" so
-              sinaliza que este plano serve varios ativos do mesmo tipo.
+              O ativo (um ou vários) é escolhido depois de salvar, na ficha do plano - "Família de ativos" só
+              sinaliza que este plano serve vários ativos do mesmo tipo.
             </p>
           )}
 
           {!isClient && (
-            <UserPicker label="Responsavel pelo plano" roles={["ADMIN", "TECHNICIAN"]} error={errors.responsibleId?.message} {...register("responsibleId")} />
+            <UserPicker label="Responsável pelo plano" roles={["ADMIN", "TECHNICIAN"]} error={errors.responsibleId?.message} {...register("responsibleId")} />
           )}
         </div>
         </div>
 
         <div className={step === 1 ? "space-y-6" : "hidden"}>
         <div className="card space-y-4 p-5">
-          <h2 className="font-semibold text-navy-900">Disparo da manutencao</h2>
+          <h2 className="font-semibold text-navy-900">Disparo da manutenção</h2>
           <SelectInput
             label="Tipo de disparo"
             required
             options={[
-              { value: "TIME", label: "Por tempo / calendario" },
+              { value: "TIME", label: "Por tempo / calendário" },
               { value: "METER", label: "Por medidor, ciclo ou contador" },
-              { value: "CONDITION", label: "Por condicao (preditiva)" },
+              { value: "CONDITION", label: "Por condição (preditiva)" },
             ]}
             {...register("triggerType")}
           />
@@ -574,7 +574,7 @@ export default function MaintenancePlanForm() {
                   options={[
                     { value: "DAY", label: "Dia(s)" },
                     { value: "WEEK", label: "Semana(s)" },
-                    { value: "MONTH", label: "Mes(es)" },
+                    { value: "MONTH", label: "Mês(es)" },
                     { value: "YEAR", label: "Ano(s)" },
                   ]}
                   {...register("frequencyUnit")}
@@ -584,7 +584,7 @@ export default function MaintenancePlanForm() {
               <TextInput
                 label="Data-base do ciclo"
                 type="date"
-                hint="De onde a contagem parte. Em branco, comeca hoje."
+                hint="De onde a contagem parte. Em branco, começa hoje."
                 {...register("baseDate")}
               />
 
@@ -595,11 +595,11 @@ export default function MaintenancePlanForm() {
                   placeholder="Qualquer dia"
                   options={[
                     { value: "1", label: "Segunda" },
-                    { value: "2", label: "Terca" },
+                    { value: "2", label: "Terça" },
                     { value: "3", label: "Quarta" },
                     { value: "4", label: "Quinta" },
                     { value: "5", label: "Sexta" },
-                    { value: "6", label: "Sabado" },
+                    { value: "6", label: "Sábado" },
                     { value: "0", label: "Domingo" },
                   ]}
                   {...register("dayOfWeek")}
@@ -608,16 +608,16 @@ export default function MaintenancePlanForm() {
               {(frequencyUnit === "MONTH" || frequencyUnit === "YEAR") && (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <TextInput
-                    label="Dia do mes"
+                    label="Dia do mês"
                     type="number"
                     placeholder="Ex.: 15"
-                    hint="Mes mais curto cai no ultimo dia, nao vira o mes."
+                    hint="Mês mais curto cai no último dia, não vira o mês."
                     {...register("dayOfMonth")}
                   />
                   {frequencyUnit === "YEAR" && (
                     <SelectInput
-                      label="Mes do ano"
-                      placeholder="Mesmo mes da data-base"
+                      label="Mês do ano"
+                      placeholder="Mesmo mês da data-base"
                       options={MESES.map((m, i) => ({ value: String(i + 1), label: m }))}
                       {...register("monthOfYear")}
                     />
@@ -633,7 +633,7 @@ export default function MaintenancePlanForm() {
                 <SelectInput
                   label="Medidor"
                   required
-                  hint="Horimetro, odometro, ciclos, partidas, toneladas - a unidade vem do medidor."
+                  hint="Horímetro, odômetro, ciclos, partidas, toneladas - a unidade vem do medidor."
                   placeholder={instrumentId ? "Selecione o medidor" : "Selecione o ativo primeiro"}
                   disabled={!instrumentId}
                   options={(meters ?? []).map((m) => ({ value: m.id, label: `${m.name} (${m.unit}) - atual: ${m.currentValue}` }))}
@@ -641,7 +641,7 @@ export default function MaintenancePlanForm() {
                   {...register("meterId")}
                 />
                 <TextInput
-                  label="Intervalo entre manutencoes"
+                  label="Intervalo entre manutenções"
                   type="number"
                   step="any"
                   required
@@ -654,7 +654,7 @@ export default function MaintenancePlanForm() {
                 label="Leitura-base"
                 type="number"
                 step="any"
-                hint="Leitura em que o ciclo atual comecou. Em branco, usa a leitura da ultima geracao."
+                hint="Leitura em que o ciclo atual começou. Em branco, usa a leitura da última geração."
                 {...register("meterBaseReading")}
               />
             </>
@@ -662,7 +662,7 @@ export default function MaintenancePlanForm() {
 
           {triggerType === "CONDITION" && (
             <SelectInput
-              label="Ponto de medicao"
+              label="Ponto de medição"
               required
               hint="A OS nasce quando este ponto entra em alarme. Configure os limites em Ativos > Medidores."
               placeholder={instrumentId ? "Selecione o ponto" : "Selecione o ativo primeiro"}
@@ -674,43 +674,43 @@ export default function MaintenancePlanForm() {
           )}
         </div>
         <div className="card space-y-4 p-5">
-          <h2 className="font-semibold text-navy-900">Configuracoes avancadas</h2>
+          <h2 className="font-semibold text-navy-900">Configurações avançadas</h2>
           <p className="text-sm text-graphite-500">
             Valem para quem precisa apertar o controle. Em branco, o plano vence na data calculada e a OS
-            nasce no proprio vencimento.
+            nasce no próprio vencimento.
           </p>
 
           {triggerType === "TIME" && (
             <>
               <div className="grid gap-4 sm:grid-cols-3">
                 <TextInput
-                  label="Gerar a OS com antecedencia (dias)"
+                  label="Gerar a OS com antecedência (dias)"
                   type="number"
-                  hint="Da tempo do PCM planejar antes de vencer."
+                  hint="Dá tempo do PCM planejar antes de vencer."
                   error={errors.generateAdvanceDays?.message}
                   {...register("generateAdvanceDays")}
                 />
                 <TextInput
                   label="Janela para antecipar (dias)"
                   type="number"
-                  hint="Pode executar ate X dias antes do vencimento."
+                  hint="Pode executar até X dias antes do vencimento."
                   error={errors.toleranceDaysBefore?.message}
                   {...register("toleranceDaysBefore")}
                 />
                 <TextInput
-                  label="Tolerancia apos vencer (dias)"
+                  label="Tolerância após vencer (dias)"
                   type="number"
-                  hint="Ainda conta como no prazo ate X dias depois."
+                  hint="Ainda conta como no prazo até X dias depois."
                   error={errors.toleranceDaysAfter?.message}
                   {...register("toleranceDaysAfter")}
                 />
               </div>
               <SelectInput
-                label="Calendario operacional"
-                hint="Em dias uteis, um vencimento que cair no fim de semana anda para a segunda."
+                label="Calendário operacional"
+                hint="Em dias úteis, um vencimento que cair no fim de semana anda para a segunda."
                 options={[
                   { value: "ALL_DAYS", label: "Todos os dias" },
-                  { value: "BUSINESS_DAYS", label: "Somente dias uteis" },
+                  { value: "BUSINESS_DAYS", label: "Somente dias úteis" },
                 ]}
                 {...register("operationalCalendar")}
               />
@@ -721,20 +721,20 @@ export default function MaintenancePlanForm() {
             <>
               <div className="grid gap-4 sm:grid-cols-3">
                 <TextInput
-                  label="Antecedencia (unidades do medidor)"
+                  label="Antecedência (unidades do medidor)"
                   type="number"
                   step="any"
                   hint="Abre a OS X unidades antes de vencer."
                   {...register("generateAdvanceMeterUnits")}
                 />
                 <TextInput
-                  label="Tolerancia antes (unidades)"
+                  label="Tolerância antes (unidades)"
                   type="number"
                   step="any"
                   {...register("toleranceMeterBefore")}
                 />
                 <TextInput
-                  label="Tolerancia depois (unidades)"
+                  label="Tolerância depois (unidades)"
                   type="number"
                   step="any"
                   {...register("toleranceMeterAfter")}
@@ -742,10 +742,10 @@ export default function MaintenancePlanForm() {
               </div>
               <SelectInput
                 label="Se o medidor for trocado ou zerado"
-                hint="Define se a contagem continua de onde estava ou recomeca."
+                hint="Define se a contagem continua de onde estava ou recomeça."
                 options={[
                   { value: "CONTINUE", label: "Continuar somando (leitura acumulada do ativo)" },
-                  { value: "RESET_BASE", label: "Recomecar do zero na troca" },
+                  { value: "RESET_BASE", label: "Recomeçar do zero na troca" },
                 ]}
                 {...register("meterResetRule")}
               />
@@ -759,7 +759,7 @@ export default function MaintenancePlanForm() {
             <SelectInput
               label="Status inicial da OS"
               required
-              hint="Programada ja entra no quadro com data; Planejada fica na fila do PCM."
+              hint="Programada já entra no quadro com data; Planejada fica na fila do PCM."
               options={[
                 { value: "IN_TRIAGE", label: "Em triagem" },
                 { value: "PLANNED", label: "Planejada" },
@@ -771,28 +771,28 @@ export default function MaintenancePlanForm() {
               label="Tempo estimado de parada (h)"
               type="number"
               step="any"
-              hint="So se a manutencao exigir maquina parada."
+              hint="Só se a manutenção exigir máquina parada."
               {...register("estimatedShutdownHours")}
             />
           </div>
 
           <div className="grid gap-2 sm:grid-cols-2">
-            <CheckboxInput label="Requer parada de maquina" {...register("requiresShutdown")} />
-            <CheckboxInput label="Requer liberacao operacional" {...register("requiresOperationalRelease")} />
-            <CheckboxInput label="Requer bloqueio/LOTO ou permissao de trabalho" {...register("requiresLoto")} />
-            <CheckboxInput label="Requer aprovacao antes de executar" {...register("requiresApproval")} />
-            <CheckboxInput label="Gerar uma OS agrupada para varios ativos" {...register("groupWorkOrder")} />
+            <CheckboxInput label="Requer parada de máquina" {...register("requiresShutdown")} />
+            <CheckboxInput label="Requer liberação operacional" {...register("requiresOperationalRelease")} />
+            <CheckboxInput label="Requer bloqueio/LOTO ou permissão de trabalho" {...register("requiresLoto")} />
+            <CheckboxInput label="Requer aprovação antes de executar" {...register("requiresApproval")} />
+            <CheckboxInput label="Gerar uma OS agrupada para vários ativos" {...register("groupWorkOrder")} />
           </div>
 
           <SelectInput
             label="Se faltar material na hora de gerar"
             required
-            hint="Em qualquer opcao o motivo da falta fica registrado na OS - nunca falha em silencio."
+            hint="Em qualquer opção o motivo da falta fica registrado na OS - nunca falha em silêncio."
             options={[
               { value: "RESERVE_AUTO", label: "Reservar o que houver e registrar o que faltou" },
-              { value: "BLOCK_AWAITING_MATERIAL", label: "Gerar a OS ja em Aguardando material" },
+              { value: "BLOCK_AWAITING_MATERIAL", label: "Gerar a OS já em Aguardando material" },
               { value: "ALERT_ONLY", label: "Gerar sem reservar, apenas alertar" },
-              { value: "DO_NOT_GENERATE", label: "Nao gerar a OS se faltar material obrigatorio" },
+              { value: "DO_NOT_GENERATE", label: "Não gerar a OS se faltar material obrigatório" },
             ]}
             {...register("materialPolicy")}
           />
@@ -806,10 +806,10 @@ export default function MaintenancePlanForm() {
         {planType === "LUBRICATION" && (
           <div className="card space-y-4 p-5">
             <div>
-              <h2 className="font-semibold text-navy-900">Rota de lubrificacao</h2>
+              <h2 className="font-semibold text-navy-900">Rota de lubrificação</h2>
               <p className="text-xs text-graphite-500">
-                O plano agenda uma rota; o lubrificante, a quantidade e o metodo sao a especificacao de cada
-                ponto dela - cadastrados em Lubrificacao &gt; Pontos.
+                O plano agenda uma rota; o lubrificante, a quantidade e o método são a especificação de cada
+                ponto dela - cadastrados em Lubrificação &gt; Pontos.
               </p>
             </div>
             <SelectInput
@@ -847,12 +847,12 @@ export default function MaintenancePlanForm() {
             prevista e procedimento se viessem de uma importacao, nunca pelo assistente
             (achado em auditoria: PM-0003 tinha estimatedShutdownHours mas nao HH prevista). */}
         <div className="card space-y-4 p-5">
-          <h2 className="font-semibold text-navy-900">Execucao</h2>
+          <h2 className="font-semibold text-navy-900">Execução</h2>
           <TextInput
             label="HH prevista (horas)"
             type="number"
             step="any"
-            hint="Total de horas de mao de obra estimadas para executar o plano - usado para comparar previsto x realizado."
+            hint="Total de horas de mão de obra estimadas para executar o plano - usado para comparar previsto x realizado."
             {...register("estimatedLaborHours")}
           />
           <div>
@@ -860,7 +860,7 @@ export default function MaintenancePlanForm() {
             <textarea
               className="input"
               rows={4}
-              placeholder="Passo a passo da execucao, ou referencia ao documento anexado abaixo."
+              placeholder="Passo a passo da execução, ou referência ao documento anexado abaixo."
               {...register("procedure")}
             />
           </div>
@@ -873,7 +873,7 @@ export default function MaintenancePlanForm() {
               <Plus className="h-4 w-4" /> Adicionar material
             </button>
           </div>
-          <p className="text-xs text-graphite-500">Ao gerar a OS, o sistema tenta reservar essas pecas no almoxarifado (melhor esforco - sem saldo, a OS e' gerada sem reservar).</p>
+          <p className="text-xs text-graphite-500">Ao gerar a OS, o sistema tenta reservar essas peças no almoxarifado (melhor esforço - sem saldo, a OS é gerada sem reservar).</p>
           {!clientId ? (
             <p className="text-sm text-graphite-500">Selecione o cliente para escolher materiais do almoxarifado.</p>
           ) : (
@@ -884,7 +884,7 @@ export default function MaintenancePlanForm() {
                     <SparePartPicker
                       label=""
                       className="flex-1"
-                      placeholder="Selecione a peca"
+                      placeholder="Selecione a peça"
                       clientId={clientId}
                       error={errors.parts?.[index]?.sparePartId?.message}
                       {...register(`parts.${index}.sparePartId`)}
@@ -910,7 +910,7 @@ export default function MaintenancePlanForm() {
                     />
                     <TextInput label="Fornecedor sugerido" placeholder="Opcional" {...register(`parts.${index}.suggestedSupplier`)} />
                     <div className="flex items-end pb-2">
-                      <CheckboxInput label="Material obrigatorio" {...register(`parts.${index}.required`)} />
+                      <CheckboxInput label="Material obrigatório" {...register(`parts.${index}.required`)} />
                     </div>
                   </div>
                 </div>
@@ -921,12 +921,12 @@ export default function MaintenancePlanForm() {
         </div>
         <div className="card space-y-4 p-5">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-navy-900">Checklist padrao</h2>
+            <h2 className="font-semibold text-navy-900">Checklist padrão</h2>
             <button type="button" className="btn-ghost btn-sm" onClick={() => append({ description: "", required: true, responseType: "YES_NO_NA" })}>
               <Plus className="h-4 w-4" /> Adicionar item
             </button>
           </div>
-          <p className="text-xs text-graphite-500">Copiado para cada ordem de manutencao gerada a partir deste plano.</p>
+          <p className="text-xs text-graphite-500">Copiado para cada ordem de manutenção gerada a partir deste plano.</p>
           <div className="space-y-2">
             {fields.map((field, index) => (
               <div key={field.id} className="rounded-lg border border-gray-200 p-3">
@@ -944,7 +944,7 @@ export default function MaintenancePlanForm() {
                   )}
                 </div>
                 <div className="mt-2 grid gap-2 sm:grid-cols-4">
-                  <TextInput label="Secao" placeholder="Ex.: Preparacao" {...register(`checklistTemplate.${index}.section`)} />
+                  <TextInput label="Seção" placeholder="Ex.: Preparação" {...register(`checklistTemplate.${index}.section`)} />
                   <TextInput
                     label="Tempo (min)"
                     type="number"
@@ -955,26 +955,26 @@ export default function MaintenancePlanForm() {
                   <SelectInput
                     label="Tipo de resposta"
                     options={[
-                      { value: "YES_NO_NA", label: "Sim / Nao / N.A." },
-                      { value: "NUMBER", label: "Medicao numerica" },
+                      { value: "YES_NO_NA", label: "Sim / Não / N.A." },
+                      { value: "NUMBER", label: "Medição numérica" },
                       { value: "TEXT", label: "Texto" },
                       { value: "PHOTO", label: "Foto" },
                       { value: "SIGNATURE", label: "Assinatura" },
                     ]}
                     {...register(`checklistTemplate.${index}.responseType`)}
                   />
-                  <TextInput label="Referencia" placeholder="Procedimento, desenho, manual" {...register(`checklistTemplate.${index}.reference`)} />
+                  <TextInput label="Referência" placeholder="Procedimento, desenho, manual" {...register(`checklistTemplate.${index}.reference`)} />
                 </div>
                 {watch(`checklistTemplate.${index}.responseType`) === "NUMBER" && (
                   <div className="mt-2 grid gap-2 sm:grid-cols-4">
                     <TextInput label="Unidade" placeholder="mm/s, °C, bar" {...register(`checklistTemplate.${index}.unit`)} />
-                    <TextInput label="Minimo" type="number" step="any" {...register(`checklistTemplate.${index}.minValue`)} />
+                    <TextInput label="Mínimo" type="number" step="any" {...register(`checklistTemplate.${index}.minValue`)} />
                     <TextInput label="Alvo" type="number" step="any" {...register(`checklistTemplate.${index}.targetValue`)} />
-                    <TextInput label="Maximo" type="number" step="any" {...register(`checklistTemplate.${index}.maxValue`)} />
+                    <TextInput label="Máximo" type="number" step="any" {...register(`checklistTemplate.${index}.maxValue`)} />
                   </div>
                 )}
                 <div className="mt-2 flex flex-wrap gap-4">
-                  <CheckboxInput label="Item obrigatorio" {...register(`checklistTemplate.${index}.required`)} />
+                  <CheckboxInput label="Item obrigatório" {...register(`checklistTemplate.${index}.required`)} />
                   <CheckboxInput label="Exige foto" {...register(`checklistTemplate.${index}.requiresPhoto`)} />
                 </div>
               </div>

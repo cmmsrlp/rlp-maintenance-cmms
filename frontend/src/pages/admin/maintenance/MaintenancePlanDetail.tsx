@@ -67,7 +67,7 @@ export default function MaintenancePlanDetail() {
     setBusy(true);
     try {
       const copia = await duplicateMaintenancePlan(id);
-      notify("success", `Plano ${copia.code ?? ""} criado como copia - ajuste e ative quando quiser.`);
+      notify("success", `Plano ${copia.code ?? ""} criado como cópia - ajuste e ative quando quiser.`);
       navigate(`${base}/planos/${copia.id}`);
     } catch (error) {
       notify("error", getApiErrorMessage(error));
@@ -163,7 +163,7 @@ export default function MaintenancePlanDetail() {
       {!plan.instrumentId && canManage && (
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-safety-yellow/40 bg-safety-yellow/10 px-4 py-3">
           <p className="text-sm text-graphite-700">
-            Este plano ainda nao tem ativo - a OS so pode ser gerada depois de atribuir um ou mais.
+            Este plano ainda não tem ativo - a OS só pode ser gerada depois de atribuir um ou mais.
           </p>
           <button className="btn-outline text-sm" onClick={() => setAtribuirOpen(true)}>
             <Wrench className="h-4 w-4" /> Atribuir ativos
@@ -179,8 +179,8 @@ export default function MaintenancePlanDetail() {
               valor={indicators.compliancePct != null ? `${indicators.compliancePct}%` : "Dados insuficientes"}
               detalhe={
                 indicators.totals.completed > 0
-                  ? `${indicators.totals.completed} OS concluida(s)`
-                  : "Nenhuma OS concluida ainda"
+                  ? `${indicators.totals.completed} OS concluída(s)`
+                  : "Nenhuma OS concluída ainda"
               }
             />
             <IndicadorCard
@@ -206,9 +206,9 @@ export default function MaintenancePlanDetail() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
-            <IndicadorCard rotulo="Ultima execucao" valor={formatDate(indicators.lastExecutionAt) || "Nunca executado"} />
-            <IndicadorCard rotulo="Proxima geracao da OS" valor={formatDate(indicators.nextGenerationDate) || "-"} />
-            <IndicadorCard rotulo="Proximo vencimento" valor={formatDate(indicators.nextDueDate) || "-"} />
+            <IndicadorCard rotulo="Última execução" valor={formatDate(indicators.lastExecutionAt) || "Nunca executado"} />
+            <IndicadorCard rotulo="Próxima geração da OS" valor={formatDate(indicators.nextGenerationDate) || "-"} />
+            <IndicadorCard rotulo="Próximo vencimento" valor={formatDate(indicators.nextDueDate) || "-"} />
           </div>
           {/* Memoria de calculo: sem ver data-base, periodicidade e ajustes um vencimento
               correto pode parecer errado (mes nao tem 30 dias fixos, antecedencia de geracao
@@ -221,7 +221,7 @@ export default function MaintenancePlanDetail() {
             <h2 className="mb-3 font-semibold text-navy-900">Custo planejado x realizado</h2>
             {indicators.cost.tracked ? (
               <dl className="grid gap-3 text-sm sm:grid-cols-4">
-                <div><dt className="text-xs text-graphite-400">Pecas</dt><dd className="font-medium">{formatCurrency(indicators.cost.parts)}</dd></div>
+                <div><dt className="text-xs text-graphite-400">Peças</dt><dd className="font-medium">{formatCurrency(indicators.cost.parts)}</dd></div>
                 <div><dt className="text-xs text-graphite-400">Mao de obra</dt><dd className="font-medium">{formatCurrency(indicators.cost.labor)}</dd></div>
                 <div><dt className="text-xs text-graphite-400">Terceiros</dt><dd className="font-medium">{formatCurrency(indicators.cost.thirdParty)}</dd></div>
                 <div><dt className="text-xs text-graphite-400">Total realizado</dt><dd className="font-semibold text-navy-900">{formatCurrency(indicators.cost.total)}</dd></div>
@@ -288,11 +288,11 @@ export default function MaintenancePlanDetail() {
           </div>
           <dl className="grid gap-4 sm:grid-cols-2">
             <Info label="Disparo" value={plan.triggerType === "TIME" ? `A cada ${plan.frequencyDays} dias` : `Medidor: ${plan.meter?.name ?? "-"} (a cada ${plan.meterInterval} ${plan.meter?.unit ?? ""})`} />
-            <Info label="Proximo vencimento" value={plan.triggerType === "TIME" ? formatDate(plan.nextDueDate) : "-"} />
-            <Info label="Ultima geracao" value={formatDate(plan.lastGeneratedAt)} />
-            <Info label="Responsavel" value={plan.responsible?.name ?? "-"} />
+            <Info label="Próximo vencimento" value={plan.triggerType === "TIME" ? formatDate(plan.nextDueDate) : "-"} />
+            <Info label="Última geração" value={formatDate(plan.lastGeneratedAt)} />
+            <Info label="Responsável" value={plan.responsible?.name ?? "-"} />
             <Info
-              label="Tolerancia"
+              label="Tolerância"
               value={plan.toleranceDaysBefore == null && plan.toleranceDaysAfter == null ? "-" : `${plan.toleranceDaysBefore ?? 0} dias antes / ${plan.toleranceDaysAfter ?? 0} dias depois`}
             />
             <Info label="HH prevista" value={plan.estimatedLaborHours != null ? `${plan.estimatedLaborHours}h` : "-"} />
@@ -309,7 +309,7 @@ export default function MaintenancePlanDetail() {
           )}
 
           <div>
-            <p className="mb-2 text-xs uppercase tracking-wide text-graphite-400">Checklist padrao</p>
+            <p className="mb-2 text-xs uppercase tracking-wide text-graphite-400">Checklist padrão</p>
             {plan.checklistTemplate.length === 0 ? (
               <p className="text-sm text-graphite-500">Nenhum item cadastrado.</p>
             ) : (
@@ -341,7 +341,7 @@ export default function MaintenancePlanDetail() {
         <div className="card p-5">
           <h2 className="mb-3 font-semibold text-navy-900">Ordens geradas</h2>
           {!plan.workOrders || plan.workOrders.length === 0 ? (
-            <EmptyState title="Nenhuma OS gerada" description="Ainda nao foi gerada nenhuma ordem a partir deste plano." />
+            <EmptyState title="Nenhuma OS gerada" description="Ainda não foi gerada nenhuma ordem a partir deste plano." />
           ) : (
             <ul className="divide-y divide-gray-100">
               {plan.workOrders.map((w) => (
@@ -359,8 +359,8 @@ export default function MaintenancePlanDetail() {
 
       <ConfirmDialog
         open={confirmDelete}
-        title="Remover plano de manutencao"
-        description="Tem certeza que deseja remover este plano? O historico de ordens de manutencao geradas sera preservado."
+        title="Remover plano de manutenção"
+        description="Tem certeza que deseja remover este plano? O histórico de ordens de manutenção geradas será preservado."
         confirmLabel="Remover"
         danger
         loading={deleting}
@@ -370,7 +370,7 @@ export default function MaintenancePlanDetail() {
 
       <ConfirmDialog
         open={confirmAntecipar != null}
-        title="Antecipar geracao da OS"
+        title="Antecipar geração da OS"
         description={`${confirmAntecipar ?? ""} Gerar a OS agora mesmo assim?`}
         confirmLabel="Gerar mesmo assim"
         loading={generating}
@@ -390,8 +390,8 @@ export default function MaintenancePlanDetail() {
             notify(
               "success",
               total > 1
-                ? `Atribuido a ${total} ativos - ${total - 1} plano(s) a mais criado(s) com a mesma configuracao.`
-                : "Ativo atribuido ao plano.",
+                ? `Atribuído a ${total} ativos - ${total - 1} plano(s) a mais criado(s) com a mesma configuração.`
+                : "Ativo atribuído ao plano.",
             );
             queryClient.invalidateQueries({ queryKey: ["maintenance-plan", id] });
             queryClient.invalidateQueries({ queryKey: ["maintenance-plans"] });
@@ -480,8 +480,8 @@ function AtribuirAtivosModal({
     >
       <div className="space-y-4">
         <p className="text-sm text-graphite-500">
-          Escolha um ativo, ou varios - cada ativo a mais cria uma copia deste plano (mesma configuracao, checklist e
-          pecas) so para ele.
+          Escolha um ativo, ou vários - cada ativo a mais cria uma cópia deste plano (mesma configuração, checklist e
+          peças) só para ele.
         </p>
 
         {ativos.length > 0 && (
