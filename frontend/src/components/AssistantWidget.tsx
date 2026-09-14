@@ -8,18 +8,17 @@ const MENSAGEM_INICIAL: ChatMessage = {
   content: "Oi! Sou o Assistente RLP. Posso ajudar com duvidas sobre como usar o CMMS - ordens, planos preventivos, lubrificacao, almoxarifado e mais. O que voce precisa?",
 };
 
-interface AssistantWidgetProps {
-  /** Estado da barra lateral no desktop - o botao precisa desviar da largura dela (w-16
-   * recolhida, w-64 aberta), senao fica flutuando por cima do logo/menu em vez de do lado. */
-  sidebarCollapsed: boolean;
-}
-
 /**
- * Assistente tecnico virtual flutuante do portal do cliente - responde duvidas de uso do
- * sistema e conceitos de manutencao via IA. Nao tem acesso aos dados da conta (numeros,
- * ordens especificas): e' orientacao, nao consulta.
+ * Assistente tecnico virtual do portal do cliente - responde duvidas de uso do sistema e
+ * conceitos de manutencao via IA. Nao tem acesso aos dados da conta (numeros, ordens
+ * especificas): e' orientacao, nao consulta.
+ *
+ * O botao fica no cabecalho, do lado do badge de plano/acessos (pedido do usuario - antes
+ * era um pill flutuante solto no canto da tela, que em telas menores chegava a tampar
+ * botao de outra tela). So' o painel do chat continua fixed, ancorado no canto do botao,
+ * porque ele precisa flutuar por cima do conteudo quando aberto.
  */
-export function AssistantWidget({ sidebarCollapsed }: AssistantWidgetProps) {
+export function AssistantWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([MENSAGEM_INICIAL]);
   const [input, setInput] = useState("");
@@ -52,30 +51,23 @@ export function AssistantWidget({ sidebarCollapsed }: AssistantWidgetProps) {
     }
   }
 
-  // No celular o topo-esquerdo ja e' o botao de abrir o menu (hamburguer) - o assistente
-  // ali em cima tampava os dois, entao no mobile ele fica embaixo. No desktop, o topo-
-  // esquerdo do VIEWPORT e' onde fica o logo da RLP/do cliente na barra lateral - o botao
-  // "fixed" ignora o layout e flutua por cima de tudo, entao precisa desviar da largura da
-  // barra (recolhida ou aberta) para ficar do lado dela, nao em cima do logo.
-  const ladoDesktop = sidebarCollapsed ? "lg:left-20" : "lg:left-72";
-
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className={`fixed bottom-4 left-4 z-40 flex items-center gap-2 rounded-full bg-navy-900 py-2 pl-2.5 pr-4 text-sm font-semibold text-white shadow-lg ring-2 ring-white transition-transform hover:scale-105 lg:bottom-auto lg:top-4 ${ladoDesktop}`}
+        className="flex shrink-0 items-center gap-2 rounded-full bg-navy-900 py-1.5 pl-1.5 pr-3 text-xs font-semibold text-white shadow-sm transition-transform hover:scale-105"
         aria-label={open ? "Fechar Assistente RLP" : "Abrir Assistente RLP"}
       >
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-lime text-navy-950">
-          <Bot className="h-4 w-4" />
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-lime text-navy-950">
+          <Bot className="h-3.5 w-3.5" />
         </span>
-        Assistente RLP
+        <span className="hidden sm:inline">Assistente RLP</span>
       </button>
 
       {open && (
         <div
-          className={`fixed bottom-20 left-4 z-40 flex h-[min(32rem,calc(100vh-8rem))] w-[22rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl lg:bottom-auto lg:top-16 lg:h-[min(32rem,calc(100vh-6rem))] ${ladoDesktop}`}
+          className="fixed right-4 top-16 z-40 flex h-[min(32rem,calc(100vh-8rem))] w-[22rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl"
         >
           <div className="flex items-center justify-between bg-navy-900 px-4 py-3">
             <div className="flex items-center gap-2 text-white">

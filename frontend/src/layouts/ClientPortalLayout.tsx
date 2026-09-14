@@ -164,7 +164,6 @@ export function ClientPortalLayout() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <AssistantWidget sidebarCollapsed={collapsed} />
       <aside className={`hidden shrink-0 bg-navy-950 transition-[width] duration-150 lg:block ${collapsed ? "w-16" : "w-64"}`}>
         <div className="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
           <div className={`flex h-16 items-center ${collapsed ? "justify-center px-2" : "px-5"}`}>
@@ -234,6 +233,7 @@ export function ClientPortalLayout() {
               <span className="text-graphite-500">Sem plano definido</span>
             )}
           </Link>
+          <AssistantWidget />
         </header>
         <main className="flex-1 px-4 py-6 sm:px-6">
           <Outlet />
