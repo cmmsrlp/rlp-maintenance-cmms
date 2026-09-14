@@ -159,8 +159,8 @@ export default function MaintenancePlanTemplatesList() {
   return (
     <div>
       <PageHeader
-        title="Modelos de plano de manutencao"
-        description="Planos reutilizaveis por familia de ativo - aplique num ativo para gerar um plano de verdade"
+        title="Modelos de plano de manutenção"
+        description="Planos reutilizáveis por família de ativo - aplique num ativo para gerar um plano de verdade"
         breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Modelos de plano" }]}
         actions={
           canManage && (
@@ -178,10 +178,10 @@ export default function MaintenancePlanTemplatesList() {
         emptyTitle="Nenhum modelo de plano cadastrado"
         columns={[
           { header: "Modelo", accessor: (t) => <span className="font-medium text-navy-900">{t.name}</span> },
-          { header: "Familia de ativo", accessor: (t) => t.applicableAssetFamily ?? "-" },
+          { header: "Família de ativo", accessor: (t) => t.applicableAssetFamily ?? "-" },
           { header: "Disparo", accessor: (t) => (t.triggerType === "TIME" ? `A cada ${t.frequencyDays ?? "-"} dias` : `Medidor: a cada ${t.meterInterval ?? "-"}`) },
           { header: "HH prevista", accessor: (t) => (t.estimatedLaborHours != null ? `${t.estimatedLaborHours}h` : "-") },
-          { header: "Origem", accessor: (t) => <span className="text-xs text-graphite-500">{t.clientId ? "Meu catalogo" : "Padrao RLP Maintenance"}</span> },
+          { header: "Origem", accessor: (t) => <span className="text-xs text-graphite-500">{t.clientId ? "Meu catálogo" : "Padrão RLP Maintenance"}</span> },
           {
             header: "Status",
             accessor: (t) =>
@@ -234,10 +234,10 @@ export default function MaintenancePlanTemplatesList() {
       >
         <form id="plan-template-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="grid gap-4 sm:grid-cols-2">
-            {!isClient && <ClientPicker label="Cliente (vazio = catalogo padrao RLP Maintenance)" {...register("clientId")} />}
-            <TextInput label="Nome do modelo" required placeholder="Ex.: Lubrificacao trimestral - motores eletricos" error={errors.name?.message} {...register("name")} />
+            {!isClient && <ClientPicker label="Cliente (vazio = catálogo padrão RLP Maintenance)" {...register("clientId")} />}
+            <TextInput label="Nome do modelo" required placeholder="Ex.: Lubrificação trimestral - motores elétricos" error={errors.name?.message} {...register("name")} />
           </div>
-          <TextInput label="Familia de ativo aplicavel (opcional)" placeholder="Ex.: Motores eletricos, Bombas centrifugas" {...register("applicableAssetFamily")} />
+          <TextInput label="Família de ativo aplicável (opcional)" placeholder="Ex.: Motores elétricos, Bombas centrífugas" {...register("applicableAssetFamily")} />
 
           <div className="grid gap-4 sm:grid-cols-2">
             <SelectInput
@@ -259,10 +259,10 @@ export default function MaintenancePlanTemplatesList() {
             <TextInput label="HH prevista (opcional)" type="number" step="any" error={errors.estimatedLaborHours?.message} {...register("estimatedLaborHours")} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <TextInput label="Tolerancia antes (dias, opcional)" type="number" error={errors.toleranceDaysBefore?.message} {...register("toleranceDaysBefore")} />
-            <TextInput label="Tolerancia depois (dias, opcional)" type="number" error={errors.toleranceDaysAfter?.message} {...register("toleranceDaysAfter")} />
+            <TextInput label="Tolerância antes (dias, opcional)" type="number" error={errors.toleranceDaysBefore?.message} {...register("toleranceDaysBefore")} />
+            <TextInput label="Tolerância depois (dias, opcional)" type="number" error={errors.toleranceDaysAfter?.message} {...register("toleranceDaysAfter")} />
           </div>
-          <TextareaInput label="Procedimento padrao (opcional)" rows={3} {...register("procedure")} />
+          <TextareaInput label="Procedimento padrão (opcional)" rows={3} {...register("procedure")} />
 
           <div>
             <div className="mb-2 flex items-center justify-between">
@@ -372,7 +372,7 @@ function ApplyTemplateModal({
             {...register("meterId")}
           />
         )}
-        {!isClient && <UserPicker label="Responsavel (opcional)" roles={["ADMIN", "TECHNICIAN"]} {...register("responsibleId")} />}
+        {!isClient && <UserPicker label="Responsável (opcional)" roles={["ADMIN", "TECHNICIAN"]} {...register("responsibleId")} />}
       </form>
     </Modal>
   );

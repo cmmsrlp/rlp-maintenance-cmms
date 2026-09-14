@@ -25,9 +25,9 @@ export default function LubricationDashboard() {
   return (
     <div>
       <PageHeader
-        title="Lubrificacao"
-        description="Do lubrificante no almoxarifado ate a aplicacao no ponto"
-        breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Lubrificacao" }]}
+        title="Lubrificação"
+        description="Do lubrificante no almoxarifado até a aplicação no ponto"
+        breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Lubrificação" }]}
         actions={
           <>
             <Link to={`${base}/lubrificacao/pontos`} className="btn-outline">Pontos</Link>
@@ -83,8 +83,8 @@ export default function LubricationDashboard() {
                 title={data.totais.pontos === 0 ? "Nenhum ponto cadastrado ainda" : "Nenhum ponto vencido"}
                 description={
                   data.totais.pontos === 0
-                    ? "Comece cadastrando os lubrificantes (a partir das pecas do almoxarifado) e depois os pontos de cada equipamento."
-                    : "Toda a lubrificacao esta em dia."
+                    ? "Comece cadastrando os lubrificantes (a partir das peças do almoxarifado) e depois os pontos de cada equipamento."
+                    : "Toda a lubrificação está em dia."
                 }
               />
             ) : (
