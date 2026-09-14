@@ -21,6 +21,8 @@ const scheduleSelect = {
   name: true,
   status: true,
   notes: true,
+  workingWeekdays: true,
+  hoursPerDay: true,
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -66,7 +68,36 @@ export const listSchedules = asyncHandler(async (req: Request, res: Response) =>
 
 const taskWithRelations = {
   instrument: { select: { id: true, tag: true, description: true, type: true } },
-  workOrder: { select: { id: true, number: true, status: true, type: true } },
+  workOrder: {
+    select: {
+      id: true,
+      number: true,
+      status: true,
+      type: true,
+      // Responsavel: o recurso do quadro do PCM (assignedResource) e' quem a ficha da OS
+      // chama de "Responsavel" - o tecnico (login) so entra de reserva quando a OS nao tem
+      // recurso atribuido.
+      assignedResource: { select: { id: true, name: true } },
+      technician: { select: { id: true, name: true } },
+    },
+  },
+} as const;
+
+const taskSelectFields = {
+  id: true,
+  parentTaskId: true,
+  predecessorTaskId: true,
+  lagDays: true,
+  name: true,
+  instrumentId: true,
+  workOrderId: true,
+  startDate: true,
+  endDate: true,
+  percentComplete: true,
+  resources: true,
+  notes: true,
+  sortOrder: true,
+  ...taskWithRelations,
 } as const;
 
 export const getSchedule = asyncHandler(async (req: Request, res: Response) => {
@@ -74,23 +105,7 @@ export const getSchedule = asyncHandler(async (req: Request, res: Response) => {
     where: { id: req.params.id, deletedAt: null, ...clientScopeFilter(req) },
     select: {
       ...scheduleSelect,
-      tasks: {
-        orderBy: [{ sortOrder: "asc" }],
-        select: {
-          id: true,
-          parentTaskId: true,
-          name: true,
-          instrumentId: true,
-          workOrderId: true,
-          startDate: true,
-          endDate: true,
-          percentComplete: true,
-          resources: true,
-          notes: true,
-          sortOrder: true,
-          ...taskWithRelations,
-        },
-      },
+      tasks: { orderBy: [{ sortOrder: "asc" }], select: taskSelectFields },
     },
   });
   if (!schedule) throw new NotFoundError("Cronograma de parada");
@@ -102,6 +117,9 @@ const scheduleSchema = z.object({
   name: z.string().min(2, "De um nome para o cronograma."),
   status: z.enum(["PLANNING", "IN_PROGRESS", "DONE"]).optional(),
   notes: z.string().nullish(),
+  // 0=domingo...6=sabado.
+  workingWeekdays: z.array(z.number().int().min(0).max(6)).min(1).optional(),
+  hoursPerDay: z.coerce.number().positive().max(24).optional(),
 });
 
 export const createSchedule = asyncHandler(async (req: Request, res: Response) => {
@@ -109,7 +127,15 @@ export const createSchedule = asyncHandler(async (req: Request, res: Response) =
   const clientId = resolveClientId(req, data.clientId);
 
   const schedule = await prisma.shutdownSchedule.create({
-    data: { name: data.name, status: data.status, notes: data.notes, clientId, createdById: req.user?.sub },
+    data: {
+      name: data.name,
+      status: data.status,
+      notes: data.notes,
+      workingWeekdays: data.workingWeekdays,
+      hoursPerDay: data.hoursPerDay,
+      clientId,
+      createdById: req.user?.sub,
+    },
     select: scheduleSelect,
   });
 
@@ -155,6 +181,10 @@ const taskInputSchema = z.object({
   id: z.string().uuid().optional(),
   key: z.string().min(1),
   parentKey: z.string().nullish(),
+  // Mesma logica do parentKey: aponta pra "key" de outra linha desta mesma gravacao (pode
+  // ser uma tarefa nova, sem id de banco ainda).
+  predecessorKey: z.string().nullish(),
+  lagDays: z.coerce.number().int().min(0).optional(),
   name: z.string().min(1, "De um nome para a tarefa."),
   instrumentId: z.string().uuid().nullish(),
   workOrderId: z.string().uuid().nullish(),
@@ -208,6 +238,7 @@ export const saveTasks = asyncHandler(async (req: Request, res: Response) => {
           resources: t.resources ?? null,
           notes: t.notes ?? null,
           sortOrder: t.sortOrder,
+          lagDays: t.lagDays ?? 0,
         },
         update: {
           name: t.name,
@@ -219,6 +250,7 @@ export const saveTasks = asyncHandler(async (req: Request, res: Response) => {
           resources: t.resources ?? null,
           notes: t.notes ?? null,
           sortOrder: t.sortOrder,
+          lagDays: t.lagDays ?? 0,
         },
       });
     }
@@ -227,29 +259,19 @@ export const saveTasks = asyncHandler(async (req: Request, res: Response) => {
     const idsQuePermanecem = tasks.map((t) => keyParaId.get(t.key)!);
     await tx.shutdownTask.deleteMany({ where: { scheduleId: schedule.id, id: { notIn: idsQuePermanecem.length ? idsQuePermanecem : ["__none__"] } } });
 
+    // So depois de toda linha existir e' que da pra ligar parentTaskId/predecessorTaskId -
+    // uma tarefa nova pode apontar pra outra tarefa nova desta mesma gravacao.
     for (const t of tasks) {
       const parentId = t.parentKey ? keyParaId.get(t.parentKey) ?? null : null;
-      await tx.shutdownTask.update({ where: { id: keyParaId.get(t.key)! }, data: { parentTaskId: parentId } });
+      const predecessorId = t.predecessorKey ? keyParaId.get(t.predecessorKey) ?? null : null;
+      await tx.shutdownTask.update({ where: { id: keyParaId.get(t.key)! }, data: { parentTaskId: parentId, predecessorTaskId: predecessorId } });
     }
   });
 
   const atualizado = await prisma.shutdownTask.findMany({
     where: { scheduleId: schedule.id },
     orderBy: [{ sortOrder: "asc" }],
-    select: {
-      id: true,
-      parentTaskId: true,
-      name: true,
-      instrumentId: true,
-      workOrderId: true,
-      startDate: true,
-      endDate: true,
-      percentComplete: true,
-      resources: true,
-      notes: true,
-      sortOrder: true,
-      ...taskWithRelations,
-    },
+    select: taskSelectFields,
   });
   res.json(atualizado);
 });

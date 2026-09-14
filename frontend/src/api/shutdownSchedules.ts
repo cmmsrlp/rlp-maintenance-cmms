@@ -30,6 +30,8 @@ export interface ScheduleInput {
   name: string;
   status?: ShutdownScheduleStatus;
   notes?: string | null;
+  workingWeekdays?: number[];
+  hoursPerDay?: number;
 }
 
 export async function createSchedule(input: ScheduleInput): Promise<ShutdownSchedule> {
@@ -50,6 +52,8 @@ export interface TaskInput {
   id?: string;
   key: string;
   parentKey?: string | null;
+  predecessorKey?: string | null;
+  lagDays?: number;
   name: string;
   instrumentId?: string | null;
   workOrderId?: string | null;

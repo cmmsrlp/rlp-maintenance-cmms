@@ -53,6 +53,13 @@ interface EditorTask {
   workOrderId: string | null;
   workOrderNumber: string | null;
   workOrderStatus: string | null;
+  /** Nome de quem responde pela OS vinculada (recurso do PCM, ou tecnico) - so leitura,
+   * vem sempre da OS, nao existe campo proprio pra editar aqui. */
+  responsavelNome: string | null;
+  /** Tarefa que precisa terminar antes desta comecar (sequencia tipo MS Project) - key de
+   * outra linha do MESMO cronograma, nao um id de banco (pode apontar pra uma linha nova). */
+  predecessorKey: string | null;
+  lagDays: number;
   startDate: string;
   endDate: string;
   percentComplete: number;
@@ -65,6 +72,10 @@ function hoje(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+function nomeDoResponsavel(w: { assignedResource?: { name: string } | null; technician?: { name: string } | null } | null | undefined): string | null {
+  return w?.assignedResource?.name ?? w?.technician?.name ?? null;
+}
+
 function novaTarefa(): EditorTask {
   const d = hoje();
   return {
@@ -75,6 +86,9 @@ function novaTarefa(): EditorTask {
     workOrderId: null,
     workOrderNumber: null,
     workOrderStatus: null,
+    responsavelNome: null,
+    predecessorKey: null,
+    lagDays: 0,
     startDate: d,
     endDate: d,
     percentComplete: 0,
@@ -96,6 +110,11 @@ function toEditorTree(tasks: ShutdownTask[]): EditorTask[] {
       workOrderId: t.workOrderId,
       workOrderNumber: t.workOrder?.number ?? null,
       workOrderStatus: t.workOrder?.status ?? null,
+      responsavelNome: nomeDoResponsavel(t.workOrder),
+      // key de uma tarefa ja salva e' o proprio id - o predecessorTaskId (id de banco)
+      // aponta certinho pra chave certa sem precisar de mapa nenhum.
+      predecessorKey: t.predecessorTaskId,
+      lagDays: t.lagDays,
       startDate: t.startDate.slice(0, 10),
       endDate: t.endDate.slice(0, 10),
       percentComplete: t.percentComplete,
@@ -142,10 +161,75 @@ function findLoc(nodes: EditorTask[], key: string, parentKey: string | null = nu
   return null;
 }
 
-function updateNode(nodes: EditorTask[], key: string, patch: Partial<EditorTask>): EditorTask[] {
-  return nodes.map((n) =>
-    n.key === key ? { ...n, ...patch } : n.children.length ? { ...n, children: updateNode(n.children, key, patch) } : n,
-  );
+function flattenAll(nodes: EditorTask[], list: EditorTask[] = []): EditorTask[] {
+  for (const n of nodes) {
+    list.push(n);
+    flattenAll(n.children, list);
+  }
+  return list;
+}
+
+// Datas em "YYYY-MM-DD" tratadas como UTC puro (meio-dia nao entra em jogo) - assim somar
+// dias nunca pula ou repete um dia por causa de horario de verao.
+function parseISO(d: string): Date {
+  const [y, m, day] = d.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, day));
+}
+function paraISO(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+function somarDias(d: string, dias: number): string {
+  const dt = parseISO(d);
+  dt.setUTCDate(dt.getUTCDate() + dias);
+  return paraISO(dt);
+}
+function diferencaEmDias(a: string, b: string): number {
+  return Math.round((parseISO(b).getTime() - parseISO(a).getTime()) / 86400000);
+}
+function diaDaSemana(d: string): number {
+  return parseISO(d).getUTCDay();
+}
+
+/** Primeira data depois de `fimDaPredecessora` que e' dia util (segundo o calendario do
+ * cronograma), pulando `lagDays` dias uteis extras de folga. Sem calendario configurado
+ * (lista vazia), todo dia conta como util. */
+function proximaDataUtil(fimDaPredecessora: string, lagDays: number, diasUteis: number[]): string {
+  let atual = fimDaPredecessora;
+  let passosQueFaltam = 1 + Math.max(0, lagDays);
+  while (passosQueFaltam > 0) {
+    atual = somarDias(atual, 1);
+    if (diasUteis.length === 0 || diasUteis.includes(diaDaSemana(atual))) passosQueFaltam--;
+  }
+  return atual;
+}
+
+/**
+ * Reagenda toda tarefa que tem predecessora: comeca no primeiro dia util depois que a
+ * predecessora termina (+ atraso configurado), preservando a duracao que a propria tarefa
+ * ja tinha. Roda em passadas ate estabilizar (cobre cadeias A->B->C independente da ordem
+ * das tarefas na arvore) - o limite de passadas evita loop infinito se alguem formar um
+ * ciclo (A depende de B que depende de A).
+ */
+function aplicarSequencia(nodes: EditorTask[], diasUteis: number[]) {
+  const flat = flattenAll(nodes);
+  const porKey = new Map(flat.map((t) => [t.key, t]));
+  for (let passada = 0; passada <= flat.length; passada++) {
+    let mudou = false;
+    for (const t of flat) {
+      if (!t.predecessorKey) continue;
+      const predecessora = porKey.get(t.predecessorKey);
+      if (!predecessora || predecessora === t) continue;
+      const duracao = diferencaEmDias(t.startDate, t.endDate);
+      const novoInicio = proximaDataUtil(predecessora.endDate, t.lagDays, diasUteis);
+      const novoFim = somarDias(novoInicio, duracao);
+      if (novoInicio !== t.startDate || novoFim !== t.endDate) {
+        t.startDate = novoInicio;
+        t.endDate = novoFim;
+        mudou = true;
+      }
+    }
+    if (!mudou) break;
+  }
 }
 
 function flattenForSave(nodes: EditorTask[], parentKey: string | null, list: TaskInput[], counter: { n: number }) {
@@ -154,6 +238,8 @@ function flattenForSave(nodes: EditorTask[], parentKey: string | null, list: Tas
       id: node.id,
       key: node.key,
       parentKey,
+      predecessorKey: node.predecessorKey,
+      lagDays: node.lagDays,
       name: node.name.trim() || "(sem nome)",
       instrumentId: node.instrumentId,
       workOrderId: node.workOrderId,
@@ -186,6 +272,7 @@ function tarefaDeOs(os: MaintenanceWorkOrder): EditorTask {
     workOrderId: os.id,
     workOrderNumber: os.number,
     workOrderStatus: os.status,
+    responsavelNome: nomeDoResponsavel(os),
     startDate: inicio.slice(0, 10),
     endDate: (os.plannedEnd ?? inicio).slice(0, 10),
   };
@@ -204,6 +291,17 @@ const STATUS_OPTIONS: { value: ShutdownScheduleStatus; label: string }[] = [
   { value: "DONE", label: "Concluido" },
 ];
 
+// 0=domingo...6=sabado, igual ao Date.getUTCDay().
+const DIAS_DA_SEMANA = [
+  { valor: 1, sigla: "Seg" },
+  { valor: 2, sigla: "Ter" },
+  { valor: 3, sigla: "Qua" },
+  { valor: 4, sigla: "Qui" },
+  { valor: 5, sigla: "Sex" },
+  { valor: 6, sigla: "Sab" },
+  { valor: 0, sigla: "Dom" },
+];
+
 /**
  * Editor do cronograma de parada - lista de tarefas com hierarquia (grupo > tarefa),
  * datas e sequencia proprias, mais um Gantt de leitura logo abaixo. "Salvar" grava a
@@ -220,6 +318,8 @@ export default function ShutdownScheduleDetail() {
   const [tasks, setTasks] = useState<EditorTask[]>([]);
   const [name, setName] = useState("");
   const [status, setStatus] = useState<ShutdownScheduleStatus>("PLANNING");
+  const [workingWeekdays, setWorkingWeekdays] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [hoursPerDay, setHoursPerDay] = useState(8);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [removeKey, setRemoveKey] = useState<string | null>(null);
@@ -233,14 +333,32 @@ export default function ShutdownScheduleDetail() {
       setTasks(toEditorTree(schedule.tasks ?? []));
       setName(schedule.name);
       setStatus(schedule.status);
+      setWorkingWeekdays(schedule.workingWeekdays.length ? schedule.workingWeekdays : [1, 2, 3, 4, 5]);
+      setHoursPerDay(schedule.hoursPerDay || 8);
       setDirty(false);
     }
   }, [schedule]);
 
+  // Toda mudanca na arvore passa por aqui - clona (nunca muta o estado anterior direto) e,
+  // depois da mutacao especifica, reaplica a sequencia (predecessora + atraso) pra quem
+  // depende de uma tarefa que acabou de mudar de data ficar sempre coerente.
   function mutateTasks(fn: (clone: EditorTask[]) => void) {
     const clone = cloneTree(tasks);
     fn(clone);
+    aplicarSequencia(clone, workingWeekdays);
     setTasks(clone);
+    setDirty(true);
+  }
+
+  // Troca no calendario (dias uteis) tambem pode empurrar datas - roda a mesma reconciliacao
+  // sem precisar de nenhuma mudanca na arvore em si.
+  function recalcularComCalendario(diasUteis: number[]) {
+    setWorkingWeekdays(diasUteis);
+    setTasks((prev) => {
+      const clone = cloneTree(prev);
+      aplicarSequencia(clone, diasUteis);
+      return clone;
+    });
     setDirty(true);
   }
 
@@ -250,6 +368,8 @@ export default function ShutdownScheduleDetail() {
     return set;
   }, [tasks]);
 
+  const todasAsTarefas = useMemo(() => flattenAll(tasks).map((t) => ({ key: t.key, name: t.name })), [tasks]);
+
   function addTaskFromWorkOrder(os: MaintenanceWorkOrder) {
     mutateTasks((clone) => {
       clone.push(tarefaDeOs(os));
@@ -257,8 +377,10 @@ export default function ShutdownScheduleDetail() {
   }
 
   function updateField(key: string, patch: Partial<EditorTask>) {
-    setTasks((prev) => updateNode(prev, key, patch));
-    setDirty(true);
+    mutateTasks((clone) => {
+      const node = findNode(clone, key);
+      if (node) Object.assign(node, patch);
+    });
   }
 
   function addSiblingAfter(key: string | null) {
@@ -331,8 +453,14 @@ export default function ShutdownScheduleDetail() {
   async function handleSave() {
     setSaving(true);
     try {
-      if (name.trim() && name !== schedule?.name) await updateSchedule(id, { name: name.trim() });
-      if (status !== schedule?.status) await updateSchedule(id, { status });
+      const scheduleChanged =
+        (name.trim() && name !== schedule?.name) ||
+        status !== schedule?.status ||
+        JSON.stringify([...workingWeekdays].sort()) !== JSON.stringify([...(schedule?.workingWeekdays ?? [])].sort()) ||
+        hoursPerDay !== schedule?.hoursPerDay;
+      if (scheduleChanged) {
+        await updateSchedule(id, { name: name.trim() || schedule?.name, status, workingWeekdays, hoursPerDay });
+      }
 
       const list: TaskInput[] = [];
       flattenForSave(tasks, null, list, { n: 0 });
@@ -357,7 +485,7 @@ export default function ShutdownScheduleDetail() {
     setGeneratingKey(task.key);
     try {
       const os = await generateWorkOrderFromTask(id, task.id);
-      updateField(task.key, { workOrderId: os.id, workOrderNumber: os.number, workOrderStatus: os.status });
+      updateField(task.key, { workOrderId: os.id, workOrderNumber: os.number, workOrderStatus: os.status, responsavelNome: null });
       notify("success", `OS ${os.number} gerada e vinculada.`);
     } catch (error) {
       notify("error", getApiErrorMessage(error));
@@ -368,12 +496,12 @@ export default function ShutdownScheduleDetail() {
 
   async function handleUnlinkOs(task: EditorTask) {
     if (!task.id) {
-      updateField(task.key, { workOrderId: null, workOrderNumber: null, workOrderStatus: null });
+      updateField(task.key, { workOrderId: null, workOrderNumber: null, workOrderStatus: null, responsavelNome: null });
       return;
     }
     try {
       await linkWorkOrderToTask(id, task.id, null);
-      updateField(task.key, { workOrderId: null, workOrderNumber: null, workOrderStatus: null });
+      updateField(task.key, { workOrderId: null, workOrderNumber: null, workOrderStatus: null, responsavelNome: null });
     } catch (error) {
       notify("error", getApiErrorMessage(error));
     }
@@ -396,10 +524,12 @@ export default function ShutdownScheduleDetail() {
     }
     const ganttTasks = ganttFlat.map(({ task, depth }) => ({
       id: task.key,
-      name: `${" ".repeat(depth)}${task.name || "(sem nome)"}`,
+      name: `${" ".repeat(depth)}${task.name || "(sem nome)"}${task.responsavelNome ? ` - ${task.responsavelNome}` : ""}`,
       start: task.startDate,
       end: task.endDate,
       progress: task.percentComplete,
+      // Desenha a setinha de dependencia entre predecessora e sucessora, igual ao Project.
+      dependencies: task.predecessorKey ?? "",
       custom_class: task.children.length > 0 ? "shutdown-gantt-group" : "",
     }));
     try {
@@ -411,7 +541,8 @@ export default function ShutdownScheduleDetail() {
           readonly: true,
           readonly_dates: true,
           readonly_progress: true,
-          bar_height: 24,
+          bar_height: 28,
+          container_height: "auto",
         });
       }
     } catch {
@@ -457,6 +588,49 @@ export default function ShutdownScheduleDetail() {
         />
       </div>
 
+      <div className="card mb-6 p-5">
+        <p className="text-sm font-medium text-graphite-700">Calendario</p>
+        <p className="mt-0.5 text-xs text-graphite-500">
+          Usado so pelo reagendamento automatico (predecessora + atraso) pra saber que dias pular - nao limita a data que voce pode digitar numa tarefa.
+        </p>
+        <div className="mt-3 flex flex-wrap items-end gap-4">
+          <div>
+            <span className="mb-1 block text-sm font-medium text-graphite-700">Dias uteis</span>
+            <div className="flex gap-1">
+              {DIAS_DA_SEMANA.map((d) => {
+                const ativo = workingWeekdays.includes(d.valor);
+                return (
+                  <button
+                    key={d.valor}
+                    type="button"
+                    className={`h-9 w-11 rounded-md border text-xs font-medium transition-colors ${
+                      ativo ? "border-navy-700 bg-navy-700 text-white" : "border-gray-200 bg-white text-graphite-500 hover:bg-gray-50"
+                    }`}
+                    onClick={() => {
+                      const novo = ativo ? workingWeekdays.filter((v) => v !== d.valor) : [...workingWeekdays, d.valor];
+                      if (novo.length === 0) return;
+                      recalcularComCalendario(novo);
+                    }}
+                  >
+                    {d.sigla}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <TextInput
+            label="Horas de trabalho por dia"
+            type="number"
+            min={1}
+            max={24}
+            step="0.5"
+            className="w-40"
+            value={hoursPerDay}
+            onChange={(e) => { setHoursPerDay(Number(e.target.value) || 8); setDirty(true); }}
+          />
+        </div>
+      </div>
+
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-semibold text-navy-900">Tarefas ({ganttFlat.length})</h2>
         <div className="flex gap-2">
@@ -483,6 +657,7 @@ export default function ShutdownScheduleDetail() {
             isFirst={i === 0}
             isLast={i === tasks.length - 1}
             generatingKey={generatingKey}
+            allTasks={todasAsTarefas}
             onUpdate={updateField}
             onAddSibling={addSiblingAfter}
             onAddChild={addChild}
@@ -507,7 +682,10 @@ export default function ShutdownScheduleDetail() {
           </div>
         ) : (
           <div className="card overflow-x-auto p-4">
-            <div ref={ganttRef} />
+            {/* frappe-gantt calcula a altura sozinho (container_height:"auto"), mas so' na
+                altura EXATA do conteudo - min-height evita a caixa nascer baixinha (2
+                linhas) num piscar de tela antes desse calculo terminar. */}
+            <div ref={ganttRef} style={{ minHeight: Math.max(200, ganttFlat.length * 40 + 80) }} />
           </div>
         )}
       </div>
@@ -544,14 +722,15 @@ export default function ShutdownScheduleDetail() {
           instrumentId={linkOsTask.instrumentId}
           onClose={() => setLinkOsModalKey(null)}
           onPick={async (os) => {
+            const patch = { workOrderId: os.id, workOrderNumber: os.number, workOrderStatus: os.status, responsavelNome: nomeDoResponsavel(os) };
             if (!linkOsTask.id) {
-              updateField(linkOsTask.key, { workOrderId: os.id, workOrderNumber: os.number, workOrderStatus: os.status });
+              updateField(linkOsTask.key, patch);
               setLinkOsModalKey(null);
               return;
             }
             try {
               await linkWorkOrderToTask(id, linkOsTask.id, os.id);
-              updateField(linkOsTask.key, { workOrderId: os.id, workOrderNumber: os.number, workOrderStatus: os.status });
+              updateField(linkOsTask.key, patch);
               notify("success", `OS ${os.number} vinculada.`);
             } catch (error) {
               notify("error", getApiErrorMessage(error));
@@ -590,6 +769,7 @@ function TaskRow({
   isFirst,
   isLast,
   generatingKey,
+  allTasks,
   onUpdate,
   onAddSibling,
   onAddChild,
@@ -608,6 +788,7 @@ function TaskRow({
   isFirst: boolean;
   isLast: boolean;
   generatingKey: string | null;
+  allTasks: { key: string; name: string }[];
   onUpdate: (key: string, patch: Partial<EditorTask>) => void;
   onAddSibling: (key: string) => void;
   onAddChild: (key: string) => void;
@@ -621,6 +802,8 @@ function TaskRow({
   onLinkOs: (key: string) => void;
   onUnlinkOs: (task: EditorTask) => void;
 }) {
+  const opcoesDePredecessora = allTasks.filter((t) => t.key !== task.key);
+  const temPredecessora = !!task.predecessorKey;
   return (
     <>
       <div className="card p-4" style={{ marginLeft: depth * 24 }}>
@@ -688,12 +871,37 @@ function TaskRow({
                 </button>
               </div>
             )}
+            {task.workOrderId && (
+              <p className="mt-1 text-xs text-graphite-500">
+                Responsavel: {task.responsavelNome ?? <span className="italic text-graphite-400">nao atribuido na OS</span>}
+              </p>
+            )}
           </div>
+
+          <SelectInput
+            label="Predecessora"
+            hint="Comeca so depois que a predecessora termina."
+            placeholder="Sem predecessora (data manual)"
+            options={opcoesDePredecessora.map((t) => ({ value: t.key, label: t.name || "(sem nome)" }))}
+            value={task.predecessorKey ?? ""}
+            onChange={(e) => onUpdate(task.key, { predecessorKey: e.target.value || null })}
+          />
+          {temPredecessora && (
+            <TextInput
+              label="Atraso (dias uteis)"
+              type="number"
+              min={0}
+              value={task.lagDays}
+              onChange={(e) => onUpdate(task.key, { lagDays: Math.max(0, Number(e.target.value) || 0) })}
+            />
+          )}
 
           <TextInput
             label="Inicio"
             type="date"
             value={task.startDate}
+            disabled={temPredecessora}
+            title={temPredecessora ? "Calculado a partir da predecessora - remova a predecessora para editar a mao." : undefined}
             onChange={(e) => onUpdate(task.key, { startDate: e.target.value })}
           />
           <TextInput
@@ -733,6 +941,7 @@ function TaskRow({
           isFirst={i === 0}
           isLast={i === task.children.length - 1}
           generatingKey={generatingKey}
+          allTasks={allTasks}
           onUpdate={onUpdate}
           onAddSibling={onAddSibling}
           onAddChild={onAddChild}
@@ -760,7 +969,7 @@ function LinkWorkOrderModal({
   clientId: string;
   instrumentId: string | null;
   onClose: () => void;
-  onPick: (os: { id: string; number: string; status: string }) => void;
+  onPick: (os: MaintenanceWorkOrder) => void;
 }) {
   const [search, setSearch] = useState("");
   const { data, isFetching } = useQuery({
@@ -783,11 +992,14 @@ function LinkWorkOrderModal({
                 <button
                   type="button"
                   className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-gray-50"
-                  onClick={() => onPick({ id: os.id, number: os.number, status: os.status })}
+                  onClick={() => onPick(os)}
                 >
                   <span className="min-w-0">
                     <span className="block text-sm font-medium text-navy-900">OS {os.number}</span>
-                    <span className="block truncate text-xs text-graphite-400">{os.title || os.description}</span>
+                    <span className="block truncate text-xs text-graphite-400">
+                      {os.title || os.description}
+                      {nomeDoResponsavel(os) ? ` - ${nomeDoResponsavel(os)}` : ""}
+                    </span>
                   </span>
                   <StatusBadge status={os.status} />
                 </button>
@@ -849,6 +1061,7 @@ function PickWorkOrdersModal({
                       <span className="block text-sm font-medium text-navy-900">OS {os.number}</span>
                       <span className="block truncate text-xs text-graphite-400">
                         {(os.title || os.description)} {os.instrument ? `- ${os.instrument.tag ?? os.instrument.description}` : ""}
+                        {nomeDoResponsavel(os) ? ` - ${nomeDoResponsavel(os)}` : ""}
                       </span>
                     </span>
                     {usada ? (

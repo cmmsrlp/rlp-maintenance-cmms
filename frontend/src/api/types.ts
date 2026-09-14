@@ -1479,6 +1479,9 @@ export interface ShutdownSchedule {
   name: string;
   status: ShutdownScheduleStatus;
   notes: string | null;
+  /** 0=domingo...6=sabado - dias que contam como uteis pro reagendamento automatico. */
+  workingWeekdays: number[];
+  hoursPerDay: number;
   taskCount: number;
   startDate: string | null;
   endDate: string | null;
@@ -1490,11 +1493,21 @@ export interface ShutdownSchedule {
 export interface ShutdownTask {
   id: string;
   parentTaskId: string | null;
+  /** Tarefa que precisa terminar antes desta comecar (sequencia tipo MS Project). */
+  predecessorTaskId: string | null;
+  lagDays: number;
   name: string;
   instrumentId: string | null;
   instrument: { id: string; tag: string | null; description: string | null; type: string } | null;
   workOrderId: string | null;
-  workOrder: { id: string; number: string; status: string; type: string } | null;
+  workOrder: {
+    id: string;
+    number: string;
+    status: string;
+    type: string;
+    assignedResource?: { id: string; name: string } | null;
+    technician?: { id: string; name: string } | null;
+  } | null;
   startDate: string;
   endDate: string;
   percentComplete: number;

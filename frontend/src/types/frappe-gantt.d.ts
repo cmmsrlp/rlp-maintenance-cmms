@@ -17,6 +17,7 @@ declare module "frappe-gantt" {
     readonly_progress?: boolean;
     bar_height?: number;
     padding?: number;
+    container_height?: number | "auto";
     on_click?: (task: GanttTask) => void;
     popup_on_click?: (task: GanttTask) => boolean | void;
   }

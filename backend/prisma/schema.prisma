@@ -1875,9 +1875,9 @@ enum ShutdownScheduleStatus {
 
 // Cronograma de uma parada programada (ex.: "PARADA LINHA 4 - DEZ/2015"): uma lista de
 // tarefas com hierarquia (grupo > tarefa > subtarefa), sequencia e datas proprias, no
-// espirito de um Gantt de MS Project - mas sem o motor de reagendamento automatico por
-// dependencia (decisao: manutencao prefere data editavel a mao a uma cadeia que se
-// reagenda sozinha e pode surpreender o planejador).
+// espirito de um Gantt de MS Project - incluindo predecessora/atraso (ShutdownTask.
+// predecessorTaskId/lagDays), que reagendam a tarefa dependente sozinhos quando a
+// predecessora atrasa (calculo feito no editor, ver ShutdownScheduleDetail.tsx).
 model ShutdownSchedule {
   id        String   @id @default(uuid())
   clientId  String
@@ -1885,6 +1885,12 @@ model ShutdownSchedule {
   name      String
   status    ShutdownScheduleStatus @default(PLANNING)
   notes     String?
+  // Calendario deste cronograma - usado so para o reagendamento automatico (predecessora
+  // + atraso) saber que dias pular. 0=domingo...6=sabado; padrao seg-sex. Nao limita quais
+  // dias uma tarefa PODE ter (a pessoa ainda digita a data que quiser a mao), so' guia o
+  // calculo automatico.
+  workingWeekdays Int[]  @default([1, 2, 3, 4, 5])
+  hoursPerDay     Float  @default(8)
   createdById String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1914,6 +1920,14 @@ model ShutdownTask {
   // ja existente, igual ao numero de OS que cada linha do PDF de referencia carrega.
   workOrderId String?
   workOrder   MaintenanceWorkOrder? @relation(fields: [workOrderId], references: [id])
+
+  // Sequencia tipo MS Project: esta tarefa comeca so depois que a predecessora termina
+  // (+ lagDays de folga). Relacao separada da hierarquia (parentTaskId) - uma tarefa pode
+  // depender de uma tarefa de outro grupo, nao so da irma anterior.
+  predecessorTaskId String?
+  predecessor        ShutdownTask?  @relation("ShutdownTaskSequence", fields: [predecessorTaskId], references: [id])
+  successors         ShutdownTask[] @relation("ShutdownTaskSequence")
+  lagDays            Int            @default(0)
 
   startDate DateTime
   endDate   DateTime
