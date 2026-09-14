@@ -18,13 +18,13 @@ import { getApiErrorMessage } from "../../../api/client";
 import { useCmms } from "../../../lib/cmms";
 import { formatDate } from "../../../lib/format";
 
-const schema = z.object({ name: z.string().min(2, "De um nome para o cronograma.") });
+const schema = z.object({ name: z.string().min(2, "Dê um nome para o cronograma.") });
 type FormValues = z.infer<typeof schema>;
 
 const OPCOES_DE_STATUS: { value: ShutdownScheduleStatus; label: string }[] = [
   { value: "PLANNING", label: "Planejamento" },
-  { value: "IN_PROGRESS", label: "Em execucao" },
-  { value: "DONE", label: "Concluido" },
+  { value: "IN_PROGRESS", label: "Em execução" },
+  { value: "DONE", label: "Concluído" },
 ];
 
 /**
@@ -68,7 +68,7 @@ export default function ShutdownSchedulesList() {
     <div>
       <PageHeader
         title="Cronogramas de parada"
-        description="Cronograma tipo projeto para paradas programadas - ativo, sequencia, datas e OS de cada tarefa"
+        description="Cronograma tipo projeto para paradas programadas - ativo, sequência, datas e OS de cada tarefa"
         breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Cronogramas de parada" }]}
         actions={
           clientId && (
@@ -109,7 +109,7 @@ export default function ShutdownSchedulesList() {
           pagination={data}
           onPageChange={setPage}
           emptyTitle="Nenhum cronograma cadastrado"
-          emptyDescription="Crie um cronograma para montar a sequencia de tarefas de uma parada programada."
+          emptyDescription="Crie um cronograma para montar a sequência de tarefas de uma parada programada."
           columns={[
             {
               header: "Cronograma",

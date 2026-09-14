@@ -698,7 +698,7 @@ export default function ShutdownScheduleDetail() {
     <div>
       <PageHeader
         title={schedule.name}
-        description="Cronograma tipo projeto: ativo, sequencia, datas e OS de cada tarefa da parada"
+        description="Cronograma tipo projeto: ativo, sequência, datas e OS de cada tarefa da parada"
         breadcrumbs={[
           { label: "RLP Maintenance CMMS", to: base },
           { label: "Cronogramas de parada", to: `${base}/cronogramas-parada` },
@@ -726,13 +726,13 @@ export default function ShutdownScheduleDetail() {
       </div>
 
       <div className="card mb-6 p-5">
-        <p className="text-sm font-medium text-graphite-700">Calendario</p>
+        <p className="text-sm font-medium text-graphite-700">Calendário</p>
         <p className="mt-0.5 text-xs text-graphite-500">
           Usado so pelo reagendamento automatico (predecessora + atraso) pra saber que dias pular - nao limita a data/hora que voce pode digitar numa tarefa.
         </p>
         <div className="mt-3 flex flex-wrap items-end gap-4">
           <div>
-            <span className="mb-1 block text-sm font-medium text-graphite-700">Dias uteis (padrao semanal)</span>
+            <span className="mb-1 block text-sm font-medium text-graphite-700">Dias úteis (padrão semanal)</span>
             <div className="flex gap-1">
               {DIAS_DA_SEMANA.map((d) => {
                 const ativo = workingWeekdays.includes(d.valor);
@@ -767,7 +767,7 @@ export default function ShutdownScheduleDetail() {
             onChange={(e) => { setHoursPerDay(Number(e.target.value) || 8); setDirty(true); }}
           />
           <TextInput
-            label="Expediente - inicio"
+            label="Expediente - início"
             type="time"
             className="w-36"
             disabled={shift24h}
@@ -829,8 +829,8 @@ export default function ShutdownScheduleDetail() {
                       recalcularComCalendario(workingWeekdays, novas);
                     }}
                   >
-                    <option value="0">Nao e dia util</option>
-                    <option value="1">E dia util</option>
+                    <option value="0">Não é dia útil</option>
+                    <option value="1">É dia útil</option>
                   </select>
                   {exc.working && (
                     <>
@@ -847,7 +847,7 @@ export default function ShutdownScheduleDetail() {
                           <input
                             type="time"
                             className="input w-28"
-                            placeholder="Inicio"
+                            placeholder="Início"
                             value={exc.shiftStart ?? ""}
                             onChange={(e) => setDateExceptions(dateExceptions.map((x, j) => (j === i ? { ...x, shiftStart: e.target.value } : x)))}
                           />
@@ -865,7 +865,7 @@ export default function ShutdownScheduleDetail() {
                   <button
                     type="button"
                     className="icon-btn ml-auto text-graphite-400 hover:text-safety-red"
-                    title="Remover excecao"
+                    title="Remover exceção"
                     onClick={() => {
                       const novas = dateExceptions.filter((_, j) => j !== i);
                       setDateExceptions(novas);
@@ -1015,7 +1015,7 @@ export default function ShutdownScheduleDetail() {
       <ConfirmDialog
         open={!!removeKey}
         title="Remover tarefa"
-        description="Remove esta tarefa e todas as subtarefas dela. So passa a valer depois de Salvar."
+        description="Remove esta tarefa e todas as subtarefas dela. Só passa a valer depois de Salvar."
         confirmLabel="Remover"
         danger
         onConfirm={() => { if (removeKey) removeSubtree(removeKey); setRemoveKey(null); }}
@@ -1148,14 +1148,14 @@ function TaskRow({
             )}
             {task.workOrderId && (
               <p className="mt-1 text-xs text-graphite-500">
-                Responsavel: {task.responsavelNome ?? <span className="italic text-graphite-400">nao atribuido na OS</span>}
+                Responsável: {task.responsavelNome ?? <span className="italic text-graphite-400">não atribuído na OS</span>}
               </p>
             )}
           </div>
 
           <SelectInput
             label="Predecessora"
-            hint="Comeca so depois que a predecessora termina."
+            hint="Começa só depois que a predecessora termina."
             placeholder="Sem predecessora (data manual)"
             options={opcoesDePredecessora.map((t) => ({ value: t.key, label: t.name || "(sem nome)" }))}
             value={task.predecessorKey ?? ""}
@@ -1163,7 +1163,7 @@ function TaskRow({
           />
           {temPredecessora && (
             <TextInput
-              label="Atraso (dias uteis)"
+              label="Atraso (dias úteis)"
               type="number"
               min={0}
               value={task.lagDays}
@@ -1172,7 +1172,7 @@ function TaskRow({
           )}
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-graphite-700">Inicio</label>
+            <label className="mb-1 block text-sm font-medium text-graphite-700">Início</label>
             <div className="flex gap-1.5">
               <input
                 type="date"
@@ -1277,7 +1277,7 @@ function LinkWorkOrderModal({
     <Modal open onClose={onClose} title="Vincular OS existente" size="md">
       <div className="space-y-3">
         <InstrumentPicker label="Filtrar por ativo (opcional)" clientId={clientId} name="filtroAtivo" value={filtroAtivoId} onChange={(e) => setFiltroAtivoId(e.target.value)} />
-        <TextInput placeholder="Buscar por numero ou descricao" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <TextInput placeholder="Buscar por número ou descrição" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
       <div className="mt-3 max-h-80 overflow-y-auto rounded-lg border border-gray-200">
         {isFetching ? (
@@ -1339,10 +1339,10 @@ function PickWorkOrdersModal({
 
   return (
     <Modal open onClose={onClose} title="Adicionar tarefas a partir de OS" size="md">
-      <p className="mb-3 text-xs text-graphite-500">Clique numa OS para cria-la como tarefa. Pode escolher varias antes de fechar.</p>
+      <p className="mb-3 text-xs text-graphite-500">Clique numa OS para criá-la como tarefa. Pode escolher várias antes de fechar.</p>
       <div className="space-y-3">
         <InstrumentPicker label="Filtrar por ativo (opcional)" clientId={clientId} name="filtroAtivo" value={filtroAtivoId} onChange={(e) => setFiltroAtivoId(e.target.value)} />
-        <TextInput placeholder="Buscar por numero ou descricao" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <TextInput placeholder="Buscar por número ou descrição" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
       <div className="mt-3 max-h-96 overflow-y-auto rounded-lg border border-gray-200">
         {isFetching ? (
