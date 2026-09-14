@@ -66,11 +66,11 @@ export default function WorkOrdersList() {
       }
 
       const csv = buildCsv(todas, [
-        { label: "Numero", value: (o) => o.number },
+        { label: "Número", value: (o) => o.number },
         ...(isClient ? [] : [{ label: "Cliente", value: (o: MaintenanceWorkOrder) => clientDisplayName(o.client) }]),
         { label: "Ativo", value: (o) => o.instrument?.tag ?? "" },
         { label: "Tipo", value: (o) => rotuloDoTipo(o.type, o.correctiveType) },
-        ...(isClient ? [] : [{ label: "Tecnico", value: (o: MaintenanceWorkOrder) => o.technician?.name ?? "" }]),
+        ...(isClient ? [] : [{ label: "Técnico", value: (o: MaintenanceWorkOrder) => o.technician?.name ?? "" }]),
         { label: "Agendada", value: (o) => formatDate(o.scheduledDate) },
         { label: "Status", value: (o) => statusLabel(o.status) },
       ]);
@@ -114,7 +114,7 @@ export default function WorkOrdersList() {
   return (
     <div>
       <PageHeader
-        title="Ordens de manutencao"
+        title="Ordens de manutenção"
         description="OS preventivas e corretivas"
         breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Ordens" }]}
         actions={
@@ -141,7 +141,7 @@ export default function WorkOrdersList() {
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-graphite-400" />
           <input
             className="input pl-9"
-            placeholder="Buscar por numero..."
+            placeholder="Buscar por número..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
@@ -153,11 +153,11 @@ export default function WorkOrdersList() {
           <option value="PLANNED">Planejada</option>
           <option value="PROGRAMMED">Programada</option>
           <option value="RELEASED">Liberada</option>
-          <option value="IN_PROGRESS">Em execucao</option>
+          <option value="IN_PROGRESS">Em execução</option>
           <option value="AWAITING_MATERIAL">Aguardando material</option>
-          <option value="AWAITING_RELEASE">Aguardando liberacao</option>
+          <option value="AWAITING_RELEASE">Aguardando liberação</option>
           <option value="AWAITING_STOPPAGE">Aguardando parada</option>
-          <option value="COMPLETED">Concluida</option>
+          <option value="COMPLETED">Concluída</option>
           <option value="CANCELED">Cancelada</option>
         </select>
         <select className="input sm:w-56" value={type} onChange={(e) => { setType(e.target.value as MaintenanceOrderType | ""); setPage(1); }}>
@@ -175,7 +175,7 @@ export default function WorkOrdersList() {
         onRowClick={(o) => navigate(`${base}/ordens/${o.id}`)}
         pagination={data}
         onPageChange={setPage}
-        emptyTitle="Nenhuma ordem de manutencao"
+        emptyTitle="Nenhuma ordem de manutenção"
         emptyDescription="Ordens nascem sozinhas dos planos preventivos, ou crie uma corretiva na hora."
         emptyAction={
           canManage && (
@@ -198,11 +198,11 @@ export default function WorkOrdersList() {
               />
             ),
           },
-          { header: "Numero", accessor: (o) => <span className="font-medium text-navy-900">{o.number}</span> },
+          { header: "Número", accessor: (o) => <span className="font-medium text-navy-900">{o.number}</span> },
           ...(isClient ? [] : [{ header: "Cliente", accessor: (o: MaintenanceWorkOrder) => clientDisplayName(o.client) }]),
           { header: "Ativo", accessor: (o) => o.instrument?.tag ?? "-" },
           { header: "Tipo", accessor: (o) => rotuloDoTipo(o.type, o.correctiveType) },
-          ...(isClient ? [] : [{ header: "Tecnico", accessor: (o: MaintenanceWorkOrder) => o.technician?.name ?? "-" }]),
+          ...(isClient ? [] : [{ header: "Técnico", accessor: (o: MaintenanceWorkOrder) => o.technician?.name ?? "-" }]),
           { header: "Agendada", accessor: (o) => formatDate(o.scheduledDate) },
           { header: "Status", accessor: (o) => <StatusBadge status={o.status} /> },
         ]}

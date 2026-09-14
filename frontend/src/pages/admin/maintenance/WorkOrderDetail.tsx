@@ -52,12 +52,12 @@ import { imprimirOS } from "../../../lib/printWorkOrder";
 
 const RESULT_OPTIONS: { value: ChecklistItemResult; label: string; tone: string }[] = [
   { value: "OK", label: "OK", tone: "bg-green-50 text-safety-green-dark border-green-200" },
-  { value: "NOT_OK", label: "Nao OK", tone: "bg-red-50 text-safety-red border-red-200" },
+  { value: "NOT_OK", label: "Não OK", tone: "bg-red-50 text-safety-red border-red-200" },
   { value: "NA", label: "N/A", tone: "bg-graphite-100 text-graphite-600 border-graphite-200" },
 ];
 
 import { rotuloDoTipo, GRAVIDADES_DE_FALHA } from "../../../lib/maintenanceLabels";
-const PRIORITY_LABELS: Record<string, string> = { LOW: "Baixa", MEDIUM: "Media", HIGH: "Alta", CRITICAL: "Critica" };
+const PRIORITY_LABELS: Record<string, string> = { LOW: "Baixa", MEDIUM: "Média", HIGH: "Alta", CRITICAL: "Crítica" };
 const HOUR_TYPE_LABELS: Record<LaborHourType, string> = { NORMAL: "Normal", OVERTIME: "Extra", NIGHT: "Noturna" };
 
 export default function WorkOrderDetail() {
@@ -135,7 +135,7 @@ export default function WorkOrderDetail() {
     setOcupadoResp(true);
     try {
       await definirResponsavel(id, resourceId);
-      notify("success", resourceId ? "Responsavel definido." : "Responsavel removido.");
+      notify("success", resourceId ? "Responsável definido." : "Responsável removido.");
       invalidate();
       queryClient.invalidateQueries({ queryKey: ["maintenance-schedule"] });
     } catch (error) {
@@ -154,8 +154,8 @@ export default function WorkOrderDetail() {
       notify(
         "success",
         atualizada.assignedResource
-          ? `OS liberada - responsavel: ${atualizada.assignedResource.name}.`
-          : "OS liberada. Defina o responsavel abaixo.",
+          ? `OS liberada - responsável: ${atualizada.assignedResource.name}.`
+          : "OS liberada. Defina o responsável abaixo.",
       );
       invalidate();
     } catch (error) {
@@ -327,7 +327,7 @@ export default function WorkOrderDetail() {
     setBusy(true);
     try {
       await addWorkOrderThirdPartyService(id, { supplierName, description: serviceDescription, cost: serviceCost });
-      notify("success", "Servico de terceiro registrado.");
+      notify("success", "Serviço de terceiro registrado.");
       setSupplierName("");
       setServiceDescription("");
       setServiceCost(0);
@@ -483,11 +483,11 @@ export default function WorkOrderDetail() {
   // O mesmo que o backend cobra na conclusao - mostrado antes, para nao virar surpresa na
   // hora de fechar a OS.
   const faltaParaConcluir = [
-    !workOrder.failureStartedAt && "inicio da falha",
-    !workOrder.failureEndedAt && "termino da falha",
+    !workOrder.failureStartedAt && "início da falha",
+    !workOrder.failureEndedAt && "término da falha",
     !workOrder.failureCodeId && "categoria da falha",
     !workOrder.failureSeverity && "gravidade",
-    !workOrder.failureDescription?.trim() && "descricao da falha",
+    !workOrder.failureDescription?.trim() && "descrição da falha",
   ].filter(Boolean) as string[];
 
   // Tempo parado sai da janela informada - nunca e' digitado, para nao divergir das datas.
@@ -578,8 +578,8 @@ export default function WorkOrderDetail() {
 
       <Tabs
         tabs={[
-          { id: "geral", label: "Visao geral" },
-          { id: "execucao", label: "Execucao" },
+          { id: "geral", label: "Visão geral" },
+          { id: "execucao", label: "Execução" },
           { id: "equipe", label: "Equipe e horas" },
           { id: "materiais", label: "Materiais" },
           { id: "custos", label: "Custos" },
@@ -610,7 +610,7 @@ export default function WorkOrderDetail() {
                 <option value="PROGRAMMED">Programada</option>
                 <option value="RELEASED">Liberada</option>
                 <option value="AWAITING_MATERIAL">Aguardando material</option>
-                <option value="AWAITING_RELEASE">Aguardando liberacao</option>
+                <option value="AWAITING_RELEASE">Aguardando liberação</option>
                 <option value="AWAITING_STOPPAGE">Aguardando parada</option>
                 <option value="CANCELED">Cancelada</option>
               </select>
@@ -639,7 +639,7 @@ export default function WorkOrderDetail() {
             </div>
           )}
           <dl className="grid gap-4 sm:grid-cols-2">
-            {!isClient && <Info label="Tecnico" value={workOrder.technician?.name ?? "-"} />}
+            {!isClient && <Info label="Técnico" value={workOrder.technician?.name ?? "-"} />}
             <div>
               <p className="text-xs uppercase tracking-wide text-graphite-400">Quem vai executar</p>
               <p className="mt-0.5 font-medium text-navy-900">
@@ -663,7 +663,7 @@ export default function WorkOrderDetail() {
                     <LaborResourcePicker
                       label=""
                       className="sm:w-64"
-                      placeholder="Sem responsavel"
+                      placeholder="Sem responsável"
                       disabled={ocupadoResp}
                       clientId={workOrder.clientId}
                       name="assignedResourceId"
@@ -675,7 +675,7 @@ export default function WorkOrderDetail() {
               )}
             </div>
             <Info label="Programada para" value={workOrder.scheduledDate ? formatDateTime(workOrder.scheduledDate).slice(0, 10) : "-"} />
-            <Info label="Codigo de falha" value={workOrder.failureCode ? `${workOrder.failureCode.code} - ${workOrder.failureCode.description}` : "-"} />
+            <Info label="Código de falha" value={workOrder.failureCode ? `${workOrder.failureCode.code} - ${workOrder.failureCode.description}` : "-"} />
             {/* Vinculo duplo: instrumentId acima (no cabecalho da OS) e' o local funcional;
                 isto e' a unidade fisica que apresentou a falha, quando houver uma vinculada. */}
             <Info label="Equipamento instalado" value={workOrder.rotableEquipment ? `${workOrder.rotableEquipment.code} (${workOrder.rotableEquipment.type})` : "-"} />
@@ -684,10 +684,10 @@ export default function WorkOrderDetail() {
             {/* Decisao do planejador na conversao da solicitacao: quem executa precisa
                 saber se pode fazer com a maquina rodando ou se espera a parada. */}
             {workOrder.executionCondition && (
-              <Info label="Condicao de execucao" value={CONDICOES_DE_EXECUCAO[workOrder.executionCondition]} />
+              <Info label="Condição de execução" value={CONDICOES_DE_EXECUCAO[workOrder.executionCondition]} />
             )}
             <Info label="Iniciada em" value={formatDateTime(workOrder.startedAt)} />
-            <Info label="Concluida em" value={formatDateTime(workOrder.completedAt)} />
+            <Info label="Concluída em" value={formatDateTime(workOrder.completedAt)} />
             {/* Estimado e realizado lado a lado: e' a comparacao que diz se o plano esta
                 dimensionado certo. */}
             <Info label="Horas estimadas" value={workOrder.estimatedHours != null ? `${workOrder.estimatedHours}h` : "-"} />
@@ -697,7 +697,7 @@ export default function WorkOrderDetail() {
           </dl>
           {workOrder.observations && (
             <div>
-              <p className="text-xs uppercase tracking-wide text-graphite-400">Observacoes</p>
+              <p className="text-xs uppercase tracking-wide text-graphite-400">Observações</p>
               <p className="mt-1 text-sm text-graphite-700">{workOrder.observations}</p>
             </div>
           )}
@@ -714,13 +714,13 @@ export default function WorkOrderDetail() {
             <h2 className="font-semibold text-navy-900">Rastreabilidade</h2>
             {workOrder.serviceRequest && (
               <Link to={`${base}/solicitacoes/${workOrder.serviceRequest.id}`} className="flex items-center justify-between text-sm text-navy-700 hover:underline">
-                <span>Originada da solicitacao de servico <span className="font-medium">{workOrder.serviceRequest.number}</span></span>
+                <span>Originada da solicitação de serviço <span className="font-medium">{workOrder.serviceRequest.number}</span></span>
                 <StatusBadge status={workOrder.serviceRequest.status} />
               </Link>
             )}
             {workOrder.originWorkOrder && (
               <Link to={`${base}/ordens/${workOrder.originWorkOrder.id}`} className="block text-sm text-navy-700 hover:underline">
-                Anomalia identificada na inspecao da OS <span className="font-medium">{workOrder.originWorkOrder.number}</span>
+                Anomalia identificada na inspeção da OS <span className="font-medium">{workOrder.originWorkOrder.number}</span>
                 {workOrder.originChecklistItem && <span className="text-graphite-500"> - item: "{workOrder.originChecklistItem.description}"</span>}
               </Link>
             )}
@@ -747,7 +747,7 @@ export default function WorkOrderDetail() {
       {tab === "execucao" && (
         <div className="space-y-6">
         <div className="card space-y-3 p-5">
-          <h2 className="font-semibold text-navy-900">Checklist de execucao</h2>
+          <h2 className="font-semibold text-navy-900">Checklist de execução</h2>
           {!workOrder.checklist || workOrder.checklist.length === 0 ? (
             <p className="text-sm text-graphite-500">Nenhum item de checklist.</p>
           ) : (
@@ -897,14 +897,14 @@ export default function WorkOrderDetail() {
                   disabled={!canManage || isCompleted}
                   onChange={(e) => handleSalvarFalha({ failureSeverity: (e.target.value || null) as FailureSeverity | null })}
                 >
-                  <option value="">Nao informada</option>
+                  <option value="">Não informada</option>
                   {GRAVIDADES_DE_FALHA.map((g) => (
                     <option key={g.valor} value={g.valor}>{g.rotulo}</option>
                   ))}
                 </select>
               </label>
               <label className="block">
-                <span className="mb-1 block text-sm font-medium text-graphite-700">Perda de producao</span>
+                <span className="mb-1 block text-sm font-medium text-graphite-700">Perda de produção</span>
                 <input
                   type="number"
                   step="any"
@@ -920,11 +920,11 @@ export default function WorkOrderDetail() {
 
             <label className="block">
               <span className="mb-1 block text-sm font-medium text-graphite-700">
-                Descricao da falha / sintoma{ehQuebra && <span className="ml-1 text-safety-red">*</span>}
+                Descrição da falha / sintoma{ehQuebra && <span className="ml-1 text-safety-red">*</span>}
               </span>
               <textarea
                 className="input min-h-[70px]"
-                placeholder="O que aconteceu, na descricao de quem foi ver."
+                placeholder="O que aconteceu, na descrição de quem foi ver."
                 defaultValue={workOrder.failureDescription ?? ""}
                 disabled={!canManage || isCompleted}
                 onBlur={(e) => {
@@ -934,7 +934,7 @@ export default function WorkOrderDetail() {
             </label>
 
             <label className="block">
-              <span className="mb-1 block text-sm font-medium text-graphite-700">Acao corretiva tomada</span>
+              <span className="mb-1 block text-sm font-medium text-graphite-700">Ação corretiva tomada</span>
               <textarea
                 className="input min-h-[70px]"
                 placeholder="O que foi feito para corrigir a falha."
@@ -966,12 +966,12 @@ export default function WorkOrderDetail() {
                 <p className="text-sm text-graphite-600">
                   RCA aberta para esta falha.{" "}
                   <Link to={`${base}/manutencao/rca/${workOrder.rootCauseAnalyses[0].id}`} className="font-medium text-navy-700 hover:underline">
-                    Ver analise
+                    Ver análise
                   </Link>
                 </p>
               ) : (
                 <>
-                  <p className="text-sm text-graphite-600">Falha recorrente ou de grande impacto? Abra uma analise de causa raiz.</p>
+                  <p className="text-sm text-graphite-600">Falha recorrente ou de grande impacto? Abra uma análise de causa raiz.</p>
                   <Link to={`${base}/manutencao/rca/novo?workOrderId=${workOrder.id}`} className="btn-outline ml-auto text-sm">
                     Abrir RCA
                   </Link>
@@ -1179,8 +1179,8 @@ export default function WorkOrderDetail() {
               <table className="w-full text-sm">
                 <thead className="border-b border-gray-200 bg-gray-50 text-left text-xs uppercase tracking-wide text-graphite-500">
                   <tr>
-                    <th className="px-3 py-2">Peca</th>
-                    <th className="px-3 py-2 text-right">Necessario</th>
+                    <th className="px-3 py-2">Peça</th>
+                    <th className="px-3 py-2 text-right">Necessário</th>
                     <th className="px-3 py-2 text-right">Reservado</th>
                     <th className="px-3 py-2 text-right">Consumido</th>
                     <th className="px-3 py-2 text-right">Saldo livre</th>
@@ -1194,8 +1194,8 @@ export default function WorkOrderDetail() {
                       <td className="px-3 py-2">
                         <p className="font-medium text-navy-900">{m.nome}</p>
                         <p className="text-xs text-graphite-400">
-                          {m.obrigatorio ? "Obrigatorio" : "Opcional"}
-                          {m.abaixoDoMinimo && <span className="ml-1 text-safety-red">- abaixo do estoque minimo</span>}
+                          {m.obrigatorio ? "Obrigatório" : "Opcional"}
+                          {m.abaixoDoMinimo && <span className="ml-1 text-safety-red">- abaixo do estoque mínimo</span>}
                         </p>
                       </td>
                       <td className="px-3 py-2 text-right font-medium text-navy-900">{m.previsto} {m.unidade}</td>
@@ -1226,7 +1226,7 @@ export default function WorkOrderDetail() {
               {" x realizado: "}
               <span className="font-semibold text-navy-900">{formatCurrency(workOrder.materialSummary.custoRealizado)}</span>
               {workOrder.materialSummary.custoPrevisto == null && (
-                <span className="text-xs text-graphite-500"> (alguma peca esta sem custo unitario cadastrado)</span>
+                <span className="text-xs text-graphite-500"> (alguma peça está sem custo unitário cadastrado)</span>
               )}
             </p>
           </div>
@@ -1341,19 +1341,19 @@ export default function WorkOrderDetail() {
           <div className="card space-y-2 p-5">
             <h2 className="font-semibold text-navy-900">Custo desta OS</h2>
             <dl className="space-y-1.5 text-sm">
-              <div className="flex justify-between"><dt className="text-graphite-500">Pecas</dt><dd className="font-medium text-graphite-800">{partsCostKnown ? formatCurrency(partsCost) : "Nao rastreado"}</dd></div>
-              <div className="flex justify-between"><dt className="text-graphite-500">Mao de obra</dt><dd className="font-medium text-graphite-800">{laborCostKnown ? formatCurrency(laborCost) : "Nao rastreado"}</dd></div>
-              <div className="flex justify-between"><dt className="text-graphite-500">Terceiros</dt><dd className="font-medium text-graphite-800">{thirdPartyCostKnown ? formatCurrency(thirdPartyCost) : "Nao rastreado"}</dd></div>
+              <div className="flex justify-between"><dt className="text-graphite-500">Peças</dt><dd className="font-medium text-graphite-800">{partsCostKnown ? formatCurrency(partsCost) : "Não rastreado"}</dd></div>
+              <div className="flex justify-between"><dt className="text-graphite-500">Mão de obra</dt><dd className="font-medium text-graphite-800">{laborCostKnown ? formatCurrency(laborCost) : "Não rastreado"}</dd></div>
+              <div className="flex justify-between"><dt className="text-graphite-500">Terceiros</dt><dd className="font-medium text-graphite-800">{thirdPartyCostKnown ? formatCurrency(thirdPartyCost) : "Não rastreado"}</dd></div>
               <div className="flex justify-between border-t border-gray-100 pt-1.5"><dt className="font-semibold text-navy-900">Total</dt><dd className="font-semibold text-navy-900">{formatCurrency(partsCost + laborCost + thirdPartyCost)}</dd></div>
             </dl>
           </div>
         )}
         <div className="card space-y-3 p-5">
-          <h2 className="font-semibold text-navy-900">Servicos de terceiros</h2>
+          <h2 className="font-semibold text-navy-900">Serviços de terceiros</h2>
           {canManage && !isCompleted && (
             <div className="space-y-2">
               <input className="input" placeholder="Fornecedor" value={supplierName} onChange={(e) => setSupplierName(e.target.value)} />
-              <input className="input" placeholder="Descricao do servico" value={serviceDescription} onChange={(e) => setServiceDescription(e.target.value)} />
+              <input className="input" placeholder="Descrição do serviço" value={serviceDescription} onChange={(e) => setServiceDescription(e.target.value)} />
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -1371,7 +1371,7 @@ export default function WorkOrderDetail() {
             </div>
           )}
           {!workOrder.thirdPartyServices || workOrder.thirdPartyServices.length === 0 ? (
-            <p className="text-sm text-graphite-500">Nenhum servico de terceiro.</p>
+            <p className="text-sm text-graphite-500">Nenhum serviço de terceiro.</p>
           ) : (
             <ul className="divide-y divide-gray-100">
               {workOrder.thirdPartyServices.map((s) => (
@@ -1381,7 +1381,7 @@ export default function WorkOrderDetail() {
                     <p className="text-xs text-graphite-400">{s.description}</p>
                   </div>
                   {canManage && !isCompleted && (
-                    <button onClick={() => handleRemoveThirdPartyService(s.id)} className="text-graphite-400 hover:text-safety-red" aria-label="Remover servico">
+                    <button onClick={() => handleRemoveThirdPartyService(s.id)} className="text-graphite-400 hover:text-safety-red" aria-label="Remover serviço">
                       <X className="h-4 w-4" />
                     </button>
                   )}
@@ -1509,14 +1509,14 @@ function WorkOrderTeam({
       <h2 className="font-semibold text-navy-900">Equipe da OS</h2>
 
       <div>
-        <p className="text-xs uppercase tracking-wide text-graphite-400">Responsavel</p>
+        <p className="text-xs uppercase tracking-wide text-graphite-400">Responsável</p>
         {workOrder.assignedResource ? (
           <p className="mt-1 text-sm font-medium text-graphite-800">
             {workOrder.assignedResource.name} <span className="font-normal text-graphite-500">- {workOrder.assignedResource.type}</span>
           </p>
         ) : (
           <p className="mt-1 text-sm text-graphite-500">
-            Sem responsavel definido. Defina pelo quadro de Programacao, arrastando a OS para a pessoa e o dia.
+            Sem responsável definido. Defina pelo quadro de Programação, arrastando a OS para a pessoa e o dia.
           </p>
         )}
       </div>
@@ -1524,7 +1524,7 @@ function WorkOrderTeam({
       <div>
         <p className="mb-1.5 text-xs uppercase tracking-wide text-graphite-400">Equipe de apoio</p>
         {(workOrder.assignees ?? []).length === 0 ? (
-          <p className="text-sm text-graphite-500">Ninguem alem do responsavel.</p>
+          <p className="text-sm text-graphite-500">Ninguém além do responsável.</p>
         ) : (
           <ul className="divide-y divide-gray-100">
             {(workOrder.assignees ?? []).map((a) => (
@@ -1603,7 +1603,7 @@ function SubstituteRotableModal({ workOrder, onClose, onDone }: { workOrder: Mai
 
   async function submit() {
     if (!outgoing) {
-      notify("error", "Este ativo nao tem equipamento recondicionavel instalado agora.");
+      notify("error", "Este ativo não tem equipamento recondicionável instalado agora.");
       return;
     }
     if (!incomingRotableId) {
@@ -1623,7 +1623,7 @@ function SubstituteRotableModal({ workOrder, onClose, onDone }: { workOrder: Mai
         openRepairOrder,
         repairOrder: openRepairOrder ? { defectReported: defectReported || null, failureCodeId: failureCodeId || null, vendor: vendor || null } : null,
       });
-      notify("success", "Equipamento substituido.");
+      notify("success", "Equipamento substituído.");
       onDone();
     } catch (error) {
       notify("error", getApiErrorMessage(error));
@@ -1642,7 +1642,7 @@ function SubstituteRotableModal({ workOrder, onClose, onDone }: { workOrder: Mai
         <>
           <button type="button" className="btn-outline" onClick={onClose}>Cancelar</button>
           <button type="button" className="btn-primary" disabled={saving || !outgoing} onClick={() => void submit()}>
-            {saving ? "Substituindo..." : "Confirmar substituicao"}
+            {saving ? "Substituindo..." : "Confirmar substituição"}
           </button>
         </>
       }
@@ -1651,7 +1651,7 @@ function SubstituteRotableModal({ workOrder, onClose, onDone }: { workOrder: Mai
         {!instalados ? (
           <p className="text-sm text-graphite-500">Carregando...</p>
         ) : !outgoing ? (
-          <p className="text-sm text-safety-red">Este ativo nao tem equipamento recondicionavel instalado agora - nao ha o que substituir.</p>
+          <p className="text-sm text-safety-red">Este ativo não tem equipamento recondicionável instalado agora - não há o que substituir.</p>
         ) : (
           <>
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm">
@@ -1661,15 +1661,15 @@ function SubstituteRotableModal({ workOrder, onClose, onDone }: { workOrder: Mai
 
             <div className="grid gap-4 sm:grid-cols-2">
               <TextInput label="Motivo da retirada" placeholder="Ex.: falha, quebra, preventiva" value={removalReason} onChange={(e) => setRemovalReason(e.target.value)} />
-              <TextInput label="Condicao na retirada" placeholder="Ex.: rolamento gripado" value={conditionAtRemoval} onChange={(e) => setConditionAtRemoval(e.target.value)} />
+              <TextInput label="Condição na retirada" placeholder="Ex.: rolamento gripado" value={conditionAtRemoval} onChange={(e) => setConditionAtRemoval(e.target.value)} />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <TextInput label="Horimetro na retirada" type="number" value={meterReadingAtRemoval} onChange={(e) => setMeterReadingAtRemoval(e.target.value)} />
-              <TextInput label="Horimetro do reserva na instalacao" type="number" value={meterReadingAtInstall} onChange={(e) => setMeterReadingAtInstall(e.target.value)} />
+              <TextInput label="Horímetro na retirada" type="number" value={meterReadingAtRemoval} onChange={(e) => setMeterReadingAtRemoval(e.target.value)} />
+              <TextInput label="Horímetro do reserva na instalação" type="number" value={meterReadingAtInstall} onChange={(e) => setMeterReadingAtInstall(e.target.value)} />
             </div>
 
             <SelectInput
-              label="Equipamento reserva (compativel)"
+              label="Equipamento reserva (compatível)"
               required
               placeholder={reservas && reservas.items.length === 0 ? "Nenhum equipamento em estoque deste tipo" : "Selecione"}
               options={(reservas?.items ?? []).map((r) => ({ value: r.id, label: `${r.code}${r.serialNumber ? ` - S/N ${r.serialNumber}` : ""}` }))}
@@ -1687,8 +1687,8 @@ function SubstituteRotableModal({ workOrder, onClose, onDone }: { workOrder: Mai
                 <TextareaInput label="Defeito informado" rows={2} value={defectReported} onChange={(e) => setDefectReported(e.target.value)} />
                 <div className="grid gap-4 sm:grid-cols-2">
                   <SelectInput
-                    label="Codigo de falha (opcional)"
-                    placeholder="Nao especificar"
+                    label="Código de falha (opcional)"
+                    placeholder="Não especificar"
                     options={(failureCodes ?? []).map((f) => ({ value: f.id, label: `${f.code} - ${f.description}` }))}
                     value={failureCodeId}
                     onChange={(e) => setFailureCodeId(e.target.value)}
