@@ -1466,3 +1466,39 @@ export interface ResultadoDaImportacao {
   /** Ja existiam e tiveram campos VAZIOS preenchidos (so no modo "completar"). */
   completados: { aba: string; linha: number; motivo: string }[];
 }
+
+// ---------------------------------------------------------------------------
+// Cronograma de parada programada
+// ---------------------------------------------------------------------------
+
+export type ShutdownScheduleStatus = "PLANNING" | "IN_PROGRESS" | "DONE";
+
+export interface ShutdownSchedule {
+  id: string;
+  clientId: string;
+  name: string;
+  status: ShutdownScheduleStatus;
+  notes: string | null;
+  taskCount: number;
+  startDate: string | null;
+  endDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+  tasks?: ShutdownTask[];
+}
+
+export interface ShutdownTask {
+  id: string;
+  parentTaskId: string | null;
+  name: string;
+  instrumentId: string | null;
+  instrument: { id: string; tag: string | null; description: string | null; type: string } | null;
+  workOrderId: string | null;
+  workOrder: { id: string; number: string; status: string; type: string } | null;
+  startDate: string;
+  endDate: string;
+  percentComplete: number;
+  resources: string | null;
+  notes: string | null;
+  sortOrder: number;
+}

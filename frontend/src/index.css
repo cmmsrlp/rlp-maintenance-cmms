@@ -51,6 +51,10 @@
   .btn-sm {
     @apply px-3 py-1.5 text-xs;
   }
+  .icon-btn {
+    @apply inline-flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-graphite-500
+      transition-colors hover:bg-gray-50 hover:text-navy-800 disabled:cursor-not-allowed disabled:opacity-40;
+  }
 
   .card {
     @apply rounded-xl border border-gray-200 bg-white shadow-card;

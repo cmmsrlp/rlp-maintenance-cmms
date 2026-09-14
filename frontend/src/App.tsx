@@ -57,6 +57,8 @@ const MaintenancePlanDetail = lazyPagina(() => import("./pages/admin/maintenance
 const MaintenancePlanTemplatesList = lazyPagina(() => import("./pages/admin/maintenance/MaintenancePlanTemplatesList"));
 const RotableEquipmentList = lazyPagina(() => import("./pages/admin/maintenance/RotableEquipmentList"));
 const RotableEquipmentDetail = lazyPagina(() => import("./pages/admin/maintenance/RotableEquipmentDetail"));
+const ShutdownSchedulesList = lazyPagina(() => import("./pages/admin/maintenance/ShutdownSchedulesList"));
+const ShutdownScheduleDetail = lazyPagina(() => import("./pages/admin/maintenance/ShutdownScheduleDetail"));
 const WorkOrdersList = lazyPagina(() => import("./pages/admin/maintenance/WorkOrdersList"));
 const KanbanBoard = lazyPagina(() => import("./pages/admin/maintenance/KanbanBoard"));
 const SchedulingBoard = lazyPagina(() => import("./pages/admin/maintenance/SchedulingBoard"));
@@ -141,6 +143,8 @@ export default function App() {
               <Route path="manutencao/modelos-de-plano" element={<MaintenancePlanTemplatesList />} />
               <Route path="manutencao/equipamentos-recondicionaveis" element={<RotableEquipmentList />} />
               <Route path="manutencao/equipamentos-recondicionaveis/:id" element={<RotableEquipmentDetail />} />
+              <Route path="manutencao/cronogramas-parada" element={<ShutdownSchedulesList />} />
+              <Route path="manutencao/cronogramas-parada/:id" element={<ShutdownScheduleDetail />} />
               <Route path="manutencao/ordens" element={<WorkOrdersList />} />
               <Route path="manutencao/kanban" element={<KanbanBoard />} />
               <Route path="manutencao/programacao" element={<SchedulingBoard />} />
@@ -229,6 +233,8 @@ export default function App() {
                 <Route path="manutencao/modelos-de-plano" element={<MaintenancePlanTemplatesList />} />
                 <Route path="manutencao/equipamentos-recondicionaveis" element={<RotableEquipmentList />} />
                 <Route path="manutencao/equipamentos-recondicionaveis/:id" element={<RotableEquipmentDetail />} />
+                <Route path="manutencao/cronogramas-parada" element={<ShutdownSchedulesList />} />
+                <Route path="manutencao/cronogramas-parada/:id" element={<ShutdownScheduleDetail />} />
                 <Route path="manutencao/ordens/novo" element={<WorkOrderForm />} />
                 <Route path="manutencao/ordens/:id/editar" element={<WorkOrderForm />} />
                 <Route path="manutencao/programacao" element={<SchedulingBoard />} />

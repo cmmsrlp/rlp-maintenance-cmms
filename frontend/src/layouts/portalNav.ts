@@ -28,6 +28,7 @@ import {
   Sparkles,
   FileSearch,
   RefreshCw,
+  CalendarRange,
 } from "lucide-react";
 import type { Role, ServiceCategory } from "../api/types";
 
@@ -85,6 +86,7 @@ const PORTAL_NAV_SECTIONS: PortalNavSection[] = [
       { to: "/portal/manutencao/ordens", label: "Ordens de manutencao", icon: ClipboardList, requires: ["CMMS_MAINTENANCE"] },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/programacao", label: "Programacao", icon: CalendarDays, requires: ["CMMS_MAINTENANCE"] },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/planejamento", label: "Planejamento", icon: ListChecks, requires: ["CMMS_MAINTENANCE"] },
+      { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/cronogramas-parada", label: "Cronogramas de parada", icon: CalendarRange, requires: ["CMMS_MAINTENANCE"] },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/planos", label: "Planos preventivos", icon: ShieldCheck, requires: ["CMMS_MAINTENANCE"] },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/manutencao/preditiva", label: "Preditiva", icon: Radar, requires: ["CMMS_MAINTENANCE"] },
       { perfis: ["CLIENT", "CLIENT_PLANNER"], to: "/portal/analise-laudos", label: "Analise de laudos", icon: FileSearch, requires: ["CMMS_MAINTENANCE"] },

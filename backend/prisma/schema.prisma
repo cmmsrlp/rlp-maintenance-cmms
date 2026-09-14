@@ -479,6 +479,7 @@ model Client {
   automationSettings        AutomationSettings?
   insight                   ClientInsight?
   documentAnalyses          DocumentAnalysis[]
+  shutdownSchedules         ShutdownSchedule[]
 
   @@index([status])
   @@index([planId])
@@ -626,6 +627,7 @@ model Instrument {
   // e' forcada no banco, e' regra de aplicacao, igual a outras relacoes "atual" deste schema).
   installedRotables     RotableEquipment[]
   rotableInstallations  RotableInstallation[]
+  shutdownTasks         ShutdownTask[]
 
   @@index([clientId])
   @@index([status])
@@ -1523,6 +1525,9 @@ model MaintenanceWorkOrder {
   // Trocas de equipamento recondicionavel (motor, redutor, rolo...) feitas durante esta OS.
   rotableInstallations RotableInstallation[]
   rotableRepairOrders  RotableRepairOrder[]
+  // Tarefas de cronograma de parada vinculadas a esta OS (geradas a partir da tarefa, ou
+  // linkadas a uma OS ja existente).
+  shutdownTasks ShutdownTask[]
 
   @@unique([clientId, number])
   @@index([clientId])
@@ -1856,6 +1861,80 @@ model RotableRepairOrder {
   @@index([workOrderId])
   @@index([failureCodeId])
   @@map("rotable_repair_orders")
+}
+
+// ---------------------------------------------------------------------------
+// Cronograma de parada programada
+// ---------------------------------------------------------------------------
+
+enum ShutdownScheduleStatus {
+  PLANNING
+  IN_PROGRESS
+  DONE
+}
+
+// Cronograma de uma parada programada (ex.: "PARADA LINHA 4 - DEZ/2015"): uma lista de
+// tarefas com hierarquia (grupo > tarefa > subtarefa), sequencia e datas proprias, no
+// espirito de um Gantt de MS Project - mas sem o motor de reagendamento automatico por
+// dependencia (decisao: manutencao prefere data editavel a mao a uma cadeia que se
+// reagenda sozinha e pode surpreender o planejador).
+model ShutdownSchedule {
+  id        String   @id @default(uuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id])
+  name      String
+  status    ShutdownScheduleStatus @default(PLANNING)
+  notes     String?
+  createdById String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  tasks ShutdownTask[]
+
+  @@index([clientId])
+  @@map("shutdown_schedules")
+}
+
+// Uma linha do cronograma. parentTaskId monta a hierarquia (grupo/fase > tarefa) igual ao
+// WBS do PDF de referencia; sortOrder guarda a ordem dentro do mesmo nivel (a "sequencia"
+// que o usuario arruma arrastando/subindo/descendo no editor).
+model ShutdownTask {
+  id         String   @id @default(uuid())
+  scheduleId String
+  schedule   ShutdownSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  parentTaskId String?
+  parentTask   ShutdownTask?  @relation("ShutdownTaskHierarchy", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  children     ShutdownTask[] @relation("ShutdownTaskHierarchy")
+
+  name      String
+  instrumentId String?
+  instrument   Instrument? @relation(fields: [instrumentId], references: [id])
+  // OS vinculada - gerada a partir desta tarefa (botao "Gerar OS") ou linkada a uma OS
+  // ja existente, igual ao numero de OS que cada linha do PDF de referencia carrega.
+  workOrderId String?
+  workOrder   MaintenanceWorkOrder? @relation(fields: [workOrderId], references: [id])
+
+  startDate DateTime
+  endDate   DateTime
+  // 0-100. Cada tarefa guarda o proprio andamento - nao e' calculado a partir da OS porque
+  // uma tarefa pode nao ter OS vinculada ainda.
+  percentComplete Int @default(0)
+  // Nomes/equipe responsavel, texto livre (igual ao PDF: "JULIANO;DANILO") - nao aponta
+  // pro cadastro de Mao de obra porque nem todo nome de uma parada e' um recurso
+  // cadastrado (empresa terceira, guincho contratado, etc.).
+  resources String?
+  notes     String?
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([scheduleId])
+  @@index([parentTaskId])
+  @@index([instrumentId])
+  @@index([workOrderId])
+  @@map("shutdown_tasks")
 }
 
 // ---------------------------------------------------------------------------

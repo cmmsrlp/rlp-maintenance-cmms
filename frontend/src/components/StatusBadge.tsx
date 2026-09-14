@@ -73,6 +73,9 @@ const STATUS_MAP: Record<string, { label: string; tone: Tone }> = {
   // entradas ja existentes acima)
   REPAIRED: { label: "Reparado", tone: "green" },
   PARTIALLY_REPAIRED: { label: "Reparo parcial", tone: "yellow" },
+  // cronograma de parada programada (IN_PROGRESS reaproveita a entrada de ordem de servico)
+  PLANNING: { label: "Planejamento", tone: "navy" },
+  DONE: { label: "Concluido", tone: "green" },
   // criticidade do ativo / prioridade da OS (mesma escala nos dois)
   LOW: { label: "Baixa", tone: "graphite" },
   MEDIUM: { label: "Media", tone: "navy" },
