@@ -63,7 +63,7 @@ export default function RotableEquipmentDetail() {
         description={`${rotable.type}${rotable.manufacturer ? ` - ${rotable.manufacturer}` : ""}${rotable.model ? ` ${rotable.model}` : ""}`}
         breadcrumbs={[
           { label: "RLP Maintenance CMMS", to: base },
-          { label: "Equipamentos recondicionaveis", to: `${base}/equipamentos-recondicionaveis` },
+          { label: "Equipamentos recondicionáveis", to: `${base}/equipamentos-recondicionaveis` },
           { label: rotable.code },
         ]}
         actions={
@@ -108,7 +108,7 @@ export default function RotableEquipmentDetail() {
           </p>
         </div>
         <div className="card p-5">
-          <p className="text-xs uppercase tracking-wide text-graphite-400">Numero de serie</p>
+          <p className="text-xs uppercase tracking-wide text-graphite-400">Número de série</p>
           <p className="mt-1 font-medium text-navy-900">{rotable.serialNumber ?? "-"}</p>
         </div>
         <div className="card p-5">
@@ -186,8 +186,8 @@ export default function RotableEquipmentDetail() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="font-medium text-navy-900">
-                      {order.vendor ?? "Fornecedor nao informado"}
-                      {order.budgetNumber && ` - orcamento ${order.budgetNumber}`}
+                      {order.vendor ?? "Fornecedor não informado"}
+                      {order.budgetNumber && ` - orçamento ${order.budgetNumber}`}
                     </p>
                     <p className="text-xs text-graphite-500">Enviado em {formatDate(order.sentAt)}</p>
                   </div>
@@ -198,20 +198,20 @@ export default function RotableEquipmentDetail() {
                 </div>
 
                 {order.defectReported && <p className="text-sm text-graphite-700"><span className="font-medium">Defeito informado:</span> {order.defectReported}</p>}
-                {order.diagnosis && <p className="text-sm text-graphite-700"><span className="font-medium">Diagnostico:</span> {order.diagnosis}</p>}
-                {order.failureCode && <p className="text-sm text-graphite-700"><span className="font-medium">Codigo de falha:</span> {order.failureCode.code} - {order.failureCode.description}</p>}
-                {order.budgetValue != null && <p className="text-sm text-graphite-700"><span className="font-medium">Valor orcado:</span> {formatCurrency(order.budgetValue)}</p>}
+                {order.diagnosis && <p className="text-sm text-graphite-700"><span className="font-medium">Diagnóstico:</span> {order.diagnosis}</p>}
+                {order.failureCode && <p className="text-sm text-graphite-700"><span className="font-medium">Código de falha:</span> {order.failureCode.code} - {order.failureCode.description}</p>}
+                {order.budgetValue != null && <p className="text-sm text-graphite-700"><span className="font-medium">Valor orçado:</span> {formatCurrency(order.budgetValue)}</p>}
                 {order.promisedReturnAt && <p className="text-sm text-graphite-700"><span className="font-medium">Prazo prometido:</span> {formatDate(order.promisedReturnAt)}</p>}
 
                 {order.returnedAt ? (
                   <div className="rounded-lg bg-gray-50 p-3 text-sm text-graphite-700">
                     <p className="font-medium text-navy-900">Retornou em {formatDate(order.returnedAt)}</p>
-                    {order.serviceDone && <p className="mt-1"><span className="font-medium">Servico executado:</span> {order.serviceDone}</p>}
-                    {order.partsReplacedNotes && <p><span className="font-medium">Pecas substituidas:</span> {order.partsReplacedNotes}</p>}
-                    {order.laborNotes && <p><span className="font-medium">Mao de obra:</span> {order.laborNotes}</p>}
+                    {order.serviceDone && <p className="mt-1"><span className="font-medium">Serviço executado:</span> {order.serviceDone}</p>}
+                    {order.partsReplacedNotes && <p><span className="font-medium">Peças substituídas:</span> {order.partsReplacedNotes}</p>}
+                    {order.laborNotes && <p><span className="font-medium">Mão de obra:</span> {order.laborNotes}</p>}
                     {order.testsPerformed && <p><span className="font-medium">Ensaios:</span> {order.testsPerformed}</p>}
                     {order.finalReport && <p><span className="font-medium">Laudo final:</span> {order.finalReport}</p>}
-                    {order.conditionAfterRepair && <p><span className="font-medium">Condicao apos reparo:</span> {order.conditionAfterRepair}</p>}
+                    {order.conditionAfterRepair && <p><span className="font-medium">Condição após reparo:</span> {order.conditionAfterRepair}</p>}
                     {order.warrantyMonths != null && <p><span className="font-medium">Garantia:</span> {order.warrantyMonths} mes(es){order.warrantyNotes ? ` - ${order.warrantyNotes}` : ""}</p>}
                     {order.finalCost != null && <p><span className="font-medium">Valor final:</span> {formatCurrency(order.finalCost)}</p>}
                   </div>
@@ -313,7 +313,7 @@ function EditModal({ rotable, onClose, onSaved }: { rotable: RotableEquipment; o
 
   async function submit() {
     if (!values.code.trim() || !values.type.trim()) {
-      notify("error", "Falta preencher: Codigo, Tipo.");
+      notify("error", "Falta preencher: Código, Tipo.");
       return;
     }
     setSaving(true);
@@ -351,19 +351,19 @@ function EditModal({ rotable, onClose, onSaved }: { rotable: RotableEquipment; o
             value={values.type}
             onChange={(e) => setValues({ ...values, type: e.target.value })}
           />
-          <TextInput label="Codigo" required value={values.code} onChange={(e) => setValues({ ...values, code: e.target.value })} />
+          <TextInput label="Código" required value={values.code} onChange={(e) => setValues({ ...values, code: e.target.value })} />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <TextInput label="Fabricante" value={values.manufacturer} onChange={(e) => setValues({ ...values, manufacturer: e.target.value })} />
           <TextInput label="Modelo" value={values.model} onChange={(e) => setValues({ ...values, model: e.target.value })} />
         </div>
-        <TextInput label="Numero de serie" value={values.serialNumber} onChange={(e) => setValues({ ...values, serialNumber: e.target.value })} />
-        <TextInput label="Observacoes" value={values.notes} onChange={(e) => setValues({ ...values, notes: e.target.value })} />
+        <TextInput label="Número de série" value={values.serialNumber} onChange={(e) => setValues({ ...values, serialNumber: e.target.value })} />
+        <TextInput label="Observações" value={values.notes} onChange={(e) => setValues({ ...values, notes: e.target.value })} />
 
         {camposEspecificos.length > 0 && (
           <div className="rounded-lg border border-gray-200 p-4">
             <p className="text-sm font-medium text-graphite-700">Ficha tecnica de {values.type}</p>
-            <p className="mt-0.5 text-xs text-graphite-500">Campos proprios deste tipo de equipamento - todos opcionais.</p>
+            <p className="mt-0.5 text-xs text-graphite-500">Campos próprios deste tipo de equipamento - todos opcionais.</p>
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
               {camposEspecificos.map((campo) =>
                 campo.tipo === "select" ? (
@@ -425,7 +425,7 @@ function InstallModal({ rotableId, clientId, onClose, onDone }: { rotableId: str
     >
       <div className="space-y-4">
         <InstrumentPicker label="Ativo" required clientId={clientId} name="instrumentId" value={instrumentId} onChange={(e) => setInstrumentId(e.target.value)} />
-        <TextInput label="Horimetro na instalacao (opcional)" type="number" value={meterReading} onChange={(e) => setMeterReading(e.target.value)} />
+        <TextInput label="Horímetro na instalação (opcional)" type="number" value={meterReading} onChange={(e) => setMeterReading(e.target.value)} />
       </div>
     </Modal>
   );
@@ -462,11 +462,11 @@ function RemoveModal({ rotableId, onClose, onDone }: { rotableId: string; onClos
     >
       <div className="space-y-4">
         <TextInput label="Motivo (opcional)" placeholder="Ex.: falha, preventiva, troca programada" value={reason} onChange={(e) => setReason(e.target.value)} />
-        <TextInput label="Condicao na retirada (opcional)" placeholder="Ex.: rolamento gripado" value={condition} onChange={(e) => setCondition(e.target.value)} />
-        <TextInput label="Horimetro na retirada (opcional)" type="number" value={meterReading} onChange={(e) => setMeterReading(e.target.value)} />
+        <TextInput label="Condição na retirada (opcional)" placeholder="Ex.: rolamento gripado" value={condition} onChange={(e) => setCondition(e.target.value)} />
+        <TextInput label="Horímetro na retirada (opcional)" type="number" value={meterReading} onChange={(e) => setMeterReading(e.target.value)} />
         <SelectInput
           label="Destino"
-          options={[{ value: "QUARANTINE", label: "Quarentena (vai avaliar/reparar)" }, { value: "IN_STOCK", label: "Estoque (peca boa, sem reparo)" }]}
+          options={[{ value: "QUARANTINE", label: "Quarentena (vai avaliar/reparar)" }, { value: "IN_STOCK", label: "Estoque (peça boa, sem reparo)" }]}
           value={destination}
           onChange={(e) => setDestination(e.target.value as "QUARANTINE" | "IN_STOCK")}
         />
@@ -510,18 +510,18 @@ function RepairOrderModal({ rotableId, failureCodes, onClose, onDone }: { rotabl
     >
       <div className="space-y-4">
         <TextareaInput label="Defeito informado" rows={2} value={values.defectReported} onChange={(e) => setValues({ ...values, defectReported: e.target.value })} />
-        <TextareaInput label="Diagnostico (se ja houver)" rows={2} value={values.diagnosis} onChange={(e) => setValues({ ...values, diagnosis: e.target.value })} />
+        <TextareaInput label="Diagnóstico (se já houver)" rows={2} value={values.diagnosis} onChange={(e) => setValues({ ...values, diagnosis: e.target.value })} />
         <SelectInput
-          label="Codigo de falha (opcional)"
+          label="Código de falha (opcional)"
           options={failureCodes.map((f) => ({ value: f.id, label: `${f.code} - ${f.description}` }))}
-          placeholder="Nao especificar"
+          placeholder="Não especificar"
           value={values.failureCodeId}
           onChange={(e) => setValues({ ...values, failureCodeId: e.target.value })}
         />
         <TextInput label="Empresa reparadora" value={values.vendor} onChange={(e) => setValues({ ...values, vendor: e.target.value })} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextInput label="Numero do orcamento" value={values.budgetNumber} onChange={(e) => setValues({ ...values, budgetNumber: e.target.value })} />
-          <TextInput label="Valor orcado" type="number" step="any" value={values.budgetValue} onChange={(e) => setValues({ ...values, budgetValue: e.target.value })} />
+          <TextInput label="Número do orçamento" value={values.budgetNumber} onChange={(e) => setValues({ ...values, budgetNumber: e.target.value })} />
+          <TextInput label="Valor orçado" type="number" step="any" value={values.budgetValue} onChange={(e) => setValues({ ...values, budgetValue: e.target.value })} />
         </div>
       </div>
     </Modal>
@@ -576,12 +576,12 @@ function ReturnModal({ orderId, onClose, onDone }: { orderId: string; onClose: (
     >
       <div className="space-y-4">
         <SelectInput label="Resultado" required options={OPCOES_DE_RESULTADO} value={values.outcome} onChange={(e) => setValues({ ...values, outcome: e.target.value as RotableRepairOutcome })} />
-        <TextareaInput label="Servico executado" rows={2} value={values.serviceDone} onChange={(e) => setValues({ ...values, serviceDone: e.target.value })} />
-        <TextareaInput label="Pecas substituidas" rows={2} value={values.partsReplacedNotes} onChange={(e) => setValues({ ...values, partsReplacedNotes: e.target.value })} />
-        <TextInput label="Mao de obra" value={values.laborNotes} onChange={(e) => setValues({ ...values, laborNotes: e.target.value })} />
+        <TextareaInput label="Serviço executado" rows={2} value={values.serviceDone} onChange={(e) => setValues({ ...values, serviceDone: e.target.value })} />
+        <TextareaInput label="Peças substituídas" rows={2} value={values.partsReplacedNotes} onChange={(e) => setValues({ ...values, partsReplacedNotes: e.target.value })} />
+        <TextInput label="Mão de obra" value={values.laborNotes} onChange={(e) => setValues({ ...values, laborNotes: e.target.value })} />
         <TextInput label="Ensaios realizados" value={values.testsPerformed} onChange={(e) => setValues({ ...values, testsPerformed: e.target.value })} />
         <TextareaInput label="Laudo final" rows={2} value={values.finalReport} onChange={(e) => setValues({ ...values, finalReport: e.target.value })} />
-        <TextInput label="Condicao depois do reparo" value={values.conditionAfterRepair} onChange={(e) => setValues({ ...values, conditionAfterRepair: e.target.value })} />
+        <TextInput label="Condição depois do reparo" value={values.conditionAfterRepair} onChange={(e) => setValues({ ...values, conditionAfterRepair: e.target.value })} />
         <div className="grid gap-4 sm:grid-cols-2">
           <TextInput label="Garantia (meses)" type="number" value={values.warrantyMonths} onChange={(e) => setValues({ ...values, warrantyMonths: e.target.value })} />
           <TextInput label="Valor final" type="number" step="any" value={values.finalCost} onChange={(e) => setValues({ ...values, finalCost: e.target.value })} />

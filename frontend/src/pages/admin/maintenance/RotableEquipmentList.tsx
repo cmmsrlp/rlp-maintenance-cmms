@@ -21,7 +21,7 @@ import { numeroOpcional } from "../../../lib/zodHelpers";
 import { camposDoTipo } from "../../../lib/camposPorTipoDeAtivo";
 
 const schema = z.object({
-  code: z.string().min(1, "Informe o codigo do equipamento."),
+  code: z.string().min(1, "Informe o código do equipamento."),
   type: z.string().min(1, "Informe o tipo."),
   manufacturer: z.string().optional(),
   model: z.string().optional(),
@@ -105,7 +105,7 @@ export default function RotableEquipmentList() {
     <div>
       <PageHeader
         title="Equipamentos recondicionaveis"
-        description="Motor, redutor, rolo... unidades fisicas que se movem entre ativos, o estoque e o reparo - separadas do local onde estao instaladas agora"
+        description="Motor, redutor, rolo... unidades físicas que se movem entre ativos, o estoque e o reparo - separadas do local onde estão instaladas agora"
         breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Equipamentos recondicionaveis" }]}
         actions={
           clientId && (
@@ -132,7 +132,7 @@ export default function RotableEquipmentList() {
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-graphite-400" />
               <input
                 className="input pl-9"
-                placeholder="Buscar por codigo, numero de serie, fabricante..."
+                placeholder="Buscar por código, número de série, fabricante..."
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               />
@@ -157,7 +157,7 @@ export default function RotableEquipmentList() {
           pagination={data}
           onPageChange={setPage}
           emptyTitle="Nenhum equipamento cadastrado"
-          emptyDescription="Cadastre motores, redutores e outras pecas recondicionaveis para vincular aos ativos."
+          emptyDescription="Cadastre motores, redutores e outras peças recondicionáveis para vincular aos ativos."
           columns={[
             {
               header: "Equipamento",
@@ -169,7 +169,7 @@ export default function RotableEquipmentList() {
             },
             { header: "Tipo", accessor: (r) => r.type },
             { header: "Fabricante / modelo", accessor: (r) => [r.manufacturer, r.model].filter(Boolean).join(" - ") || "-" },
-            { header: "Numero de serie", accessor: (r) => r.serialNumber ?? "-" },
+            { header: "Número de série", accessor: (r) => r.serialNumber ?? "-" },
             { header: "Status", accessor: (r) => <StatusBadge status={r.status} /> },
             {
               header: "Instalado em",
@@ -187,7 +187,7 @@ export default function RotableEquipmentList() {
       <Modal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        title="Novo equipamento recondicionavel"
+        title="Novo equipamento recondicionável"
         size="md"
         footer={
           <>
@@ -202,7 +202,7 @@ export default function RotableEquipmentList() {
           <div className="grid gap-4 sm:grid-cols-2">
             <RotableTypeInput label="Tipo" required clientId={clientId} error={errors.type?.message} {...register("type")} />
             <TextInput
-              label="Codigo"
+              label="Código"
               required
               placeholder="Ex.: MOT-ROT-014"
               hint={tipoEscolhido ? "Sugerido a partir do prefixo do tipo - pode editar." : undefined}
@@ -215,15 +215,15 @@ export default function RotableEquipmentList() {
             <TextInput label="Modelo" placeholder="Opcional" {...register("model")} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <TextInput label="Numero de serie" placeholder="Opcional" {...register("serialNumber")} />
-            <TextInput label="Custo de aquisicao (opcional)" type="number" step="any" {...register("acquisitionCost")} />
+            <TextInput label="Número de série" placeholder="Opcional" {...register("serialNumber")} />
+            <TextInput label="Custo de aquisição (opcional)" type="number" step="any" {...register("acquisitionCost")} />
           </div>
-          <TextInput label="Observacoes (opcional)" {...register("notes")} />
+          <TextInput label="Observações (opcional)" {...register("notes")} />
 
           {camposEspecificos.length > 0 && (
             <div className="rounded-lg border border-gray-200 p-4">
               <p className="text-sm font-medium text-graphite-700">Ficha tecnica de {tipoEscolhido}</p>
-              <p className="mt-0.5 text-xs text-graphite-500">Campos proprios deste tipo de equipamento - todos opcionais.</p>
+              <p className="mt-0.5 text-xs text-graphite-500">Campos próprios deste tipo de equipamento - todos opcionais.</p>
               <div className="mt-3 grid gap-4 sm:grid-cols-2">
                 {camposEspecificos.map((campo) =>
                   campo.tipo === "select" ? (
@@ -246,7 +246,7 @@ export default function RotableEquipmentList() {
             </div>
           )}
 
-          <p className="text-xs text-graphite-500">O equipamento nasce em estoque - instale num ativo na propria ficha dele, depois de salvar.</p>
+          <p className="text-xs text-graphite-500">O equipamento nasce em estoque - instale num ativo na própria ficha dele, depois de salvar.</p>
         </form>
       </Modal>
     </div>
