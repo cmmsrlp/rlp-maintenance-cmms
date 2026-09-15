@@ -136,7 +136,11 @@ export function PublicHeader() {
             <Link to="/planos" className="text-sm font-semibold text-graphite-700" onClick={() => setOpen(false)}>
               Planos
             </Link>
-            <Link to="/entrar" className="text-sm font-semibold text-graphite-700" onClick={() => setOpen(false)}>
+            <Link
+              to="/entrar"
+              className="rounded-md bg-brand-lime px-5 py-2.5 text-center text-sm font-bold text-navy-950 transition-colors hover:bg-brand-lime-dark"
+              onClick={() => setOpen(false)}
+            >
               Entrar
             </Link>
             <a
