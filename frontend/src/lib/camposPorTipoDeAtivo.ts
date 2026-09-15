@@ -45,6 +45,19 @@ const CAMPOS_POR_TIPO: Record<string, CampoEspecifico[]> = {
     { chave: "materialDoRevestimento", rotulo: "Material do revestimento", placeholder: "Ex.: Borracha nitrilica" },
     { chave: "temperaturaDeTrabalho", rotulo: "Temperatura de trabalho", placeholder: "Ex.: ate 80 C" },
   ],
+  // "bomba de vacuo" precisa vir antes de "bomba" - o casamento e' por primeira chave que
+  // bater, e "bomba de vacuo" tambem contem "bomba".
+  "bomba de vacuo": [
+    {
+      chave: "tipoDeBombaDeVacuo",
+      rotulo: "Tipo",
+      tipo: "select",
+      opcoes: ["Palhetas", "Anel liquido", "Lobulos (Roots)", "Parafuso", "Diafragma", "Outro"],
+    },
+    { chave: "vazaoDeSuccao", rotulo: "Vazao de succao", placeholder: "Ex.: 40 m3/h" },
+    { chave: "nivelDeVacuo", rotulo: "Nivel de vacuo", placeholder: "Ex.: 0.5 mbar" },
+    { chave: "potencia", rotulo: "Potencia", placeholder: "Ex.: 5.5 cv" },
+  ],
   bomba: [
     { chave: "vazao", rotulo: "Vazao", placeholder: "Ex.: 12 m3/h" },
     { chave: "pressao", rotulo: "Pressao", placeholder: "Ex.: 4 bar" },
