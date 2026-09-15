@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { ModoDeImportacao, ResultadoDaImportacao, RotableEquipment, RotableEquipmentStatus, RotableInstallation, RotableRepairOrder, RotableRepairOutcome, RotableRepairPurpose } from "./types";
+import type { CalibrationAttachment, ModoDeImportacao, ResultadoDaImportacao, RotableEquipment, RotableEquipmentStatus, RotableInstallation, RotableRepairOrder, RotableRepairOutcome, RotableRepairPurpose } from "./types";
 
 export interface RotableEquipmentInput {
   clientId?: string;
@@ -192,6 +192,7 @@ export async function rejectRepairBudget(id: string): Promise<RotableRepairOrder
 
 export interface ReturnFromRepairInput {
   outcome: RotableRepairOutcome;
+  returnInvoiceNumber?: string | null;
   serviceDone?: string | null;
   partsReplacedNotes?: string | null;
   laborNotes?: string | null;
@@ -206,4 +207,32 @@ export interface ReturnFromRepairInput {
 export async function returnFromRepair(id: string, input: ReturnFromRepairInput): Promise<RotableRepairOrder> {
   const { data } = await api.post<RotableRepairOrder>(`/rotable-repair-orders/${id}/retorno`, input);
   return data;
+}
+
+/** Anexa o orcamento (PDF/foto) que o fornecedor mandou, junto do numero da requisicao de
+ * compras ou pedido que a empresa abriu para autorizar o reparo. */
+export async function uploadRepairOrderBudget(
+  repairOrderId: string,
+  file: File,
+  purchaseRequisitionNumber?: string | null,
+): Promise<{ attachment: CalibrationAttachment; order: RotableRepairOrder }> {
+  const form = new FormData();
+  form.append("file", file);
+  if (purchaseRequisitionNumber) form.append("purchaseRequisitionNumber", purchaseRequisitionNumber);
+  const { data } = await api.post(`/rotable-repair-orders/${repairOrderId}/anexos`, form);
+  return data;
+}
+
+export async function listRepairOrderAttachments(repairOrderId: string): Promise<CalibrationAttachment[]> {
+  const { data } = await api.get<CalibrationAttachment[]>(`/rotable-repair-orders/${repairOrderId}/anexos`);
+  return data;
+}
+
+export async function getRepairOrderAttachmentUrl(repairOrderId: string, attachmentId: string): Promise<string> {
+  const { data } = await api.get<{ url: string }>(`/rotable-repair-orders/${repairOrderId}/anexos/${attachmentId}/url`);
+  return data.url;
+}
+
+export async function deleteRepairOrderAttachment(repairOrderId: string, attachmentId: string): Promise<void> {
+  await api.delete(`/rotable-repair-orders/${repairOrderId}/anexos/${attachmentId}`);
 }

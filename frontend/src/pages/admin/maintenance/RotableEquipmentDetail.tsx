@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Wrench, LogOut, LogIn, CheckCircle2, XCircle, PackageCheck, FileDown, DollarSign } from "lucide-react";
+import { Pencil, Wrench, LogOut, LogIn, CheckCircle2, XCircle, PackageCheck, FileDown, DollarSign, Paperclip, ExternalLink } from "lucide-react";
 import {
   getRotableEquipment,
   updateRotableEquipment,
@@ -13,6 +13,9 @@ import {
   rejectRepairBudget,
   returnFromRepair,
   baixarFichaDeEnvio,
+  uploadRepairOrderBudget,
+  listRepairOrderAttachments,
+  getRepairOrderAttachmentUrl,
 } from "../../../api/rotableEquipment";
 import { listFailureCodes } from "../../../api/failureCodes";
 import type { RotableEquipment, RotableRepairOutcome, RotableRepairOrder, RotableRepairPurpose } from "../../../api/types";
@@ -72,6 +75,7 @@ export default function RotableEquipmentDetail() {
   const [repairOpen, setRepairOpen] = useState(false);
   const [returnOpen, setReturnOpen] = useState<string | null>(null);
   const [budgetOpen, setBudgetOpen] = useState<string | null>(null);
+  const [attachOpen, setAttachOpen] = useState<string | null>(null);
 
   const { data: rotable, isLoading } = useQuery({ queryKey: ["rotable-equipment", id], queryFn: () => getRotableEquipment(id) });
   const { data: failureCodes } = useQuery({ queryKey: ["failure-codes-picker"], queryFn: () => listFailureCodes({ active: true }) });
@@ -242,7 +246,10 @@ export default function RotableEquipmentDetail() {
                 {order.diagnosis && <p className="text-sm text-graphite-700"><span className="font-medium">Diagnóstico:</span> {order.diagnosis}</p>}
                 {order.failureCode && <p className="text-sm text-graphite-700"><span className="font-medium">Código de falha:</span> {order.failureCode.code} - {order.failureCode.description}</p>}
                 {order.budgetValue != null && <p className="text-sm text-graphite-700"><span className="font-medium">Valor orçado:</span> {formatCurrency(order.budgetValue)}</p>}
+                {order.purchaseRequisitionNumber && <p className="text-sm text-graphite-700"><span className="font-medium">Requisição de compras:</span> {order.purchaseRequisitionNumber}</p>}
                 {order.promisedReturnAt && <p className="text-sm text-graphite-700"><span className="font-medium">Prazo prometido:</span> {formatDate(order.promisedReturnAt)}</p>}
+
+                <AnexoOrcamento orderId={order.id} canManage={!!canManage} onAnexar={() => setAttachOpen(order.id)} />
 
                 {canManage && (
                   <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-3">
@@ -315,9 +322,13 @@ export default function RotableEquipmentDetail() {
                 {order.diagnosis && <p className="text-sm text-graphite-700"><span className="font-medium">Diagnóstico:</span> {order.diagnosis}</p>}
                 {order.failureCode && <p className="text-sm text-graphite-700"><span className="font-medium">Código de falha:</span> {order.failureCode.code} - {order.failureCode.description}</p>}
                 {order.budgetValue != null && <p className="text-sm text-graphite-700"><span className="font-medium">Valor orçado:</span> {formatCurrency(order.budgetValue)}</p>}
+                {order.purchaseRequisitionNumber && <p className="text-sm text-graphite-700"><span className="font-medium">Requisição de compras:</span> {order.purchaseRequisitionNumber}</p>}
+
+                <AnexoOrcamento orderId={order.id} canManage={!!canManage} onAnexar={() => setAttachOpen(order.id)} />
 
                 <div className="rounded-lg bg-gray-50 p-3 text-sm text-graphite-700">
                   <p className="font-medium text-navy-900">Retornou em {formatDate(order.returnedAt)}</p>
+                  {order.returnInvoiceNumber && <p className="mt-1"><span className="font-medium">Nota fiscal de retorno:</span> {order.returnInvoiceNumber}</p>}
                   {order.serviceDone && <p className="mt-1"><span className="font-medium">Serviço executado:</span> {order.serviceDone}</p>}
                   {order.partsReplacedNotes && <p><span className="font-medium">Peças substituídas:</span> {order.partsReplacedNotes}</p>}
                   {order.laborNotes && <p><span className="font-medium">Mão de obra:</span> {order.laborNotes}</p>}
@@ -377,6 +388,18 @@ export default function RotableEquipmentDetail() {
           orderId={budgetOpen}
           onClose={() => setBudgetOpen(null)}
           onDone={() => { setBudgetOpen(null); invalidar(); }}
+        />
+      )}
+
+      {attachOpen && (
+        <AttachBudgetModal
+          orderId={attachOpen}
+          onClose={() => setAttachOpen(null)}
+          onDone={() => {
+            setAttachOpen(null);
+            invalidar();
+            queryClient.invalidateQueries({ queryKey: ["repair-order-attachments", attachOpen] });
+          }}
         />
       )}
     </div>
@@ -693,6 +716,7 @@ function ReturnModal({ orderId, onClose, onDone }: { orderId: string; onClose: (
   const { notify } = useToast();
   const [values, setValues] = useState({
     outcome: "REPAIRED" as RotableRepairOutcome,
+    returnInvoiceNumber: "",
     serviceDone: "",
     partsReplacedNotes: "",
     laborNotes: "",
@@ -709,6 +733,7 @@ function ReturnModal({ orderId, onClose, onDone }: { orderId: string; onClose: (
     try {
       await returnFromRepair(orderId, {
         outcome: values.outcome,
+        returnInvoiceNumber: values.returnInvoiceNumber || null,
         serviceDone: values.serviceDone || null,
         partsReplacedNotes: values.partsReplacedNotes || null,
         laborNotes: values.laborNotes || null,
@@ -737,6 +762,12 @@ function ReturnModal({ orderId, onClose, onDone }: { orderId: string; onClose: (
     >
       <div className="space-y-4">
         <SelectInput label="Resultado" required options={OPCOES_DE_RESULTADO} value={values.outcome} onChange={(e) => setValues({ ...values, outcome: e.target.value as RotableRepairOutcome })} />
+        <TextInput
+          label="Nota fiscal de retorno (opcional)"
+          hint="Numero da NF que o fornecedor emitiu ao devolver o equipamento - fecha o ciclo fiscal da remessa."
+          value={values.returnInvoiceNumber}
+          onChange={(e) => setValues({ ...values, returnInvoiceNumber: e.target.value })}
+        />
         <TextareaInput label="Serviço executado" rows={2} value={values.serviceDone} onChange={(e) => setValues({ ...values, serviceDone: e.target.value })} />
         <TextareaInput label="Peças substituídas" rows={2} value={values.partsReplacedNotes} onChange={(e) => setValues({ ...values, partsReplacedNotes: e.target.value })} />
         <TextInput label="Mão de obra" value={values.laborNotes} onChange={(e) => setValues({ ...values, laborNotes: e.target.value })} />
@@ -788,6 +819,96 @@ function BudgetModal({ orderId, onClose, onDone }: { orderId: string; onClose: (
       <div className="space-y-4">
         <TextInput label="Número do orçamento" value={budgetNumber} onChange={(e) => setBudgetNumber(e.target.value)} />
         <TextInput label="Valor orçado" required type="number" step="any" value={budgetValue} onChange={(e) => setBudgetValue(e.target.value)} />
+      </div>
+    </Modal>
+  );
+}
+
+/** Link pro orcamento anexado (PDF/foto que o fornecedor mandou), ou o botao pra anexar
+ * quando ainda nao tem nenhum. So um arquivo por ordem, na pratica. */
+function AnexoOrcamento({ orderId, canManage, onAnexar }: { orderId: string; canManage: boolean; onAnexar: () => void }) {
+  const { notify } = useToast();
+  const { data: anexos } = useQuery({
+    queryKey: ["repair-order-attachments", orderId],
+    queryFn: () => listRepairOrderAttachments(orderId),
+  });
+  const anexo = anexos?.[0];
+
+  async function abrir() {
+    if (!anexo) return;
+    try {
+      const url = await getRepairOrderAttachmentUrl(orderId, anexo.id);
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      notify("error", getApiErrorMessage(error));
+    }
+  }
+
+  if (anexo) {
+    return (
+      <button type="button" onClick={() => void abrir()} className="flex items-center gap-2 text-sm text-navy-700 hover:underline">
+        <Paperclip className="h-4 w-4 text-navy-600" />
+        <span className="truncate">{anexo.fileName}</span>
+        <ExternalLink className="h-3 w-3 shrink-0 text-graphite-400" />
+      </button>
+    );
+  }
+
+  if (!canManage) return null;
+  return (
+    <button type="button" className="btn-outline btn-sm" onClick={onAnexar}>
+      <Paperclip className="h-4 w-4" /> Anexar orçamento
+    </button>
+  );
+}
+
+function AttachBudgetModal({ orderId, onClose, onDone }: { orderId: string; onClose: () => void; onDone: () => void }) {
+  const { notify } = useToast();
+  const [file, setFile] = useState<File | null>(null);
+  const [purchaseRequisitionNumber, setPurchaseRequisitionNumber] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function submit() {
+    if (!file) {
+      notify("error", "Selecione o arquivo do orçamento.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await uploadRepairOrderBudget(orderId, file, purchaseRequisitionNumber || null);
+      notify("success", "Orçamento anexado.");
+      onDone();
+    } catch (error) {
+      notify("error", getApiErrorMessage(error));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title="Anexar orçamento"
+      size="sm"
+      footer={<><button type="button" className="btn-outline" onClick={onClose}>Cancelar</button><button type="button" className="btn-primary" disabled={saving} onClick={submit}>{saving ? "Salvando..." : "Salvar"}</button></>}
+    >
+      <div className="space-y-4">
+        <div>
+          <label className="mb-1 block text-sm font-medium text-graphite-700">Arquivo do orçamento</label>
+          <input
+            type="file"
+            accept="application/pdf,image/*"
+            className="input"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          />
+        </div>
+        <TextInput
+          label="Número da requisição de compras ou pedido"
+          hint="Numero interno que autorizou a compra do reparo - opcional."
+          value={purchaseRequisitionNumber}
+          onChange={(e) => setPurchaseRequisitionNumber(e.target.value)}
+        />
       </div>
     </Modal>
   );

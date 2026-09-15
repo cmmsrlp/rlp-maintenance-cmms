@@ -2,6 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import { requireAuth } from "../../middleware/auth";
 import { requireRole, CMMS_ROLES, CMMS_ADMIN_ROLES } from "../../middleware/rbac";
+import { uploadAny } from "../../middleware/upload";
 import {
   listRotableEquipment,
   getRotableEquipment,
@@ -21,6 +22,10 @@ import {
   getRotableInstallationHistory,
   getRotableSummary,
   getRepairOrderShipmentPdf,
+  uploadRepairOrderBudget,
+  listRepairOrderAttachments,
+  getRepairOrderAttachmentUrl,
+  deleteRepairOrderAttachment,
 } from "./controller";
 import { baixarModeloRotable, simularImportacaoRotable, confirmarImportacaoRotable, exportarRotable } from "./importExport";
 
@@ -73,3 +78,7 @@ rotableRepairOrdersRouter.post("/:id/aprovar-orcamento", approveRepairBudget);
 rotableRepairOrdersRouter.post("/:id/reprovar-orcamento", rejectRepairBudget);
 rotableRepairOrdersRouter.post("/:id/retorno", returnFromRepair);
 rotableRepairOrdersRouter.get("/:id/ficha-envio", getRepairOrderShipmentPdf);
+rotableRepairOrdersRouter.get("/:id/anexos", listRepairOrderAttachments);
+rotableRepairOrdersRouter.post("/:id/anexos", uploadAny.single("file"), uploadRepairOrderBudget);
+rotableRepairOrdersRouter.get("/:id/anexos/:attachmentId/url", getRepairOrderAttachmentUrl);
+rotableRepairOrdersRouter.delete("/:id/anexos/:attachmentId", deleteRepairOrderAttachment);

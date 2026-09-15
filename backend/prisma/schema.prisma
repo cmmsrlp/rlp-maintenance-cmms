@@ -1859,9 +1859,15 @@ model RotableRepairOrder {
   approvedById     String?
   approvedAt       DateTime?
   promisedReturnAt DateTime?
+  // Numero interno de compras (requisicao ou pedido) vinculado a este orcamento - liga o
+  // reparo ao processo de compras da propria empresa, nao ao fornecedor.
+  purchaseRequisitionNumber String?
 
   // Retorno e execucao.
   returnedAt           DateTime?
+  // Nota fiscal que o fornecedor emitiu na devolucao do equipamento - fecha o ciclo fiscal
+  // que comecou na ficha de envio (remessa).
+  returnInvoiceNumber  String?
   serviceDone          String?
   partsReplacedNotes   String?
   laborNotes           String?

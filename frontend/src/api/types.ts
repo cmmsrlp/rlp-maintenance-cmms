@@ -514,7 +514,11 @@ export interface RotableRepairOrder {
   approvedById: string | null;
   approvedAt: string | null;
   promisedReturnAt: string | null;
+  /** Numero da requisicao de compras ou pedido interno vinculado ao orcamento anexado. */
+  purchaseRequisitionNumber: string | null;
   returnedAt: string | null;
+  /** Nota fiscal que o fornecedor emitiu na devolucao - fecha o ciclo fiscal da remessa. */
+  returnInvoiceNumber: string | null;
   serviceDone: string | null;
   partsReplacedNotes: string | null;
   laborNotes: string | null;

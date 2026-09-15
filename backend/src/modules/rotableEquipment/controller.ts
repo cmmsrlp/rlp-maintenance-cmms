@@ -10,6 +10,7 @@ import { clientScopeFilter, assertOwnClient, resolveClientId } from "../../middl
 import { recalcularCriticidade } from "../../lib/assetCriticality";
 import { buildRotableShipmentPdf } from "../../lib/rotableShipmentPdf";
 import { tipoPadraoDoNome } from "./camposPorTipo";
+import { getStorageProvider } from "../../lib/storage";
 
 function paraJson(valor: Record<string, string> | null | undefined): Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined {
   if (valor === undefined) return undefined;
@@ -558,7 +559,9 @@ const repairOrderSelect = {
   approvedById: true,
   approvedAt: true,
   promisedReturnAt: true,
+  purchaseRequisitionNumber: true,
   returnedAt: true,
+  returnInvoiceNumber: true,
   serviceDone: true,
   partsReplacedNotes: true,
   laborNotes: true,
@@ -662,6 +665,9 @@ export const rejectRepairBudget = asyncHandler(async (req: Request, res: Respons
 
 const returnRepairOrderSchema = z.object({
   outcome: z.nativeEnum(RotableRepairOutcome),
+  // Nota fiscal que o fornecedor emitiu na devolucao - fecha o ciclo fiscal que comecou na
+  // ficha de envio (remessa).
+  returnInvoiceNumber: z.string().nullish(),
   serviceDone: z.string().nullish(),
   partsReplacedNotes: z.string().nullish(),
   laborNotes: z.string().nullish(),
@@ -726,4 +732,76 @@ export const getRepairOrderShipmentPdf = asyncHandler(async (req: Request, res: 
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", `inline; filename="ficha-de-envio-${order.rotable.code}.pdf"`);
   res.end(pdf);
+});
+
+// ---------------------------------------------------------------------------
+// Anexo do orcamento - o PDF/foto que o fornecedor manda, junto do numero da
+// requisicao de compras ou pedido que a propria empresa abriu para autorizar o reparo.
+// ---------------------------------------------------------------------------
+
+const anexarOrcamentoSchema = z.object({ purchaseRequisitionNumber: z.string().nullish() });
+
+export const uploadRepairOrderBudget = asyncHandler(async (req: Request, res: Response) => {
+  const data = anexarOrcamentoSchema.parse(req.body);
+  const existing = await getOwnRepairOrder(req, req.params.id);
+  const file = req.file;
+  if (!file) throw new ValidationError("Selecione um arquivo.");
+
+  const key = `rotable-repair-orders/${existing.id}/${Date.now()}-${file.originalname}`;
+  await getStorageProvider().upload(key, file.buffer, file.mimetype);
+
+  const [attachment, order] = await prisma.$transaction([
+    prisma.attachment.create({
+      data: {
+        entityType: "ROTABLE_REPAIR_ORDER",
+        entityId: existing.id,
+        category: "DOCUMENT",
+        caption: "Orçamento",
+        fileKey: key,
+        fileName: file.originalname,
+        mimeType: file.mimetype,
+        sizeBytes: file.size,
+        uploadedById: req.user?.sub,
+      },
+    }),
+    prisma.rotableRepairOrder.update({
+      where: { id: existing.id },
+      data: { purchaseRequisitionNumber: data.purchaseRequisitionNumber || undefined },
+      select: repairOrderSelect,
+    }),
+  ]);
+
+  res.status(201).json({ attachment, order });
+});
+
+export const listRepairOrderAttachments = asyncHandler(async (req: Request, res: Response) => {
+  const existing = await getOwnRepairOrder(req, req.params.id);
+  const items = await prisma.attachment.findMany({
+    where: { entityType: "ROTABLE_REPAIR_ORDER", entityId: existing.id },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+  });
+  res.json(items);
+});
+
+export const getRepairOrderAttachmentUrl = asyncHandler(async (req: Request, res: Response) => {
+  const existing = await getOwnRepairOrder(req, req.params.id);
+  const attachment = await prisma.attachment.findFirst({
+    where: { id: req.params.attachmentId, entityType: "ROTABLE_REPAIR_ORDER", entityId: existing.id },
+  });
+  if (!attachment) throw new NotFoundError("Anexo");
+
+  const url = await getStorageProvider().getSignedDownloadUrl(attachment.fileKey, attachment.fileName);
+  res.json({ url });
+});
+
+export const deleteRepairOrderAttachment = asyncHandler(async (req: Request, res: Response) => {
+  const existing = await getOwnRepairOrder(req, req.params.id);
+  const attachment = await prisma.attachment.findFirst({
+    where: { id: req.params.attachmentId, entityType: "ROTABLE_REPAIR_ORDER", entityId: existing.id },
+  });
+  if (!attachment) throw new NotFoundError("Anexo");
+
+  await getStorageProvider().delete(attachment.fileKey).catch(() => undefined);
+  await prisma.attachment.delete({ where: { id: attachment.id } });
+  res.status(204).send();
 });
