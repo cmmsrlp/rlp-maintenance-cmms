@@ -24,9 +24,9 @@ export default function InstrumentsTree() {
   return (
     <div>
       <PageHeader
-        title="Arvore de ativos"
+        title="Árvore de ativos"
         description="Estrutura pai/filho dos ativos - clique no + para expandir os componentes"
-        breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Arvore de ativos" }]}
+        breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Árvore de ativos" }]}
       />
 
       <div className="mb-6">
@@ -40,7 +40,7 @@ export default function InstrumentsTree() {
       </div>
 
       {!clientId ? (
-        <EmptyState title="Selecione um cliente" description="Escolha a empresa para ver a arvore de ativos dela." />
+        <EmptyState title="Selecione um cliente" description="Escolha a empresa para ver a árvore de ativos dela." />
       ) : (
         <AssetTree clientId={clientId} linkBase="/gestao/ativos" rootLabel={client ? clientDisplayName(client) : undefined} />
       )}

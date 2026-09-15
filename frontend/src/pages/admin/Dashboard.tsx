@@ -15,13 +15,13 @@ export default function Dashboard() {
 
   return (
     <div>
-      <PageHeader title="Dashboard" description="Visao geral do CMMS entre todos os clientes" />
+      <PageHeader title="Dashboard" description="Visão geral do CMMS entre todos os clientes" />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Clientes ativos" value={data.kpis.activeClients} icon={Building2} tone="navy" to="/gestao/clientes" />
         <StatCard label="Ativos cadastrados" value={data.kpis.totalInstruments} icon={Boxes} tone="navy" to="/gestao/ativos" />
         <StatCard
-          label="Ordens de manutencao em aberto"
+          label="Ordens de manutenção em aberto"
           value={data.kpis.openWorkOrders}
           icon={ClipboardList}
           tone="yellow"
@@ -31,9 +31,9 @@ export default function Dashboard() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <div className="card p-5 lg:col-span-2">
-          <h2 className="mb-4 font-semibold text-navy-900">Ordens de manutencao recentes</h2>
+          <h2 className="mb-4 font-semibold text-navy-900">Ordens de manutenção recentes</h2>
           {data.recentWorkOrders.length === 0 ? (
-            <EmptyState title="Nada por aqui" description="Nenhuma ordem de manutencao criada ainda." />
+            <EmptyState title="Nada por aqui" description="Nenhuma ordem de manutenção criada ainda." />
           ) : (
             <ul className="divide-y divide-gray-100">
               {data.recentWorkOrders.map((w) => (
@@ -59,7 +59,7 @@ export default function Dashboard() {
             <PackageX className="h-4 w-4 text-safety-red" /> Almoxarifado: estoque baixo
           </h2>
           {data.lowStockSpareParts.length === 0 ? (
-            <p className="text-sm text-graphite-500">Nenhuma peca com estoque baixo.</p>
+            <p className="text-sm text-graphite-500">Nenhuma peça com estoque baixo.</p>
           ) : (
             <ul className="divide-y divide-gray-100">
               {data.lowStockSpareParts.map((p) => (

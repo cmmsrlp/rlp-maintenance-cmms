@@ -39,7 +39,7 @@ export function AssetTree({ clientId, linkBase, rootLabel }: AssetTreeProps) {
 
   if (isLoading) return <FullPageSpinner />;
   if (roots.length === 0) {
-    return <EmptyState title="Nenhum ativo cadastrado" description="Cadastre o primeiro ativo para comecar a montar a arvore." />;
+    return <EmptyState title="Nenhum ativo cadastrado" description="Cadastre o primeiro ativo para começar a montar a árvore." />;
   }
 
   return (
@@ -128,7 +128,7 @@ function TreeRow({
         <span className="shrink-0 text-xs text-graphite-400">
           {[instrument.type, instrument.model].filter(Boolean).join(" · ")}
         </span>
-        {alert && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-safety-red" aria-label="Atencao: critico ou vencido" />}
+        {alert && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-safety-red" aria-label="Atenção: crítico ou vencido" />}
         <span className="ml-auto flex shrink-0 gap-1.5">
           {(instrument.criticality === "CRITICAL" || instrument.criticality === "HIGH") && (
             <StatusBadge status={instrument.criticality} />
