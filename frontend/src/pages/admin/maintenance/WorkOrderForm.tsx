@@ -35,10 +35,10 @@ const schema = z.object({
   rotableEquipmentId: z.string().uuid().optional().or(z.literal("")),
   // Um seletor so, ja separando a corretiva em operacao da de quebra - o par (tipo,
   // tipo de corretiva) e' remontado no envio.
-  tipoSelecionado: z.string().min(1, "Selecione o tipo de servico."),
+  tipoSelecionado: z.string().min(1, "Selecione o tipo de serviço."),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
-  title: z.string().min(3, "Informe um titulo curto.").max(200),
-  description: z.string().min(2, "Descreva o servico."),
+  title: z.string().min(3, "Informe um título curto.").max(200),
+  description: z.string().min(2, "Descreva o serviço."),
   technicianId: z.string().uuid().optional().or(z.literal("")),
   assignedResourceId: z.string().uuid().optional().or(z.literal("")),
   breakdownSituation: z.enum(["ALREADY_HAPPENED", "HAPPENING_NOW", "TO_PLAN"]).optional().or(z.literal("")),
@@ -75,10 +75,10 @@ type FormValues = z.infer<typeof schema>;
 const ROTULO_DO_CAMPO: Partial<Record<keyof FormValues, string>> = {
   clientId: "Cliente",
   instrumentId: "Ativo",
-  tipoSelecionado: "Tipo de servico",
-  title: "Titulo",
-  description: "Descricao",
-  breakdownSituation: "Situacao da quebra",
+  tipoSelecionado: "Tipo de serviço",
+  title: "Título",
+  description: "Descrição",
+  breakdownSituation: "Situação da quebra",
   failureCodeId: "Categoria da falha",
 };
 
@@ -284,7 +284,7 @@ export default function WorkOrderForm() {
       .filter((v, i, arr) => arr.indexOf(v) === i);
     notify(
       "error",
-      campos.length ? `Falta preencher: ${campos.join(", ")}.` : "Ha campos obrigatorios nao preenchidos.",
+      campos.length ? `Falta preencher: ${campos.join(", ")}.` : "Há campos obrigatórios não preenchidos.",
     );
   }
 
@@ -293,7 +293,7 @@ export default function WorkOrderForm() {
   return (
     <div>
       <PageHeader
-        title={isEdit ? `Editar OS ${existing?.number ?? ""}` : "Nova ordem de manutencao"}
+        title={isEdit ? `Editar OS ${existing?.number ?? ""}` : "Nova ordem de manutenção"}
         breadcrumbs={[
           { label: "RLP Maintenance CMMS", to: base },
           { label: "Ordens", to: `${base}/ordens` },
@@ -303,7 +303,7 @@ export default function WorkOrderForm() {
 
       <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6" noValidate>
         <div className="card space-y-4 p-5">
-          <h2 className="font-semibold text-navy-900">Identificacao</h2>
+          <h2 className="font-semibold text-navy-900">Identificação</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {isClient ? (
               <div>
@@ -326,9 +326,9 @@ export default function WorkOrderForm() {
               ativo de verdade). */}
           {temAtivo && (
             <SelectInput
-              label="Equipamento (unidade fisica que falhou)"
+              label="Equipamento (unidade física que falhou)"
               placeholder={opcoesDeEquipamento.length ? "Detecta automaticamente" : "Nenhum equipamento instalado neste ativo"}
-              hint="So' corrige o vinculo da OS. Para trocar o equipamento fisico de verdade, use 'Substituir equipamento' na ficha da OS."
+              hint="Só corrige o vínculo da OS. Para trocar o equipamento físico de verdade, use 'Substituir equipamento' na ficha da OS."
               options={opcoesDeEquipamento}
               {...register("rotableEquipmentId")}
             />
@@ -337,10 +337,10 @@ export default function WorkOrderForm() {
               descricao abaixo continua sendo o relato completo do sintoma/servico. */}
           {mostrar(temTipo) && (
           <TextInput
-            label="Titulo"
+            label="Título"
             required
             placeholder="Ex.: Troca do rolamento do mancal lado acoplamento"
-            hint="Resumo em uma linha - e' o que aparece nas listas e na programacao."
+            hint="Resumo em uma linha - é o que aparece nas listas e na programação."
             error={errors.title?.message}
             {...register("title")}
           />
@@ -348,9 +348,9 @@ export default function WorkOrderForm() {
           {mostrar(temAtivo) && (
           <div className={`grid gap-4 ${isClient ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
             <SelectInput
-              label="Tipo de servico"
+              label="Tipo de serviço"
               required
-              hint={ehQuebra ? "Quebra: o registro da falha e' obrigatorio para concluir." : undefined}
+              hint={ehQuebra ? "Quebra: o registro da falha é obrigatório para concluir." : undefined}
               options={OPCOES_DE_TIPO.map((o) => ({ value: o.valor, label: o.rotulo }))}
               error={errors.tipoSelecionado?.message}
               {...register("tipoSelecionado")}
@@ -364,19 +364,19 @@ export default function WorkOrderForm() {
           {mostrar(temTipo) && ehQuebra && (
             <div className="rounded-lg border-2 border-safety-red/40 bg-red-50/40 p-4">
             <SelectInput
-              label="Situacao da quebra"
+              label="Situação da quebra"
               required
               hint={
                 situacaoDaQuebra === "HAPPENING_NOW"
-                  ? "A maquina esta parada: informe so quando ela parou - o termino entra quando ela voltar."
+                  ? "A máquina está parada: informe só quando ela parou - o término entra quando ela voltar."
                   : situacaoDaQuebra === "TO_PLAN"
-                    ? "Sem janela de falha por enquanto; ela e' preenchida quando o atendimento acontecer."
-                    : "Maquina ja voltou: informe quando parou e quando voltou."
+                    ? "Sem janela de falha por enquanto; ela é preenchida quando o atendimento acontecer."
+                    : "Máquina já voltou: informe quando parou e quando voltou."
               }
               options={[
-                { value: "ALREADY_HAPPENED", label: "Ja aconteceu - a maquina ja voltou" },
-                { value: "HAPPENING_NOW", label: "Esta acontecendo agora - maquina parada" },
-                { value: "TO_PLAN", label: "Vou planejar - sera atendida depois" },
+                { value: "ALREADY_HAPPENED", label: "Já aconteceu - a máquina já voltou" },
+                { value: "HAPPENING_NOW", label: "Está acontecendo agora - máquina parada" },
+                { value: "TO_PLAN", label: "Vou planejar - será atendida depois" },
               ]}
               error={errors.breakdownSituation?.message}
               {...register("breakdownSituation")}
@@ -386,7 +386,7 @@ export default function WorkOrderForm() {
 
           {mostrar(temTipo) && (
           <TextareaInput
-            label="Descricao / sintoma"
+            label="Descrição / sintoma"
             required
             rows={3}
             hint="O relato completo: o que foi observado ou o que precisa ser feito."
@@ -405,9 +405,9 @@ export default function WorkOrderForm() {
               label="Prioridade"
               options={[
                 { value: "LOW", label: "Baixa" },
-                { value: "MEDIUM", label: "Media" },
+                { value: "MEDIUM", label: "Média" },
                 { value: "HIGH", label: "Alta" },
-                { value: "CRITICAL", label: "Critica" },
+                { value: "CRITICAL", label: "Crítica" },
               ]}
               {...register("priority")}
             />
@@ -416,7 +416,7 @@ export default function WorkOrderForm() {
                 Cancelada nao entram aqui - so na ficha da OS, onde tem regra. */}
             {!isEdit && (
               <SelectInput
-                label="Situacao da OS"
+                label="Situação da OS"
                 hint={SITUACOES_DE_ABERTURA.find((o) => o.valor === situacaoDaOs)?.ajuda ?? "Como a OS nasce."}
                 options={SITUACOES_DE_ABERTURA.map((o) => ({ value: o.valor, label: o.rotulo }))}
                 {...register("status")}
@@ -437,17 +437,17 @@ export default function WorkOrderForm() {
           {/* Daqui para baixo tudo e' opcional: fica recolhido para o formulario mostrar
               primeiro o que ele exige. */}
           {mostrar(temOQueFazer) && (
-            <SecaoRecolhivel titulo="Responsavel" dica="opcional">
+            <SecaoRecolhivel titulo="Responsável" dica="opcional">
               <div className={`grid gap-4 ${isClient ? "" : "sm:grid-cols-2"}`}>
                 {!isClient && (
-                  <UserPicker label="Tecnico responsavel" roles={["ADMIN", "TECHNICIAN"]} error={errors.technicianId?.message} {...register("technicianId")} />
+                  <UserPicker label="Técnico responsável" roles={["ADMIN", "TECHNICIAN"]} error={errors.technicianId?.message} {...register("technicianId")} />
                 )}
                 <LaborResourcePicker
                   label="Quem vai executar"
-                  placeholder={clientId ? "Buscar por nome, funcao ou matricula" : "Selecione o cliente primeiro"}
+                  placeholder={clientId ? "Buscar por nome, função ou matrícula" : "Selecione o cliente primeiro"}
                   disabled={!clientId}
                   clientId={clientId}
-                  hint="Tambem da para definir arrastando no quadro de programacao ou no planejamento."
+                  hint="Também dá para definir arrastando no quadro de programação ou no planejamento."
                   error={errors.assignedResourceId?.message}
                   {...register("assignedResourceId")}
                 />
@@ -456,8 +456,8 @@ export default function WorkOrderForm() {
           )}
 
           {mostrar(temOQueFazer) && (
-            <SecaoRecolhivel titulo="Observacoes" dica="opcional">
-              <TextareaInput label="Observacoes" rows={2} {...register("observations")} />
+            <SecaoRecolhivel titulo="Observações" dica="opcional">
+              <TextareaInput label="Observações" rows={2} {...register("observations")} />
             </SecaoRecolhivel>
           )}
 
@@ -467,8 +467,8 @@ export default function WorkOrderForm() {
               {!temAtivo
                 ? "Escolha o ativo para continuar."
                 : !temTipo
-                  ? "Escolha o tipo de servico para continuar."
-                  : "Preencha o titulo e a descricao - o resto aparece em seguida."}
+                  ? "Escolha o tipo de serviço para continuar."
+                  : "Preencha o título e a descrição - o resto aparece em seguida."}
             </p>
           )}
         </div>
@@ -483,20 +483,20 @@ export default function WorkOrderForm() {
                 Registro da falha
                 {ehQuebra ? (
                   <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-safety-red">
-                    obrigatorio na corretiva de quebra
+                    obrigatório na corretiva de quebra
                   </span>
                 ) : (
-                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-graphite-500">opcional em operacao</span>
+                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-graphite-500">opcional em operação</span>
                 )}
               </h2>
               <p className="text-xs text-graphite-500">
-                Alimenta o Pareto de falhas e a tela de Falhas e RCA. O tempo parado e' calculado das datas.
+                Alimenta o Pareto de falhas e a tela de Falhas e RCA. O tempo parado é calculado das datas.
               </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <TextInput
-                label="Inicio da falha"
+                label="Início da falha"
                 type="datetime-local"
                 required={ehQuebra && situacaoDaQuebra !== "TO_PLAN"}
                 hint={situacaoDaQuebra === "TO_PLAN" ? "Preencha quando o atendimento acontecer." : undefined}
@@ -506,7 +506,7 @@ export default function WorkOrderForm() {
                   chutar a hora em que ela vai voltar. */}
               {situacaoDaQuebra !== "HAPPENING_NOW" && (
                 <TextInput
-                  label="Termino da falha"
+                  label="Término da falha"
                   type="datetime-local"
                   required={ehQuebra && situacaoDaQuebra === "ALREADY_HAPPENED"}
                   {...register("failureEndedAt")}
@@ -514,7 +514,7 @@ export default function WorkOrderForm() {
               )}
               <SelectInput
                 label="Gravidade"
-                placeholder="Nao informada"
+                placeholder="Não informada"
                 required={ehQuebra}
                 options={GRAVIDADES_DE_FALHA.map((g) => ({ value: g.valor, label: g.rotulo }))}
                 {...register("failureSeverity")}
@@ -522,7 +522,7 @@ export default function WorkOrderForm() {
             </div>
 
             <TextareaInput
-              label="Descricao da falha / sintoma"
+              label="Descrição da falha / sintoma"
               required={ehQuebra}
               rows={2}
               hint="O laudo de quem foi ver - diferente do pedido que abriu a OS."
@@ -533,7 +533,7 @@ export default function WorkOrderForm() {
                 com o que a OS exige agora. */}
             <SecaoRecolhivel titulo="Mais sobre a falha" dica="opcional">
               <TextInput
-                label="Perda de producao"
+                label="Perda de produção"
                 type="number"
                 step="any"
                 min="0"
@@ -542,7 +542,7 @@ export default function WorkOrderForm() {
               />
               <div className="grid gap-4 sm:grid-cols-2">
                 <TextareaInput label="Causa identificada" rows={2} hint="A causa raiz de verdade sai da RCA." {...register("failureRootCause")} />
-                <TextareaInput label="Acao corretiva tomada" rows={2} {...register("failureCorrectiveAction")} />
+                <TextareaInput label="Ação corretiva tomada" rows={2} {...register("failureCorrectiveAction")} />
               </div>
             </SecaoRecolhivel>
           </div>
@@ -552,14 +552,14 @@ export default function WorkOrderForm() {
         <div className="card p-5">
           <SecaoRecolhivel titulo="Planejamento" dica="opcional - data, janela e horas previstas">
           <p className="text-xs text-graphite-500">
-            A data agendada e' o dia em que a OS aparece na programacao. A janela e as horas estimadas
-            sao a previsao - o que foi realmente gasto e' apontado na aba Equipe e horas da OS.
+            A data agendada é o dia em que a OS aparece na programação. A janela e as horas estimadas
+            são a previsão - o que foi realmente gasto é apontado na aba Equipe e horas da OS.
           </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <TextInput label="Data agendada" type="date" {...register("scheduledDate")} />
-            <TextInput label="Inicio planejado" type="datetime-local" {...register("plannedStart")} />
+            <TextInput label="Início planejado" type="datetime-local" {...register("plannedStart")} />
             <TextInput
-              label="Termino planejado"
+              label="Término planejado"
               type="datetime-local"
               error={errors.plannedEnd?.message}
               {...register("plannedEnd")}
@@ -572,7 +572,7 @@ export default function WorkOrderForm() {
 
         {mostrar(temOQueFazer) && (
         <div className="card p-5">
-          <SecaoRecolhivel titulo="Operacoes do servico" dica="opcional - o passo a passo">
+          <SecaoRecolhivel titulo="Operações do serviço" dica="opcional - o passo a passo">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-graphite-500">O que fazer, em ordem, e o tempo esperado de cada uma (em minutos).</p>
@@ -586,7 +586,7 @@ export default function WorkOrderForm() {
               <div key={field.id} className="flex items-center gap-2">
                 <TextInput
                   className="flex-1"
-                  placeholder={`Operacao ${index + 1}`}
+                  placeholder={`Operação ${index + 1}`}
                   error={errors.checklist?.[index]?.description?.message}
                   {...register(`checklist.${index}.description`)}
                 />
