@@ -144,7 +144,7 @@ export default function RcaForm() {
     const campos = Object.keys(erros)
       .map((campo) => ROTULO_DO_CAMPO[campo as keyof FormValues] ?? campo)
       .filter((v, i, arr) => arr.indexOf(v) === i);
-    notify("error", campos.length ? `Falta preencher: ${campos.join(", ")}.` : "Ha campos obrigatorios nao preenchidos.");
+    notify("error", campos.length ? `Falta preencher: ${campos.join(", ")}.` : "Há campos obrigatórios não preenchidos.");
   }
 
   async function handleDelete() {
@@ -163,10 +163,10 @@ export default function RcaForm() {
   return (
     <div>
       <PageHeader
-        title={isEdit ? `RCA: ${existing?.problem ?? ""}` : "Nova analise de causa raiz (RCA)"}
+        title={isEdit ? `RCA: ${existing?.problem ?? ""}` : "Nova análise de causa raiz (RCA)"}
         breadcrumbs={[
           { label: "RLP Maintenance CMMS", to: base },
-          { label: "RCA / 5 Porques", to: `${base}/rca` },
+          { label: "RCA / 5 Porquês", to: `${base}/rca` },
           { label: isEdit ? "Editar" : "Nova" },
         ]}
         actions={
@@ -180,7 +180,7 @@ export default function RcaForm() {
 
       <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6" noValidate>
         <div className="card space-y-4 p-5">
-          <h2 className="font-semibold text-navy-900">Identificacao</h2>
+          <h2 className="font-semibold text-navy-900">Identificação</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {isClient ? (
               <div>
@@ -194,8 +194,8 @@ export default function RcaForm() {
           </div>
           <TextareaInput label="Problema" required rows={2} error={errors.problem?.message} {...register("problem")} />
           <div className="grid gap-4 sm:grid-cols-3">
-            <TextInput label="Participantes (opcional)" placeholder="Nomes, separados por virgula" {...register("participants")} />
-            <UserPicker label="Responsavel (opcional)" roles={["ADMIN", "TECHNICIAN"]} {...register("responsibleId")} />
+            <TextInput label="Participantes (opcional)" placeholder="Nomes, separados por vírgula" {...register("participants")} />
+            <UserPicker label="Responsável (opcional)" roles={["ADMIN", "TECHNICIAN"]} {...register("responsibleId")} />
             <TextInput label="Prazo (opcional)" type="date" {...register("dueDate")} />
           </div>
           <SelectInput
@@ -210,7 +210,7 @@ export default function RcaForm() {
         </div>
 
         <div className="card space-y-3 p-5">
-          <h2 className="font-semibold text-navy-900">5 Porques</h2>
+          <h2 className="font-semibold text-navy-900">5 Porquês</h2>
           <TextInput label="1. Por que aconteceu?" {...register("why1")} />
           <TextInput label="2. Por que?" {...register("why2")} />
           <TextInput label="3. Por que?" {...register("why3")} />
@@ -220,17 +220,17 @@ export default function RcaForm() {
         </div>
 
         <div className="card space-y-4 p-5">
-          <h2 className="font-semibold text-navy-900">Plano de acao</h2>
-          <TextareaInput label="Acoes corretivas" rows={2} {...register("correctiveActions")} />
-          <TextareaInput label="Acoes preventivas" rows={2} {...register("preventiveActions")} />
+          <h2 className="font-semibold text-navy-900">Plano de ação</h2>
+          <TextareaInput label="Ações corretivas" rows={2} {...register("correctiveActions")} />
+          <TextareaInput label="Ações preventivas" rows={2} {...register("preventiveActions")} />
         </div>
 
         <div className="card space-y-4 p-5">
-          <h2 className="font-semibold text-navy-900">Verificacao de eficacia</h2>
+          <h2 className="font-semibold text-navy-900">Verificação de eficácia</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <TextInput label="Verificada em (opcional)" type="date" {...register("effectivenessVerifiedAt")} />
           </div>
-          <TextareaInput label="Observacoes da verificacao" rows={2} {...register("effectivenessNotes")} />
+          <TextareaInput label="Observações da verificação" rows={2} {...register("effectivenessNotes")} />
         </div>
 
         <div className="flex justify-end gap-3">

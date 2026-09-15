@@ -29,8 +29,8 @@ export default function RcaList() {
   return (
     <div>
       <PageHeader
-        title="RCA / 5 Porques"
-        description="Analise de causa raiz de falhas criticas ou recorrentes"
+        title="RCA / 5 Porquês"
+        description="Análise de causa raiz de falhas críticas ou recorrentes"
         breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "RCA" }]}
         actions={
           <button className="btn-primary" onClick={() => navigate(`${base}/rca/novo`)}>
@@ -60,7 +60,7 @@ export default function RcaList() {
           { header: "Problema", accessor: (r) => <span className="line-clamp-1 font-medium text-navy-900">{r.problem}</span> },
           ...(isClient ? [] : [{ header: "Cliente", accessor: (r: RootCauseAnalysis) => clientDisplayName(r.client) }]),
           { header: "Ativo", accessor: (r) => r.instrument?.tag ?? "-" },
-          { header: "Responsavel", accessor: (r) => r.responsible?.name ?? "-" },
+          { header: "Responsável", accessor: (r) => r.responsible?.name ?? "-" },
           { header: "Prazo", accessor: (r) => formatDate(r.dueDate) },
           { header: "Status", accessor: (r) => <StatusBadge status={r.status} label={STATUS_LABELS[r.status]} /> },
         ]}

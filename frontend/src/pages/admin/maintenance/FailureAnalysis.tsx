@@ -35,11 +35,11 @@ export default function FailureAnalysis() {
     <div>
       <PageHeader
         title="Falhas e RCA"
-        description="O que quebrou, quanto parou e o que ja foi investigado - a partir das OS corretivas"
+        description="O que quebrou, quanto parou e o que já foi investigado - a partir das OS corretivas"
         breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Falhas e RCA" }]}
         actions={
           <Link to={`${base}/manutencao/rca`} className="btn-outline">
-            Todas as analises (RCA)
+            Todas as análises (RCA)
           </Link>
         }
       />
@@ -53,20 +53,20 @@ export default function FailureAnalysis() {
       {isLoading || !data ? (
         <FullPageSpinner />
       ) : data.totalCorrective === 0 ? (
-        <EmptyState title="Nenhuma OS corretiva no periodo" description="O Pareto aparece assim que houver ordens corretivas concluidas ou em andamento nos ultimos 90 dias." />
+        <EmptyState title="Nenhuma OS corretiva no período" description="O Pareto aparece assim que houver ordens corretivas concluídas ou em andamento nos últimos 90 dias." />
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="OS corretivas (periodo)" value={data.totalCorrective} icon={AlertTriangle} tone="navy" />
-            <StatCard label="Emergenciais (criticas)" value={data.emergency} icon={Siren} tone="red" />
-            <StatCard label="Sem codigo de falha" value={data.withoutFailureCode} icon={HelpCircle} tone="yellow" />
-            <StatCard label="Codigos recorrentes" value={data.recurringFailureCodes} icon={Repeat} tone="yellow" />
+            <StatCard label="OS corretivas (período)" value={data.totalCorrective} icon={AlertTriangle} tone="navy" />
+            <StatCard label="Emergenciais (críticas)" value={data.emergency} icon={Siren} tone="red" />
+            <StatCard label="Sem código de falha" value={data.withoutFailureCode} icon={HelpCircle} tone="yellow" />
+            <StatCard label="Códigos recorrentes" value={data.recurringFailureCodes} icon={Repeat} tone="yellow" />
           </div>
 
           <div className="mt-8 grid gap-6 lg:grid-cols-2">
-            <ParetoSection title="Por codigo de falha" buckets={data.byFailureCode} />
+            <ParetoSection title="Por código de falha" buckets={data.byFailureCode} />
             <ParetoSection title="Por ativo (ranking)" buckets={data.byInstrument} />
-            <ParetoSection title="Por area" buckets={data.byArea} />
+            <ParetoSection title="Por área" buckets={data.byArea} />
           </div>
         </>
       )}
@@ -80,7 +80,7 @@ export default function FailureAnalysis() {
         {!registros || registros.items.length === 0 ? (
           <EmptyState
             title="Nenhum registro de falha ainda"
-            description="Numa OS corretiva, a aba Execucao tem o bloco 'Registro da falha' - o que for preenchido la aparece aqui."
+            description="Numa OS corretiva, a aba Execução tem o bloco 'Registro da falha' - o que for preenchido lá aparece aqui."
           />
         ) : (
           <div className="card divide-y divide-gray-100">
@@ -113,7 +113,7 @@ export default function FailureAnalysis() {
                   {/* Sem as duas datas nao da pra dizer quanto parou - e' melhor dizer isso
                       do que estampar "0h" como se a linha nao tivesse parado. */}
                   <p className="text-sm font-semibold text-navy-900">
-                    {r.downtimeHours != null ? `${r.downtimeHours.toFixed(1)}h parada` : "Parada nao informada"}
+                    {r.downtimeHours != null ? `${r.downtimeHours.toFixed(1)}h parada` : "Parada não informada"}
                   </p>
                   {r.productionLoss != null && (
                     <p className="text-xs text-graphite-500">Perda: {r.productionLoss}</p>
@@ -141,7 +141,7 @@ const SEVERIDADE: Record<FailureSeverity, { rotulo: string; tom: string }> = {
   LOW: { rotulo: "Baixa", tom: "border-gray-200 bg-gray-50 text-graphite-600" },
   MODERATE: { rotulo: "Moderada", tom: "border-yellow-200 bg-yellow-50 text-safety-yellow-dark" },
   HIGH: { rotulo: "Alta", tom: "border-orange-200 bg-orange-50 text-orange-700" },
-  CRITICAL: { rotulo: "Critica", tom: "border-red-200 bg-red-50 text-safety-red" },
+  CRITICAL: { rotulo: "Crítica", tom: "border-red-200 bg-red-50 text-safety-red" },
 };
 
 function ParetoSection({ title, buckets }: { title: string; buckets: FailureAnalysisBucket[] }) {
