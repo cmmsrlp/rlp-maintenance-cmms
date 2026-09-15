@@ -124,11 +124,12 @@ export default function RotableEquipmentList() {
   async function exportar() {
     setExportando(true);
     try {
-      const blob = await exportarRotable(clientId);
+      const blob = await exportarRotable(clientId, status || undefined);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "equipamentos-recondicionaveis.xlsx";
+      const sufixo = status ? `-${OPCOES_DE_STATUS.find((o) => o.value === status)?.label.toLowerCase().replace(/\s+/g, "-")}` : "";
+      a.download = `equipamentos-recondicionaveis${sufixo}.xlsx`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
@@ -147,8 +148,14 @@ export default function RotableEquipmentList() {
         actions={
           clientId && (
             <>
-              <button className="btn-outline" onClick={exportar} disabled={exportando}>
-                <Upload className="h-4 w-4" /> {exportando ? "Exportando..." : "Exportar"}
+              <button
+                className="btn-outline"
+                onClick={exportar}
+                disabled={exportando}
+                title={status ? `Exporta só os equipamentos com status "${OPCOES_DE_STATUS.find((o) => o.value === status)?.label}"` : "Exporta todos os equipamentos"}
+              >
+                <Upload className="h-4 w-4" />
+                {exportando ? "Exportando..." : status ? `Exportar (${OPCOES_DE_STATUS.find((o) => o.value === status)?.label})` : "Exportar"}
               </button>
               <button className="btn-outline" onClick={() => setImportOpen(true)}>
                 <Download className="h-4 w-4" /> Importar

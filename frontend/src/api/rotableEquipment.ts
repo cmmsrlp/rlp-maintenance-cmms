@@ -91,8 +91,8 @@ export async function confirmarImportacaoRotable(file: File, clientId?: string, 
 
 /** Tudo que esta cadastrado, separado por aba/tipo - mesmo layout do modelo de importacao,
  * com colunas extras de status/instalacao/data de cadastro. */
-export async function exportarRotable(clientId?: string): Promise<Blob> {
-  const { data } = await api.get("/rotable-equipment/exportar", { params: { clientId }, responseType: "blob" });
+export async function exportarRotable(clientId?: string, status?: RotableEquipmentStatus): Promise<Blob> {
+  const { data } = await api.get("/rotable-equipment/exportar", { params: { clientId, status }, responseType: "blob" });
   return data as Blob;
 }
 
