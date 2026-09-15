@@ -27,8 +27,8 @@ import { LaborResourcePicker } from "../../../components/LaborResourcePicker";
 import { useCmms } from "../../../lib/cmms";
 
 const CRITERIOS_AUTO = [
-  { value: "VENCIMENTO", label: "Vencimento proximo (data +/- 5 dias)" },
-  { value: "AREA", label: "Area" },
+  { value: "VENCIMENTO", label: "Vencimento próximo (data +/- 5 dias)" },
+  { value: "AREA", label: "Área" },
   { value: "PARADO", label: "Equipamento parado" },
 ] as const;
 type CriterioAuto = (typeof CRITERIOS_AUTO)[number]["value"];
@@ -106,7 +106,7 @@ export default function LubricationRoutesList() {
   async function buscarSugestoes() {
     if (!clientId) return;
     if (criterioAuto === "AREA" && !areaIdAuto) {
-      notify("error", "Escolha uma area.");
+      notify("error", "Escolha uma área.");
       return;
     }
     setBuscandoSugestoes(true);
@@ -123,7 +123,7 @@ export default function LubricationRoutesList() {
         pontos.forEach((p) => novo.set(p.id, p));
         return novo;
       });
-      if (pontos.length === 0) notify("error", "Nenhum ponto encontrado para esse criterio.");
+      if (pontos.length === 0) notify("error", "Nenhum ponto encontrado para esse critério.");
     } catch (error) {
       notify("error", getApiErrorMessage(error));
     } finally {
@@ -148,7 +148,7 @@ export default function LubricationRoutesList() {
         notify("error", resultado.puladas.map((p) => p.motivo).join(" "));
       }
       if (resultado.geradas.length === 0 && resultado.puladas.length === 0) {
-        notify("error", "Nao ha pontos na rota para gerar OS.");
+        notify("error", "Não há pontos na rota para gerar OS.");
       }
     } catch (error) {
       notify("error", getApiErrorMessage(error));
@@ -198,11 +198,11 @@ export default function LubricationRoutesList() {
   return (
     <div>
       <PageHeader
-        title="Rotas de lubrificacao"
+        title="Rotas de lubrificação"
         description="A ordem em que o lubrificador percorre os pontos"
         breadcrumbs={[
           { label: "RLP Maintenance CMMS", to: base },
-          { label: "Lubrificacao", to: `${base}/lubrificacao` },
+          { label: "Lubrificação", to: `${base}/lubrificacao` },
           { label: "Rotas" },
         ]}
         actions={
@@ -225,13 +225,13 @@ export default function LubricationRoutesList() {
       )}
 
       {!clientId ? (
-        <EmptyState title="Selecione o cliente" description="As rotas sao da fabrica de cada empresa." />
+        <EmptyState title="Selecione o cliente" description="As rotas são da fábrica de cada empresa." />
       ) : isLoading ? (
         <p className="text-sm text-graphite-500">Carregando...</p>
       ) : (routes ?? []).length === 0 ? (
         <EmptyState
           title="Nenhuma rota criada"
-          description="Uma rota agrupa os pontos numa sequencia de campo - e' o que o plano de lubrificacao agenda para virar OS."
+          description="Uma rota agrupa os pontos numa sequência de campo - é o que o plano de lubrificação agenda para virar OS."
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
@@ -251,7 +251,7 @@ export default function LubricationRoutesList() {
                   <div>
                     <h2 className="font-semibold text-navy-900">{r.name}</h2>
                     <p className="text-xs text-graphite-500">
-                      {[r.code, r.responsible?.name].filter(Boolean).join(" - ") || "sem responsavel definido"}
+                      {[r.code, r.responsible?.name].filter(Boolean).join(" - ") || "sem responsável definido"}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -259,7 +259,7 @@ export default function LubricationRoutesList() {
                       className="btn-ghost btn-sm"
                       onClick={() => handleGerarOs(r)}
                       disabled={gerandoOsDe === r.id || (r.items ?? []).length === 0}
-                      title="Gera uma OS de lubrificacao por ativo da rota, para acompanhamento e rastreio"
+                      title="Gera uma OS de lubrificação por ativo da rota, para acompanhamento e rastreio"
                     >
                       <ClipboardList className="h-4 w-4" /> {gerandoOsDe === r.id ? "Gerando..." : "Gerar OS"}
                     </button>
@@ -300,7 +300,7 @@ export default function LubricationRoutesList() {
       <Modal
         open={formOpen}
         onClose={() => setFormOpen(false)}
-        title={editando ? `Editar rota ${editando.name}` : "Nova rota de lubrificacao"}
+        title={editando ? `Editar rota ${editando.name}` : "Nova rota de lubrificação"}
         size="lg"
         footer={
           <>
@@ -314,34 +314,34 @@ export default function LubricationRoutesList() {
         <form id="rota-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="grid gap-4 sm:grid-cols-2">
             <TextInput label="Nome da rota" required placeholder="Ex.: Rota semanal - Linha 4" error={errors.name?.message} {...register("name")} />
-            <TextInput label="Codigo" placeholder="Ex.: ROT-L4-SEM" {...register("code")} />
+            <TextInput label="Código" placeholder="Ex.: ROT-L4-SEM" {...register("code")} />
           </div>
           <LaborResourcePicker
-            label="Responsavel"
+            label="Responsável"
             placeholder="A definir"
             clientId={clientId}
             {...register("responsibleId")}
           />
-          <TextareaInput label="Observacoes" rows={2} {...register("notes")} />
+          <TextareaInput label="Observações" rows={2} {...register("notes")} />
 
           <div className="rounded-lg border border-gray-200 p-4">
             <p className="flex items-center gap-1.5 text-sm font-medium text-graphite-700">
-              <Wand2 className="h-4 w-4 text-navy-600" /> Montagem automatica
+              <Wand2 className="h-4 w-4 text-navy-600" /> Montagem automática
             </p>
             <p className="mb-3 mt-0.5 text-xs text-graphite-500">
-              Sugere os pontos por um criterio - so entram na rota depois de confirmados abaixo. A montagem manual
-              (adicionar ponto a ponto) continua disponivel logo depois.
+              Sugere os pontos por um critério - só entram na rota depois de confirmados abaixo. A montagem manual
+              (adicionar ponto a ponto) continua disponível logo depois.
             </p>
             <div className="grid gap-3 sm:grid-cols-3">
               <SelectInput
-                label="Criterio"
+                label="Critério"
                 options={CRITERIOS_AUTO.map((c) => ({ value: c.value, label: c.label }))}
                 value={criterioAuto}
                 onChange={(e) => { setCriterioAuto(e.target.value as CriterioAuto); setSugestoes(null); }}
               />
               {criterioAuto === "VENCIMENTO" && (
                 <TextInput
-                  label="Data de referencia"
+                  label="Data de referência"
                   type="date"
                   hint="Junta quem vence 5 dias antes ou depois desta data."
                   value={dataReferenciaAuto}
@@ -350,8 +350,8 @@ export default function LubricationRoutesList() {
               )}
               {criterioAuto === "AREA" && (
                 <SelectInput
-                  label="Area"
-                  placeholder="Selecione a area"
+                  label="Área"
+                  placeholder="Selecione a área"
                   options={(areas ?? []).map((a) => ({ value: a.id, label: a.name }))}
                   value={areaIdAuto}
                   onChange={(e) => setAreaIdAuto(e.target.value)}
@@ -373,22 +373,22 @@ export default function LubricationRoutesList() {
                     return (
                       <li key={id}>
                         {p ? `${p.code} - ${p.name} (${p.instrument?.tag ?? "sem TAG"})` : id}
-                        {p && pontosDaRota.includes(id) ? " - ja esta na rota" : ""}
+                        {p && pontosDaRota.includes(id) ? " - já está na rota" : ""}
                       </li>
                     );
                   })}
                 </ul>
                 <button type="button" className="btn-primary btn-sm" onClick={adicionarSugeridos}>
-                  Adicionar {sugestoes.length} ponto(s) a rota
+                  Adicionar {sugestoes.length} ponto(s) à rota
                 </button>
               </div>
             )}
           </div>
 
           <div>
-            <p className="mb-1 text-sm font-medium text-graphite-700">Pontos da rota, na ordem de execucao</p>
+            <p className="mb-1 text-sm font-medium text-graphite-700">Pontos da rota, na ordem de execução</p>
             <p className="mb-2 text-xs text-graphite-500">
-              A ordem e' a sequencia de caminhada na fabrica - e' ela que economiza o tempo do lubrificador.
+              A ordem é a sequência de caminhada na fábrica - é ela que economiza o tempo do lubrificador.
             </p>
 
             {pontosDaRota.length === 0 ? (

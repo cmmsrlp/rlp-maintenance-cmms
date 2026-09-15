@@ -21,7 +21,7 @@ import { numeroOpcional } from "../../../lib/zodHelpers";
 import { TIPOS_DE_LUBRIFICANTE, BASES_DE_LUBRIFICANTE } from "../../../lib/lubricationLabels";
 
 const schema = z.object({
-  sparePartId: z.string().uuid("Selecione a peca do almoxarifado."),
+  sparePartId: z.string().uuid("Selecione a peça do almoxarifado."),
   type: z.enum(["GREASE", "OIL", "OTHER"]),
   specification: z.string().optional(),
   base: z.enum(["MINERAL", "SYNTHETIC", "SEMI_SYNTHETIC"]).optional().or(z.literal("")),
@@ -112,10 +112,10 @@ export default function LubricantsList() {
     <div>
       <PageHeader
         title="Lubrificantes"
-        description="Ficha tecnica das graxas e oleos - o saldo e o custo vem do almoxarifado"
+        description="Ficha técnica das graxas e óleos - o saldo e o custo vem do almoxarifado"
         breadcrumbs={[
           { label: "RLP Maintenance CMMS", to: base },
-          { label: "Lubrificacao", to: `${base}/lubrificacao` },
+          { label: "Lubrificação", to: `${base}/lubrificacao` },
           { label: "Lubrificantes" },
         ]}
         actions={
@@ -138,7 +138,7 @@ export default function LubricantsList() {
       )}
 
       {!clientId ? (
-        <EmptyState title="Selecione o cliente" description="Os lubrificantes sao do almoxarifado de cada empresa." />
+        <EmptyState title="Selecione o cliente" description="Os lubrificantes são do almoxarifado de cada empresa." />
       ) : (
         <DataTable<Lubricant>
           rows={lubricants ?? []}
@@ -152,14 +152,14 @@ export default function LubricantsList() {
                 <div>
                   <p className="font-medium text-navy-900">{l.sparePart.name}</p>
                   <p className="text-xs text-graphite-400">
-                    {[l.sparePart.code, l.specification, l.manufacturer].filter(Boolean).join(" - ") || "sem especificacao"}
+                    {[l.sparePart.code, l.specification, l.manufacturer].filter(Boolean).join(" - ") || "sem especificação"}
                   </p>
                 </div>
               ),
             },
             { header: "Tipo", accessor: (l) => TIPOS_DE_LUBRIFICANTE[l.type] },
             { header: "Base", accessor: (l) => (l.base ? BASES_DE_LUBRIFICANTE[l.base] : "-") },
-            { header: "Aplicacao", accessor: (l) => l.application ?? "-" },
+            { header: "Aplicação", accessor: (l) => l.application ?? "-" },
             {
               header: "Saldo no estoque",
               accessor: (l) => (
@@ -175,7 +175,7 @@ export default function LubricantsList() {
               header: "Embalagem aberta",
               accessor: (l) =>
                 l.packageSize == null ? (
-                  <span className="text-graphite-400">nao rastreada</span>
+                  <span className="text-graphite-400">não rastreada</span>
                 ) : (
                   <span className="text-graphite-700">
                     {l.openPackageRemaining != null ? `${l.openPackageRemaining.toFixed(2)} de ${l.packageSize}` : "nenhuma aberta"}
@@ -210,15 +210,15 @@ export default function LubricantsList() {
         <form id="lubricant-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           {editing ? (
             <div className="rounded-lg bg-gray-50 px-3 py-2 text-sm text-graphite-700">
-              Peca do almoxarifado: <span className="font-medium text-navy-900">{editing.sparePart.name}</span>
-              <p className="mt-0.5 text-xs text-graphite-500">Nao da para trocar a peca de um lubrificante ja cadastrado.</p>
+              Peça do almoxarifado: <span className="font-medium text-navy-900">{editing.sparePart.name}</span>
+              <p className="mt-0.5 text-xs text-graphite-500">Não dá para trocar a peça de um lubrificante já cadastrado.</p>
             </div>
           ) : (
             <SelectInput
-              label="Peca do almoxarifado"
+              label="Peça do almoxarifado"
               required
-              hint="O lubrificante e' uma peca do estoque - o saldo e o custo ficam la."
-              placeholder={disponiveis.length ? "Selecione a peca" : "Nenhuma peca disponivel"}
+              hint="O lubrificante é uma peça do estoque - o saldo e o custo ficam lá."
+              placeholder={disponiveis.length ? "Selecione a peça" : "Nenhuma peça disponível"}
               options={disponiveis.map((p) => ({ value: p.id, label: `${p.name} (${p.stockQty} ${p.unit})` }))}
               error={errors.sparePartId?.message}
               {...register("sparePartId")}
@@ -226,7 +226,7 @@ export default function LubricantsList() {
           )}
           {!editing && disponiveis.length === 0 && (
             <p className="text-xs text-graphite-500">
-              Cadastre a graxa ou o oleo no Almoxarifado primeiro; aqui ele ganha a ficha tecnica.
+              Cadastre a graxa ou o óleo no Almoxarifado primeiro; aqui ele ganha a ficha técnica.
             </p>
           )}
           <div className="grid gap-4 sm:grid-cols-2">
@@ -238,21 +238,21 @@ export default function LubricantsList() {
             />
             <SelectInput
               label="Base"
-              placeholder="Nao informada"
+              placeholder="Não informada"
               options={Object.entries(BASES_DE_LUBRIFICANTE).map(([valor, rotulo]) => ({ value: valor, label: rotulo }))}
               {...register("base")}
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <TextInput label="Especificacao" placeholder="Ex.: NLGI 2, ISO VG 220" {...register("specification")} />
+            <TextInput label="Especificação" placeholder="Ex.: NLGI 2, ISO VG 220" {...register("specification")} />
             <TextInput label="Fabricante" {...register("manufacturer")} />
           </div>
-          <TextInput label="Aplicacao" placeholder="Ex.: mancais de rolamento ate 120 C" {...register("application")} />
+          <TextInput label="Aplicação" placeholder="Ex.: mancais de rolamento até 120 C" {...register("application")} />
           <TextInput
             label="Quanto vem numa embalagem fechada (opcional)"
             type="number"
             step="any"
-            hint={`Ex.: 1.8 ${editing?.sparePart.unit ?? "kg"}. Com isso preenchido, o saldo do almoxarifado passa a contar embalagens FECHADAS (o lubrificador retira uma inteira e usa aos poucos, sem baixar o estoque a cada aplicacao) - em branco, cada aplicacao continua baixando o estoque direto (uso por tambor/reservatorio, sem embalagem individual).`}
+            hint={`Ex.: 1.8 ${editing?.sparePart.unit ?? "kg"}. Com isso preenchido, o saldo do almoxarifado passa a contar embalagens FECHADAS (o lubrificador retira uma inteira e usa aos poucos, sem baixar o estoque a cada aplicação) - em branco, cada aplicação continua baixando o estoque direto (uso por tambor/reservatório, sem embalagem individual).`}
             error={errors.packageSize?.message}
             {...register("packageSize")}
           />
