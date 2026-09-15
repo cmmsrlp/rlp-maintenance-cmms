@@ -19,7 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 const schema = z.object({
-  name: z.string().min(2, "Informe o nome da peca."),
+  name: z.string().min(2, "Informe o nome da peça."),
   code: z.string().optional(),
   category: z.string().optional(),
   unit: z.string().optional(),
@@ -72,7 +72,7 @@ export default function SparePartsList() {
   async function onSubmit(values: FormValues) {
     try {
       await createSparePart({ ...values, clientId, unitCost: values.unitCost ?? null });
-      notify("success", "Peca cadastrada no almoxarifado.");
+      notify("success", "Peça cadastrada no almoxarifado.");
       reset({ unit: "un" });
       setCreateOpen(false);
       queryClient.invalidateQueries({ queryKey: ["spare-parts"] });
@@ -91,7 +91,7 @@ export default function SparePartsList() {
     if (!movimento) return;
     const quantidade = Math.trunc(Number(quantidadeMovimento));
     if (!quantidadeMovimento || Number.isNaN(quantidade) || quantidade <= 0) {
-      notify("error", "Informe uma quantidade valida (maior que zero).");
+      notify("error", "Informe uma quantidade válida (maior que zero).");
       return;
     }
     const unitCost = movimento.type === "IN" && custoMovimento && !Number.isNaN(Number(custoMovimento)) && Number(custoMovimento) >= 0
@@ -114,12 +114,12 @@ export default function SparePartsList() {
     <div>
       <PageHeader
         title="Almoxarifado"
-        description="Estoque de pecas de manutencao do cliente (rolamentos, retentores, disjuntores...) - cada empresa tem o seu almoxarifado"
+        description="Estoque de peças de manutenção do cliente (rolamentos, retentores, disjuntores...) - cada empresa tem o seu almoxarifado"
         breadcrumbs={[{ label: "RLP Maintenance CMMS", to: "/gestao/manutencao" }, { label: "Almoxarifado" }]}
         actions={
           clientId && (
             <button className="btn-primary" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4" /> Nova peca
+              <Plus className="h-4 w-4" /> Nova peça
             </button>
           )
         }
@@ -138,7 +138,7 @@ export default function SparePartsList() {
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-graphite-400" />
             <input
               className="input pl-9"
-              placeholder="Buscar por nome, codigo ou categoria..."
+              placeholder="Buscar por nome, código ou categoria..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             />
@@ -147,7 +147,7 @@ export default function SparePartsList() {
       </div>
 
       {!clientId ? (
-        <EmptyState title="Selecione um cliente" description="O almoxarifado e' proprio de cada empresa - escolha uma acima para ver as pecas dela." />
+        <EmptyState title="Selecione um cliente" description="O almoxarifado é próprio de cada empresa - escolha uma acima para ver as peças dela." />
       ) : (
         <>
           {/* Alertas primeiro. Sao tres consultas que ninguem cruzava a mao, e o resultado
@@ -159,7 +159,7 @@ export default function SparePartsList() {
                   <p className="flex items-center gap-2 font-semibold text-safety-red">
                     <AlertTriangle className="h-4 w-4" />
                     {alertas.totais.osComFalta} OS sem material
-                    {alertas.totais.osAtrasadasComFalta > 0 && ` (${alertas.totais.osAtrasadasComFalta} ja atrasada${alertas.totais.osAtrasadasComFalta > 1 ? "s" : ""})`}
+                    {alertas.totais.osAtrasadasComFalta > 0 && ` (${alertas.totais.osAtrasadasComFalta} já atrasada${alertas.totais.osAtrasadasComFalta > 1 ? "s" : ""})`}
                   </p>
                   <ul className="mt-2 space-y-1 text-sm">
                     {alertas.osComMaterialFaltando.slice(0, 6).map((os) => (
@@ -182,7 +182,7 @@ export default function SparePartsList() {
               <div className="grid gap-3 sm:grid-cols-2">
                 {alertas.abaixoDoMinimo.length > 0 && (
                   <div className="card border-safety-yellow/40 p-4">
-                    <p className="font-semibold text-safety-yellow-dark">{alertas.totais.abaixoDoMinimo} peca(s) abaixo do minimo</p>
+                    <p className="font-semibold text-safety-yellow-dark">{alertas.totais.abaixoDoMinimo} peça(s) abaixo do mínimo</p>
                     <ul className="mt-1.5 space-y-0.5 text-sm text-graphite-700">
                       {alertas.abaixoDoMinimo.slice(0, 6).map((peca) => (
                         <li key={peca.id}>
@@ -197,7 +197,7 @@ export default function SparePartsList() {
                 {alertas.reservadoParaOsFutura.length > 0 && (
                   <div className="card p-4">
                     <p className="font-semibold text-navy-900">{alertas.totais.reservasFuturas} reserva(s) para OS futura</p>
-                    <p className="text-xs text-graphite-500">O saldo existe, mas ja tem dono.</p>
+                    <p className="text-xs text-graphite-500">O saldo existe, mas já tem dono.</p>
                     <ul className="mt-1.5 space-y-0.5 text-sm text-graphite-700">
                       {alertas.reservadoParaOsFutura.slice(0, 6).map((r) => (
                         <li key={r.reservationId}>
@@ -217,7 +217,7 @@ export default function SparePartsList() {
 
           {data && data.items.some((p) => p.unitCost != null) && (
             <p className="mb-3 text-sm text-graphite-600">
-              Valor do estoque desta pagina:{" "}
+              Valor do estoque desta página:{" "}
               <span className="font-semibold text-navy-900">
                 {formatCurrency(data.items.reduce((sum, p) => sum + (p.unitCost ?? 0) * p.stockQty, 0))}
               </span>
@@ -229,10 +229,10 @@ export default function SparePartsList() {
           keyField={(p) => p.id}
           pagination={data}
           onPageChange={setPage}
-          emptyTitle="Nenhuma peca cadastrada no almoxarifado deste cliente"
+          emptyTitle="Nenhuma peça cadastrada no almoxarifado deste cliente"
           columns={[
             {
-              header: "Peca",
+              header: "Peça",
               accessor: (p) => (
                 <div>
                   <span className="font-medium text-navy-900">{p.name}</span>
@@ -263,7 +263,7 @@ export default function SparePartsList() {
               accessor: (p) => (p.unitCost != null ? formatCurrency(p.unitCost * p.stockQty) : "-"),
             },
             {
-              header: "Historico",
+              header: "Histórico",
               accessor: (p) => (
                 <button
                   type="button"
@@ -281,7 +281,7 @@ export default function SparePartsList() {
                   <button onClick={() => handleMovement(p, "IN")} className="text-graphite-400 hover:text-safety-green" title="Entrada" aria-label="Registrar entrada">
                     <ArrowDownCircle className="h-4 w-4" />
                   </button>
-                  <button onClick={() => handleMovement(p, "OUT")} className="text-graphite-400 hover:text-safety-red" title="Saida" aria-label="Registrar saida">
+                  <button onClick={() => handleMovement(p, "OUT")} className="text-graphite-400 hover:text-safety-red" title="Saída" aria-label="Registrar saída">
                     <ArrowUpCircle className="h-4 w-4" />
                   </button>
                 </div>
@@ -295,7 +295,7 @@ export default function SparePartsList() {
       <Modal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        title="Nova peca do almoxarifado"
+        title="Nova peça do almoxarifado"
         size="sm"
         footer={
           <>
@@ -309,18 +309,18 @@ export default function SparePartsList() {
         <form id="spare-part-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <TextInput label="Nome" required placeholder="Ex.: Rolamento 6205" error={errors.name?.message} {...register("name")} />
           <div className="grid gap-4 sm:grid-cols-2">
-            <TextInput label="Codigo (opcional)" placeholder="Ex.: ROL-6205" {...register("code")} />
+            <TextInput label="Código (opcional)" placeholder="Ex.: ROL-6205" {...register("code")} />
             <TextInput label="Categoria (opcional)" placeholder="Ex.: Rolamentos" {...register("category")} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <TextInput label="Unidade" {...register("unit")} />
-            <TextInput label="Estoque minimo" type="number" {...register("minStock")} />
+            <TextInput label="Estoque mínimo" type="number" {...register("minStock")} />
           </div>
           <TextInput
-            label="Custo unitario (opcional)"
+            label="Custo unitário (opcional)"
             type="number"
             step="any"
-            hint="So alimenta o valor do estoque quando preenchido - pode deixar em branco."
+            hint="Só alimenta o valor do estoque quando preenchido - pode deixar em branco."
             {...register("unitCost")}
           />
         </form>
@@ -328,7 +328,7 @@ export default function SparePartsList() {
       <Modal
         open={!!historicoDe}
         onClose={() => setHistoricoDe(null)}
-        title={historicoDe ? `Historico - ${historicoDe.name}` : ""}
+        title={historicoDe ? `Histórico - ${historicoDe.name}` : ""}
         size="lg"
         footer={<button type="button" className="btn-outline" onClick={() => setHistoricoDe(null)}>Fechar</button>}
       >
@@ -338,7 +338,7 @@ export default function SparePartsList() {
         {!historico ? (
           <p className="text-sm text-graphite-500">Carregando...</p>
         ) : historico.eventos.length === 0 ? (
-          <p className="text-sm text-graphite-500">Nenhuma movimentacao registrada ainda.</p>
+          <p className="text-sm text-graphite-500">Nenhuma movimentação registrada ainda.</p>
         ) : (
           <ul className="divide-y divide-gray-100">
             {historico.eventos.map((e, i) => (
@@ -354,7 +354,7 @@ export default function SparePartsList() {
                 </div>
                 <div className="shrink-0 text-right text-xs text-graphite-500">
                   <p>{formatDateTime(e.quando)}</p>
-                  <p>{e.usuario ?? "sem usuario registrado"}</p>
+                  <p>{e.usuario ?? "sem usuário registrado"}</p>
                   {e.custoUnitario != null && <p>{formatCurrency(e.custoUnitario)} / un.</p>}
                 </div>
               </li>
@@ -366,7 +366,7 @@ export default function SparePartsList() {
       <Modal
         open={!!movimento}
         onClose={() => setMovimento(null)}
-        title={movimento ? `${movimento.type === "IN" ? "Entrada" : "Saida"} - ${movimento.part.name}` : ""}
+        title={movimento ? `${movimento.type === "IN" ? "Entrada" : "Saída"} - ${movimento.part.name}` : ""}
         size="sm"
         footer={
           <>
@@ -391,7 +391,7 @@ export default function SparePartsList() {
           />
           {movimento?.type === "IN" && (
             <TextInput
-              label="Custo unitario desta compra (opcional)"
+              label="Custo unitário desta compra (opcional)"
               type="number"
               step="any"
               value={custoMovimento}
@@ -406,11 +406,11 @@ export default function SparePartsList() {
 
 const ROTULO_DO_EVENTO: Record<string, string> = {
   ENTRADA: "Entrada",
-  SAIDA: "Saida",
+  SAIDA: "Saída",
   AJUSTE: "Ajuste",
   RESERVA: "Reserva",
   CONSUMO: "Consumo",
-  DEVOLUCAO: "Devolucao",
+  DEVOLUCAO: "Devolução",
 };
 
 const TOM_DO_EVENTO: Record<string, string> = {
