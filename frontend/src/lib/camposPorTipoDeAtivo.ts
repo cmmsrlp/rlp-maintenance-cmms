@@ -75,6 +75,18 @@ const CAMPOS_POR_TIPO: Record<string, CampoEspecifico[]> = {
     { chave: "largura", rotulo: "Largura", placeholder: "Ex.: 600 mm" },
     { chave: "velocidade", rotulo: "Velocidade", placeholder: "Ex.: 1.2 m/min" },
   ],
+  "trocador de calor": [
+    {
+      chave: "tipoDeTrocador",
+      rotulo: "Tipo",
+      tipo: "select",
+      opcoes: ["Casco e tubo", "Placas", "Ar/oleo", "Outro"],
+    },
+    { chave: "areaDeTroca", rotulo: "Area de troca termica", placeholder: "Ex.: 12 m2" },
+    { chave: "fluidoQuente", rotulo: "Fluido quente", placeholder: "Ex.: Oleo hidraulico" },
+    { chave: "fluidoFrio", rotulo: "Fluido frio", placeholder: "Ex.: Agua" },
+    { chave: "pressaoDeProjeto", rotulo: "Pressao de projeto", placeholder: "Ex.: 10 bar" },
+  ],
 };
 
 /** Sem acento, sem espaco duplicado, minusculo - "Motor Eletrico" e "motor" batem no mesmo
