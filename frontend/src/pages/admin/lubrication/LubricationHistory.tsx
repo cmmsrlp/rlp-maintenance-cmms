@@ -48,12 +48,12 @@ export default function LubricationHistory() {
   return (
     <div>
       <PageHeader
-        title="Historico de lubrificacao"
-        description="O que foi aplicado, por quem e em que condicao o ponto estava"
+        title="Histórico de lubrificação"
+        description="O que foi aplicado, por quem e em que condição o ponto estava"
         breadcrumbs={[
           { label: "RLP Maintenance CMMS", to: base },
-          { label: "Lubrificacao", to: `${base}/lubrificacao` },
-          { label: "Historico" },
+          { label: "Lubrificação", to: `${base}/lubrificacao` },
+          { label: "Histórico" },
         ]}
       />
 
@@ -91,7 +91,7 @@ export default function LubricationHistory() {
 
       {Object.keys(totalAplicado).length > 0 && (
         <p className="mb-3 text-xs text-graphite-500">
-          Nesta pagina:{" "}
+          Nesta página:{" "}
           {Object.entries(totalAplicado)
             .map(([nome, v]) => `${Number(v.qtd.toFixed(3))} ${v.unidade} de ${nome}`)
             .join("; ")}
@@ -100,8 +100,8 @@ export default function LubricationHistory() {
 
       {!isLoading && (data?.items ?? []).length === 0 ? (
         <EmptyState
-          title="Nenhuma aplicacao registrada"
-          description="Assim que um ponto for lubrificado (em Lubrificacao > Pontos, botao Registrar), a aplicacao aparece aqui."
+          title="Nenhuma aplicação registrada"
+          description="Assim que um ponto for lubrificado (em Lubrificação > Pontos, botão Registrar), a aplicação aparece aqui."
         />
       ) : (
         <DataTable<LubricationRecord>
@@ -110,7 +110,7 @@ export default function LubricationHistory() {
           keyField={(r) => r.id}
           pagination={data}
           onPageChange={setPage}
-          emptyTitle="Nenhuma aplicacao registrada"
+          emptyTitle="Nenhuma aplicação registrada"
           columns={[
             { header: "Quando", accessor: (r) => formatDateTime(r.executedAt) },
             {
@@ -132,7 +132,7 @@ export default function LubricationHistory() {
             },
             { header: "Quem", accessor: (r) => r.laborResource?.name ?? "-" },
             {
-              header: "Condicao",
+              header: "Condição",
               accessor: (r) =>
                 r.conditionBefore || r.conditionAfter
                   ? `${r.conditionBefore ? CONDICOES_DO_PONTO[r.conditionBefore] : "-"} -> ${r.conditionAfter ? CONDICOES_DO_PONTO[r.conditionAfter] : "-"}`

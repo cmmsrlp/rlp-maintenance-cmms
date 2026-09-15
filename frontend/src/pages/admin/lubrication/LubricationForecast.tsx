@@ -35,12 +35,12 @@ export default function LubricationForecast() {
   return (
     <div>
       <PageHeader
-        title="Previsao de consumo de lubrificantes"
-        description="Quanto de cada lubrificante a rotina vai consumir no periodo, e o que falta comprar"
+        title="Previsão de consumo de lubrificantes"
+        description="Quanto de cada lubrificante a rotina vai consumir no período, e o que falta comprar"
         breadcrumbs={[
           { label: "RLP Maintenance CMMS", to: base },
-          { label: "Lubrificacao", to: `${base}/lubrificacao` },
-          { label: "Previsao de consumo" },
+          { label: "Lubrificação", to: `${base}/lubrificacao` },
+          { label: "Previsão de consumo" },
         ]}
       />
 
@@ -83,23 +83,23 @@ export default function LubricationForecast() {
       </div>
 
       {isError ? (
-        <EmptyState title="Nao foi possivel calcular a previsao" description={(error as Error)?.message ?? "Tente outro periodo."} />
+        <EmptyState title="Não foi possível calcular a previsão" description={(error as Error)?.message ?? "Tente outro período."} />
       ) : isLoading || !data ? (
         <FullPageSpinner />
       ) : data.itens.length === 0 ? (
         <EmptyState
-          title="Nenhum consumo previsto neste periodo"
+          title="Nenhum consumo previsto neste período"
           description={
             data.totais.pontosConsiderados === 0
-              ? "Nao ha pontos de lubrificacao cadastrados. Cadastre os pontos para a previsao aparecer."
-              : "Os pontos cadastrados nao tem aplicacao prevista dentro da janela escolhida - experimente um periodo maior."
+              ? "Não há pontos de lubrificação cadastrados. Cadastre os pontos para a previsão aparecer."
+              : "Os pontos cadastrados não têm aplicação prevista dentro da janela escolhida - experimente um período maior."
           }
         />
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard label="Lubrificantes" value={data.totais.lubrificantes} icon={Droplets} tone="navy" />
-            <StatCard label="Aplicacoes previstas" value={data.totais.aplicacoesPrevistas} icon={CalendarRange} tone="navy" />
+            <StatCard label="Aplicações previstas" value={data.totais.aplicacoesPrevistas} icon={CalendarRange} tone="navy" />
             <StatCard label="Pontos considerados" value={data.totais.pontosConsiderados} icon={Gauge} tone="navy" />
             <StatCard
               label="Itens a comprar"
@@ -110,8 +110,8 @@ export default function LubricationForecast() {
           </div>
 
           <p className="mt-4 text-xs text-graphite-500">
-            Periodo de {formatDate(data.periodo.de)} a {formatDate(data.periodo.ate)} ({data.periodo.dias} dias).
-            "A comprar" ja considera manter o estoque minimo de cada item.
+            Período de {formatDate(data.periodo.de)} a {formatDate(data.periodo.ate)} ({data.periodo.dias} dias).
+            "A comprar" já considera manter o estoque mínimo de cada item.
           </p>
 
           <div className="card mt-4 overflow-x-auto">
@@ -120,7 +120,7 @@ export default function LubricationForecast() {
                 <tr>
                   <th className="px-4 py-2.5">Lubrificante</th>
                   <th className="px-4 py-2.5 text-right">Pontos</th>
-                  <th className="px-4 py-2.5 text-right">Aplicacoes</th>
+                  <th className="px-4 py-2.5 text-right">Aplicações</th>
                   <th className="px-4 py-2.5 text-right">Consumo previsto</th>
                   <th className="px-4 py-2.5 text-right">Saldo atual</th>
                   <th className="px-4 py-2.5 text-right">Cobertura</th>
@@ -133,7 +133,7 @@ export default function LubricationForecast() {
                     <td className="px-4 py-2.5">
                       <p className="font-medium text-navy-900">{item.nome}</p>
                       <p className="text-xs text-graphite-400">
-                        {[item.codigo, item.especificacao].filter(Boolean).join(" - ") || "sem especificacao"}
+                        {[item.codigo, item.especificacao].filter(Boolean).join(" - ") || "sem especificação"}
                       </p>
                     </td>
                     <td className="px-4 py-2.5 text-right text-graphite-700">{item.pontos}</td>
@@ -185,7 +185,7 @@ export default function LubricationForecast() {
                       <th className="px-4 py-2.5">Ponto</th>
                       <th className="px-4 py-2.5">Ativo</th>
                       <th className="px-4 py-2.5">Lubrificante</th>
-                      <th className="px-4 py-2.5 text-right">Aplicacoes</th>
+                      <th className="px-4 py-2.5 text-right">Aplicações</th>
                       <th className="px-4 py-2.5 text-right">Consumo</th>
                     </tr>
                   </thead>

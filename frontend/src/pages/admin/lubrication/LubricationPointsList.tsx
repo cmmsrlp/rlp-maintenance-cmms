@@ -40,7 +40,7 @@ const pointSchema = z.object({
   name: z.string().min(2, "Informe o nome do ponto."),
   component: z.string().optional(),
   lubricantId: z.string().uuid("Selecione o lubrificante."),
-  quantityPerApplication: z.coerce.number().positive("Informe a quantidade por aplicacao."),
+  quantityPerApplication: z.coerce.number().positive("Informe a quantidade por aplicação."),
   method: z.enum(["MANUAL_GUN", "AUTOMATIC_CENTRAL", "OIL_BATH", "IMMERSION", "BRUSH", "SPRAY"]),
   frequencyDays: z.coerce.number().int().positive("Informe a periodicidade em dias."),
   machineState: z.enum(["STOPPED", "RUNNING", "ANY"]),
@@ -61,7 +61,7 @@ const recordSchema = z.object({
 type RecordForm = z.infer<typeof recordSchema>;
 
 function situacaoDoPonto(p: LubricationPoint): { rotulo: string; tom: string } {
-  if (!p.nextDueAt) return { rotulo: "Sem programacao", tom: "border-gray-200 bg-gray-50 text-graphite-500" };
+  if (!p.nextDueAt) return { rotulo: "Sem programação", tom: "border-gray-200 bg-gray-50 text-graphite-500" };
   const dias = Math.floor((new Date(p.nextDueAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000));
   if (dias < 0) return { rotulo: `${Math.abs(dias)}d de atraso`, tom: "border-red-200 bg-red-50 text-safety-red" };
   if (dias <= 7) return { rotulo: `vence em ${dias}d`, tom: "border-yellow-200 bg-yellow-50 text-safety-yellow-dark" };
@@ -239,7 +239,7 @@ export default function LubricationPointsList() {
   async function concluirAtivo(instrumentId: string) {
     try {
       await concluirPontosDoAtivo(instrumentId, true);
-      notify("success", "Ativo concluido - saiu da fila de pendentes.");
+      notify("success", "Ativo concluído - saiu da fila de pendentes.");
       atualizarListas();
     } catch (error) {
       notify("error", getApiErrorMessage(error));
@@ -257,7 +257,7 @@ export default function LubricationPointsList() {
         conditionAfter: values.conditionAfter || null,
         notes: values.notes || null,
       });
-      notify("success", "Lubrificacao registrada - o estoque foi baixado e o ponto reprogramado.");
+      notify("success", "Lubrificação registrada - o estoque foi baixado e o ponto reprogramado.");
       setRegistrando(null);
       recordForm.reset();
       queryClient.invalidateQueries({ queryKey: ["pontos-lubrificacao"] });
@@ -276,11 +276,11 @@ export default function LubricationPointsList() {
   return (
     <div>
       <PageHeader
-        title="Pontos de lubrificacao"
+        title="Pontos de lubrificação"
         description="Cada ponto diz qual lubrificante, quanto e de quanto em quanto tempo"
         breadcrumbs={[
           { label: "RLP Maintenance CMMS", to: base },
-          { label: "Lubrificacao", to: `${base}/lubrificacao` },
+          { label: "Lubrificação", to: `${base}/lubrificacao` },
           { label: "Pontos" },
         ]}
         actions={
@@ -305,7 +305,7 @@ export default function LubricationPointsList() {
           value={situacao}
           onChange={(e) => { setSituacao(e.target.value as typeof situacao); setPage(1); }}
         >
-          <option value="">Todas as situacoes</option>
+          <option value="">Todas as situações</option>
           <option value="vencidos">Somente vencidos</option>
           <option value="proximos">Vencem em 7 dias</option>
         </select>
@@ -313,7 +313,7 @@ export default function LubricationPointsList() {
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-graphite-400" />
           <input
             className="input pl-9"
-            placeholder={aba === "pendentes" ? "Buscar ativo por TAG ou nome..." : "Buscar ponto por codigo, nome ou ativo..."}
+            placeholder={aba === "pendentes" ? "Buscar ativo por TAG ou nome..." : "Buscar ponto por código, nome ou ativo..."}
             value={busca}
             onChange={(e) => { setBusca(e.target.value); setPage(1); }}
           />
@@ -341,7 +341,7 @@ export default function LubricationPointsList() {
           pagination={pendentes}
           onPageChange={setPage}
           emptyTitle="Nenhum ativo esperando ponto"
-          emptyDescription="Todo ativo marcado como lubrificavel ja foi concluido."
+          emptyDescription="Todo ativo marcado como lubrificável já foi concluído."
           columns={[
             {
               header: "Ativo",
@@ -354,7 +354,7 @@ export default function LubricationPointsList() {
             },
             { header: "Componente de", accessor: (a) => (a.parent ? `TAG ${a.parent.tag ?? ""}` : "-") },
             { header: "Planta", accessor: (a) => a.plant?.name ?? "-" },
-            { header: "Area", accessor: (a) => a.area?.name ?? "-" },
+            { header: "Área", accessor: (a) => a.area?.name ?? "-" },
             {
               // Um TAG pode ter varios pontos: "2 pontos, falta confirmar" e "nem comecou"
               // sao situacoes diferentes na hora de decidir por onde comecar.
@@ -383,7 +383,7 @@ export default function LubricationPointsList() {
                     className="btn-ghost text-sm"
                     onClick={() => concluirAtivo(a.id)}
                     disabled={a.pontosCadastrados === 0}
-                    title={a.pontosCadastrados === 0 ? "Cadastre ao menos um ponto antes de concluir" : "Nao ha mais pontos neste ativo"}
+                    title={a.pontosCadastrados === 0 ? "Cadastre ao menos um ponto antes de concluir" : "Não há mais pontos neste ativo"}
                   >
                     <Check className="h-4 w-4" /> Concluir
                   </button>
@@ -393,11 +393,11 @@ export default function LubricationPointsList() {
           ]}
         />
       ) : !clientId ? (
-        <EmptyState title="Selecione o cliente" description="Os pontos de lubrificacao sao dos equipamentos de cada empresa." />
+        <EmptyState title="Selecione o cliente" description="Os pontos de lubrificação são dos equipamentos de cada empresa." />
       ) : opcoesDeLubrificante.length === 0 ? (
         <EmptyState
           title="Cadastre um lubrificante primeiro"
-          description="Um ponto precisa dizer qual graxa ou oleo usa. Em Lubrificacao > Lubrificantes, transforme a peca do almoxarifado em lubrificante."
+          description="Um ponto precisa dizer qual graxa ou óleo usa. Em Lubrificação > Lubrificantes, transforme a peça do almoxarifado em lubrificante."
         />
       ) : (
         <DataTable<LubricationPoint>
@@ -426,29 +426,29 @@ export default function LubricationPointsList() {
                 <div>
                   <p className="text-graphite-800">{p.lubricant?.sparePart.name ?? "-"}</p>
                   <p className="text-xs text-graphite-400">
-                    {p.quantityPerApplication} {p.lubricant?.sparePart.unit ?? ""} por aplicacao
+                    {p.quantityPerApplication} {p.lubricant?.sparePart.unit ?? ""} por aplicação
                   </p>
                 </div>
               ),
             },
             { header: "A cada", accessor: (p) => `${p.frequencyDays} dias` },
             {
-              header: "Maquina",
+              header: "Máquina",
               accessor: (p) =>
                 p.machineState === "STOPPED" ? (
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-safety-red">
-                    <AlertTriangle className="h-3.5 w-3.5" /> so parada
+                    <AlertTriangle className="h-3.5 w-3.5" /> só parada
                   </span>
                 ) : (
                   <span className="text-xs text-graphite-500">{ESTADOS_DA_MAQUINA[p.machineState]}</span>
                 ),
             },
             {
-              header: "Ultima",
+              header: "Última",
               accessor: (p) => (p.lastLubricatedAt ? formatDate(p.lastLubricatedAt) : "nunca"),
             },
             {
-              header: "Situacao",
+              header: "Situação",
               accessor: (p) => {
                 const s = situacaoDoPonto(p);
                 return <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${s.tom}`}>{s.rotulo}</span>;
@@ -476,7 +476,7 @@ export default function LubricationPointsList() {
       <Modal
         open={formOpen}
         onClose={() => setFormOpen(false)}
-        title={editando ? `Editar ponto ${editando.code}` : "Novo ponto de lubrificacao"}
+        title={editando ? `Editar ponto ${editando.code}` : "Novo ponto de lubrificação"}
         size="lg"
         footer={
           <>
@@ -488,7 +488,7 @@ export default function LubricationPointsList() {
                   checked={continuarNoAtivo}
                   onChange={(e) => setContinuarNoAtivo(e.target.checked)}
                 />
-                Continuar neste ativo (para lancar o proximo ponto)
+                Continuar neste ativo (para lançar o próximo ponto)
               </label>
             )}
             {/* "Concluir" sugeria "salvar e terminar", mas o botao so' fecha o modal sem
@@ -519,9 +519,9 @@ export default function LubricationPointsList() {
           />
           <div className="grid gap-4 sm:grid-cols-2">
             <TextInput
-              label="Codigo do ponto"
+              label="Código do ponto"
               placeholder="Preenchido ao escolher o ativo"
-              hint="Numerado a partir do TAG do ativo (-PT-01, -PT-02...). Da para editar; em branco, o sistema numera ao salvar."
+              hint="Numerado a partir do TAG do ativo (-PT-01, -PT-02...). Dá para editar; em branco, o sistema numera ao salvar."
               error={pointForm.formState.errors.code?.message}
               {...pointForm.register("code")}
             />
@@ -544,12 +544,12 @@ export default function LubricationPointsList() {
           />
           <div className="grid gap-4 sm:grid-cols-3">
             <TextInput
-              label="Quantidade por aplicacao"
+              label="Quantidade por aplicação"
               type="number"
               step="any"
               min="0"
               required
-              hint="Na unidade da peca do almoxarifado."
+              hint="Na unidade da peça do almoxarifado."
               error={pointForm.formState.errors.quantityPerApplication?.message}
               {...pointForm.register("quantityPerApplication")}
             />
@@ -562,7 +562,7 @@ export default function LubricationPointsList() {
               {...pointForm.register("frequencyDays")}
             />
             <SelectInput
-              label="Metodo"
+              label="Método"
               required
               options={Object.entries(METODOS_DE_LUBRIFICACAO).map(([valor, rotulo]) => ({ value: valor, label: rotulo }))}
               {...pointForm.register("method")}
@@ -571,22 +571,22 @@ export default function LubricationPointsList() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <SelectInput
-              label="Estado da maquina"
+              label="Estado da máquina"
               required
-              hint="Ponto que so pode ser lubrificado parado precisa estar marcado aqui."
+              hint="Ponto que só pode ser lubrificado parado precisa estar marcado aqui."
               options={Object.entries(ESTADOS_DA_MAQUINA).map(([valor, rotulo]) => ({ value: valor, label: rotulo }))}
               {...pointForm.register("machineState")}
             />
             <TextInput
-              label="Ultima lubrificacao"
+              label="Última lubrificação"
               type="date"
-              hint="Em branco = o ponto ja nasce vencido, para entrar na proxima rota."
+              hint="Em branco = o ponto já nasce vencido, para entrar na próxima rota."
               {...pointForm.register("lastLubricatedAt")}
             />
           </div>
 
-          <TextareaInput label="Acesso" rows={2} placeholder="Como chegar ao ponto (plataforma, escada, protecao a remover)" {...pointForm.register("accessNotes")} />
-          <TextareaInput label="Seguranca" rows={2} placeholder="Bloqueio, EPI, cuidados especificos" {...pointForm.register("safetyNotes")} />
+          <TextareaInput label="Acesso" rows={2} placeholder="Como chegar ao ponto (plataforma, escada, proteção a remover)" {...pointForm.register("accessNotes")} />
+          <TextareaInput label="Segurança" rows={2} placeholder="Bloqueio, EPI, cuidados específicos" {...pointForm.register("safetyNotes")} />
         </form>
       </Modal>
 
@@ -594,7 +594,7 @@ export default function LubricationPointsList() {
       <Modal
         open={!!registrando}
         onClose={() => setRegistrando(null)}
-        title={registrando ? `Registrar lubrificacao - ${registrando.code}` : ""}
+        title={registrando ? `Registrar lubrificação - ${registrando.code}` : ""}
         footer={
           <>
             <button type="button" className="btn-outline" onClick={() => setRegistrando(null)}>Cancelar</button>
@@ -617,10 +617,10 @@ export default function LubricationPointsList() {
               </p>
               {registrando.machineState === "STOPPED" && (
                 <p className="mt-1 text-xs font-medium text-safety-red">
-                  Este ponto so pode ser lubrificado com a maquina parada.
+                  Este ponto só pode ser lubrificado com a máquina parada.
                 </p>
               )}
-              {registrando.safetyNotes && <p className="mt-1 text-xs text-graphite-600">Seguranca: {registrando.safetyNotes}</p>}
+              {registrando.safetyNotes && <p className="mt-1 text-xs text-graphite-600">Segurança: {registrando.safetyNotes}</p>}
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -639,27 +639,27 @@ export default function LubricationPointsList() {
 
             <LaborResourcePicker
               label="Quem executou"
-              placeholder="Nao informado"
+              placeholder="Não informado"
               clientId={clientId}
               {...recordForm.register("laborResourceId")}
             />
 
             <div className="grid gap-4 sm:grid-cols-2">
               <SelectInput
-                label="Condicao encontrada"
-                placeholder="Nao informada"
+                label="Condição encontrada"
+                placeholder="Não informada"
                 options={Object.entries(CONDICOES_DO_PONTO).map(([valor, rotulo]) => ({ value: valor, label: rotulo }))}
                 {...recordForm.register("conditionBefore")}
               />
               <SelectInput
-                label="Condicao apos"
-                placeholder="Nao informada"
+                label="Condição após"
+                placeholder="Não informada"
                 options={Object.entries(CONDICOES_DO_PONTO).map(([valor, rotulo]) => ({ value: valor, label: rotulo }))}
                 {...recordForm.register("conditionAfter")}
               />
             </div>
 
-            <TextareaInput label="Observacoes" rows={2} {...recordForm.register("notes")} />
+            <TextareaInput label="Observações" rows={2} {...recordForm.register("notes")} />
           </form>
         )}
       </Modal>
