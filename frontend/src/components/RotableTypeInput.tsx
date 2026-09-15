@@ -49,7 +49,7 @@ export const RotableTypeInput = forwardRef<HTMLSelectElement, Props>(function Ro
       ref={ref}
       label={label ?? "Tipo"}
       placeholder="Selecione o tipo"
-      hint="Novos tipos em Ativos > Cadastros tecnicos > Tipos de ativo."
+      hint="Novos tipos em Ativos > Cadastros tecnicos > Classes de ativo."
       options={options}
       {...rest}
     />

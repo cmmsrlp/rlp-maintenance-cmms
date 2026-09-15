@@ -52,9 +52,9 @@ export const AssetTypeInput = forwardRef<HTMLSelectElement, Props>(function Asse
   return (
     <SelectInput
       ref={ref}
-      label={label ?? `Tipo de ${rotuloDoNivel.toLowerCase()}`}
+      label={label ?? `Classe de ${rotuloDoNivel.toLowerCase()}`}
       placeholder="Não especificar"
-      hint="Opcional. Novos tipos em Cadastros > Tipos de ativo."
+      hint="Opcional. Novas classes em Cadastros > Classes de ativo."
       options={options}
       {...rest}
     />

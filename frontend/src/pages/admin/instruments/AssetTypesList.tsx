@@ -17,15 +17,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 const schema = z.object({
-  name: z.string().min(2, "Informe o nome do tipo."),
+  name: z.string().min(2, "Informe o nome da classe."),
   level: z.enum(["PLANT", "AREA", "MACHINE", "SUBASSEMBLY", "PART"]).optional().or(z.literal("")),
   codePrefix: z.string().trim().max(10, "No máximo 10 caracteres.").optional(),
 });
 type FormValues = z.infer<typeof schema>;
 
-/** Catalogo pre-cadastrado do campo "Tipo de ativo" - hoje representa o nivel do ativo
+/** Catalogo pre-cadastrado do campo "Classe de ativo" - hoje representa o nivel do ativo
  * na hierarquia funcional (Planta/Area/Maquina/Subconjunto/Parte), nao o tipo de
- * equipamento. Cadastro de tipo novo e edicao acontecem so aqui (o formulario de ativo
+ * equipamento. Cadastro de classe nova e edicao acontecem so aqui (o formulario de ativo
  * so escolhe entre o que ja existe). */
 export default function AssetTypesList() {
   const queryClient = useQueryClient();
@@ -65,10 +65,10 @@ export default function AssetTypesList() {
     try {
       if (editingType) {
         await updateAssetType(editingType.id, payload);
-        notify("success", "Tipo de ativo atualizado.");
+        notify("success", "Classe de ativo atualizada.");
       } else {
         await createAssetType(payload);
-        notify("success", "Tipo de ativo criado.");
+        notify("success", "Classe de ativo criada.");
       }
       reset();
       setCreateOpen(false);
@@ -94,7 +94,7 @@ export default function AssetTypesList() {
   async function handleDelete(type: AssetType) {
     try {
       await deleteAssetType(type.id);
-      notify("success", "Tipo removido.");
+      notify("success", "Classe removida.");
       queryClient.invalidateQueries({ queryKey: ["asset-types"] });
       queryClient.invalidateQueries({ queryKey: ["asset-types-picker"] });
     } catch (error) {
@@ -105,13 +105,13 @@ export default function AssetTypesList() {
   return (
     <div>
       <PageHeader
-        title="Tipos de ativo"
-        description="Catálogo usado no campo Tipo de ativo do cadastro"
-        breadcrumbs={[{ label: "Ativos", to: base }, { label: "Cadastros técnicos", to: `${base}/cadastros` }, { label: "Tipos de ativo" }]}
+        title="Classes de ativo"
+        description="Catálogo usado no campo Classe de ativo do cadastro"
+        breadcrumbs={[{ label: "Ativos", to: base }, { label: "Cadastros técnicos", to: `${base}/cadastros` }, { label: "Classes de ativo" }]}
         actions={
           canManage && (
             <button className="btn-primary" onClick={openCreate}>
-              <Plus className="h-4 w-4" /> Novo tipo
+              <Plus className="h-4 w-4" /> Nova classe
             </button>
           )
         }
@@ -121,7 +121,7 @@ export default function AssetTypesList() {
         loading={isLoading}
         rows={data ?? []}
         keyField={(t) => t.id}
-        emptyTitle="Nenhum tipo cadastrado"
+        emptyTitle="Nenhuma classe cadastrada"
         columns={[
           { header: "Nome", accessor: (t) => <span className="font-medium text-navy-900">{t.name}</span> },
           {
@@ -152,10 +152,10 @@ export default function AssetTypesList() {
             accessor: (t) =>
               canEdit(t) && (
                 <div className="flex items-center gap-2">
-                  <button onClick={() => openEdit(t)} className="text-graphite-400 hover:text-navy-700" aria-label="Editar tipo">
+                  <button onClick={() => openEdit(t)} className="text-graphite-400 hover:text-navy-700" aria-label="Editar classe">
                     <Pencil className="h-4 w-4" />
                   </button>
-                  <button onClick={() => handleDelete(t)} className="text-graphite-400 hover:text-safety-red" aria-label="Remover tipo">
+                  <button onClick={() => handleDelete(t)} className="text-graphite-400 hover:text-safety-red" aria-label="Remover classe">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -167,7 +167,7 @@ export default function AssetTypesList() {
       <Modal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        title={editingType ? "Editar tipo de ativo" : "Novo tipo de ativo"}
+        title={editingType ? "Editar classe de ativo" : "Nova classe de ativo"}
         size="sm"
         footer={
           <>
@@ -182,7 +182,7 @@ export default function AssetTypesList() {
           <TextInput label="Nome" required placeholder="Ex.: Planta, Máquina, Subconjunto" error={errors.name?.message} {...register("name")} />
           <SelectInput
             label="Nível na árvore"
-            hint="Define o ícone deste tipo na árvore de ativos. Deixe em branco para um tipo antigo/específico."
+            hint="Define o ícone desta classe na árvore de ativos. Deixe em branco para uma classe antiga/específica."
             placeholder="Sem nível definido"
             options={ASSET_LEVEL_OPTIONS}
             error={errors.level?.message}
@@ -191,7 +191,7 @@ export default function AssetTypesList() {
           <TextInput
             label="Prefixo do código (opcional)"
             placeholder="Ex.: MOT"
-            hint='Usado só pelo cadastro de Equipamentos recondicionáveis - com isso preenchido, o código (ex.: "MOT-001") é sugerido sozinho ao escolher este tipo.'
+            hint='Usado só pelo cadastro de Equipamentos recondicionáveis - com isso preenchido, o código (ex.: "MOT-001") é sugerido sozinho ao escolher esta classe.'
             error={errors.codePrefix?.message}
             {...register("codePrefix")}
           />

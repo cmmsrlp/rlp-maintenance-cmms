@@ -29,9 +29,9 @@ const CAPACIDADES = [
   },
   {
     icon: Tags,
-    title: "Catálogo de tipos",
+    title: "Catálogo de classes",
     description:
-      "Motor, compressor, redutor, extrusora - cada tipo com seus próprios campos técnicos (potência, rotação, capacidade), sem forçar todo ativo no mesmo formulário genérico.",
+      "Motor, compressor, redutor, extrusora - cada classe com seus próprios campos técnicos (potência, rotação, capacidade), sem forçar todo ativo no mesmo formulário genérico.",
   },
   {
     icon: ShieldAlert,
@@ -58,7 +58,7 @@ export default function AssetManagement() {
     <div>
       <Seo
         title="Gestão de ativos industriais"
-        description="Árvore de ativos com estrutura pai/filho, ficha técnica por tipo, criticidade e localização herdada - a base do CMMS RLP Maintenance."
+        description="Árvore de ativos com estrutura pai/filho, ficha técnica por classe, criticidade e localização herdada - a base do CMMS RLP Maintenance."
         path="/gestao-de-ativos"
       />
       <section className="relative overflow-hidden bg-navy-900">
@@ -79,7 +79,7 @@ export default function AssetManagement() {
               O parque completo da fábrica, organizado numa árvore só
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-navy-200">
-              Planta, área, máquina e componente com estrutura pai/filho, ficha técnica por tipo e localização
+              Planta, área, máquina e componente com estrutura pai/filho, ficha técnica por classe e localização
               herdada - o cadastro que vira base de todo o resto do CMMS.
             </p>
             <div className="mt-9 flex flex-wrap gap-3">
@@ -165,7 +165,7 @@ export default function AssetManagement() {
               <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-graphite-400">Ficha técnica · Extrusora EX-04</p>
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg bg-graphite-50 p-3">
-                  <p className="text-[11px] font-medium text-graphite-500">Tipo</p>
+                  <p className="text-[11px] font-medium text-graphite-500">Classe</p>
                   <p className="text-sm font-bold text-navy-900">Extrusora</p>
                 </div>
                 <div className="rounded-lg bg-graphite-50 p-3">
@@ -187,17 +187,17 @@ export default function AssetManagement() {
             </div>
           </div>
           <div className="order-1 lg:order-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-lime">Ficha técnica por tipo</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-brand-lime">Ficha técnica por classe</span>
             <h2 className="mt-3 text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl">
-              Campos que fazem sentido pra cada tipo de ativo
+              Campos que fazem sentido pra cada classe de ativo
             </h2>
             <p className="mt-4 text-navy-200">
               Motor pede potência e rotação, redutor pede relação de redução, tanque pede volume - o formulário
-              muda com o tipo escolhido, sem obrigar todo ativo a preencher os mesmos campos genéricos.
+              muda com a classe escolhida, sem obrigar todo ativo a preencher os mesmos campos genéricos.
             </p>
             <ul className="mt-6 space-y-3">
               {[
-                "Catálogo de tipos aberto - crie os seus além dos padrão",
+                "Catálogo de classes aberto - crie as suas além das padrão",
                 "Criticidade e status operacional em cada ativo",
                 "Localização (planta/área/sistema) herdada na árvore",
               ].map((item) => (

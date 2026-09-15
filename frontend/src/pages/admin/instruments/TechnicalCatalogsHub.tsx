@@ -14,7 +14,7 @@ export default function TechnicalCatalogsHub() {
       title: "Estrutura de ativos",
       description: "Como a fábrica é organizada - preencha antes de cadastrar os equipamentos.",
       items: [
-        { to: `${assetsBase}/tipos`, icon: Tags, title: "Tipos de ativo", description: "Nível na hierarquia (Planta, Máquina, Subconjunto, Parte...)" },
+        { to: `${assetsBase}/tipos`, icon: Tags, title: "Classes de ativo", description: "Nível na hierarquia (Planta, Máquina, Subconjunto, Parte...)" },
         { to: `${assetsBase}/plantas`, icon: Factory, title: "Plantas", description: "Unidades/fábricas da empresa" },
         // Um cadastro so: o centro de custo existe por causa da area, e mante-los em
         // telas separadas obrigava a cadastrar o centro antes para so entao voltar aqui.
