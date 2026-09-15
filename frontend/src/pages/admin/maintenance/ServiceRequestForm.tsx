@@ -108,15 +108,14 @@ export default function ServiceRequestForm() {
 
       <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6" noValidate>
         <div className="card space-y-4 p-5">
+          {isClient && (
+            <>
+              <input type="hidden" {...register("clientId")} />
+              {errors.clientId && <p className="text-xs text-safety-red">{errors.clientId.message}</p>}
+            </>
+          )}
           <div className="grid gap-4 sm:grid-cols-2">
-            {isClient ? (
-              <div>
-                <input type="hidden" {...register("clientId")} />
-                {errors.clientId && <p className="text-xs text-safety-red">{errors.clientId.message}</p>}
-              </div>
-            ) : (
-              <ClientPicker required error={errors.clientId?.message} {...register("clientId")} />
-            )}
+            {!isClient && <ClientPicker required error={errors.clientId?.message} {...register("clientId")} />}
             <SelectInput
               label="Área"
               required
