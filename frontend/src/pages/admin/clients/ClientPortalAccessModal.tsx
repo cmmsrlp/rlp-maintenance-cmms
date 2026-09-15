@@ -12,7 +12,7 @@ import { useToast } from "../../../components/Toast";
 
 const schema = z.object({
   name: z.string().min(2, "Informe o nome de quem vai acessar."),
-  email: z.string().email("E-mail invalido."),
+  email: z.string().email("E-mail inválido."),
   password: z.string().min(8, "A senha deve ter pelo menos 8 caracteres."),
 });
 type FormValues = z.infer<typeof schema>;
@@ -80,7 +80,7 @@ export function ClientPortalAccessModal({
     >
       <form id="portal-access-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <p className="text-sm text-graphite-500">
-          Cria um login de portal para esta empresa. O acesso mostra apenas as areas dos servicos marcados como
+          Cria um login de portal para esta empresa. O acesso mostra apenas as áreas dos serviços marcados como
           contratados na ficha do cliente.
         </p>
         <TextInput label="Nome de quem vai acessar" required error={errors.name?.message} {...register("name")} />

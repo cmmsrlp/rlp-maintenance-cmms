@@ -12,7 +12,7 @@ import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
 
 const schema = z.object({
-  companyName: z.string().min(2, "Informe a razao social."),
+  companyName: z.string().min(2, "Informe a razão social."),
   tradeName: z.string().optional(),
   cnpj: z.string().optional(),
   stateRegistration: z.string().optional(),
@@ -24,7 +24,7 @@ const schema = z.object({
   addressZip: z.string().optional(),
   phone: z.string().optional(),
   whatsapp: z.string().optional(),
-  email: z.string().email("E-mail invalido.").optional().or(z.literal("")),
+  email: z.string().email("E-mail inválido.").optional().or(z.literal("")),
   technicalContactName: z.string().optional(),
   commercialContactName: z.string().optional(),
   status: z.enum(["ACTIVE", "INACTIVE", "PROSPECT"]),
@@ -110,12 +110,12 @@ export function ClientFormModal({ open, onClose, onSaved, client }: ClientFormMo
     }>
       <form id="client-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextInput label="Razao social" required error={errors.companyName?.message} {...register("companyName")} />
+          <TextInput label="Razão social" required error={errors.companyName?.message} {...register("companyName")} />
           <TextInput label="Nome fantasia" {...register("tradeName")} />
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <TextInput label="CNPJ" {...register("cnpj")} />
-          <TextInput label="Inscricao estadual" {...register("stateRegistration")} />
+          <TextInput label="Inscrição estadual" {...register("stateRegistration")} />
           <SelectInput
             label="Status"
             options={[
@@ -128,15 +128,15 @@ export function ClientFormModal({ open, onClose, onSaved, client }: ClientFormMo
         </div>
         <SelectInput
           label="Plano de assinatura (opcional)"
-          hint="Define limites de usuarios e ativos. Sem plano, o cliente segue sem limite."
+          hint="Define limites de usuários e ativos. Sem plano, o cliente segue sem limite."
           placeholder="Sem plano (sem limite)"
-          options={(plans ?? []).map((p) => ({ value: p.id, label: `${p.name}${p.maxUsers != null || p.maxInstruments != null ? ` (ate ${p.maxUsers ?? "∞"} usuarios, ${p.maxInstruments ?? "∞"} ativos)` : ""}` }))}
+          options={(plans ?? []).map((p) => ({ value: p.id, label: `${p.name}${p.maxUsers != null || p.maxInstruments != null ? ` (até ${p.maxUsers ?? "∞"} usuários, ${p.maxInstruments ?? "∞"} ativos)` : ""}` }))}
           {...register("planId")}
         />
 
         <div className="grid gap-4 sm:grid-cols-4">
-          <TextInput label="Endereco" className="sm:col-span-2" {...register("addressStreet")} />
-          <TextInput label="Numero" {...register("addressNumber")} />
+          <TextInput label="Endereço" className="sm:col-span-2" {...register("addressStreet")} />
+          <TextInput label="Número" {...register("addressNumber")} />
           <TextInput label="CEP" {...register("addressZip")} />
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
@@ -151,17 +151,17 @@ export function ClientFormModal({ open, onClose, onSaved, client }: ClientFormMo
           <TextInput label="E-mail" type="email" error={errors.email?.message} {...register("email")} />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextInput label="Responsavel tecnico" {...register("technicalContactName")} />
-          <TextInput label="Responsavel comercial" {...register("commercialContactName")} />
+          <TextInput label="Responsável técnico" {...register("technicalContactName")} />
+          <TextInput label="Responsável comercial" {...register("commercialContactName")} />
         </div>
         <div className="rounded-lg border border-gray-200 p-4">
           <CheckboxInput label="Cliente usa o RLP Maintenance CMMS" {...register("usaCmms")} />
           <p className="mt-1 text-xs text-graphite-500">
-            Desmarcado, o cliente fica sem acesso ao sistema (util para prospecto ainda nao ativado).
+            Desmarcado, o cliente fica sem acesso ao sistema (útil para prospecto ainda não ativado).
           </p>
         </div>
 
-        <TextareaInput label="Observacoes" rows={3} {...register("notes")} />
+        <TextareaInput label="Observações" rows={3} {...register("notes")} />
       </form>
     </Modal>
   );

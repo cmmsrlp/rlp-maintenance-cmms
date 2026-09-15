@@ -47,7 +47,7 @@ export default function ClientsList() {
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-graphite-400" />
           <input
             className="input pl-9"
-            placeholder="Buscar por razao social, nome fantasia ou CNPJ..."
+            placeholder="Buscar por razão social, nome fantasia ou CNPJ..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -89,7 +89,7 @@ export default function ClientsList() {
         pagination={data}
         onPageChange={setPage}
         emptyTitle="Nenhum cliente cadastrado"
-        emptyDescription="Cadastre o primeiro cliente para comecar."
+        emptyDescription="Cadastre o primeiro cliente para começar."
         emptyAction={
           canManage && (
             <button className="btn-primary btn-sm" onClick={() => setCreateOpen(true)}>
@@ -108,7 +108,7 @@ export default function ClientsList() {
                   Ativo
                 </span>
               ) : (
-                <span className="text-graphite-400">Nao ativado</span>
+                <span className="text-graphite-400">Não ativado</span>
               ),
           },
           { header: "Plano", accessor: (c) => (c.plan ? <span className="text-xs font-medium text-navy-700">{c.plan.name}</span> : <span className="text-graphite-400">-</span>) },

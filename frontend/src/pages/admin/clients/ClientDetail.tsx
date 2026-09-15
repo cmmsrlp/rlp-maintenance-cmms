@@ -87,17 +87,17 @@ export default function ClientDetail() {
             {client.cnpj && <span className="text-sm text-graphite-500">CNPJ {client.cnpj}</span>}
           </div>
           <dl className="grid gap-4 sm:grid-cols-2">
-            <Info label="Endereco" value={[client.addressStreet, client.addressNumber, client.addressDistrict].filter(Boolean).join(", ") || "-"} />
+            <Info label="Endereço" value={[client.addressStreet, client.addressNumber, client.addressDistrict].filter(Boolean).join(", ") || "-"} />
             <Info label="Cidade/UF" value={[client.addressCity, client.addressState].filter(Boolean).join("/") || "-"} />
             <Info label="Telefone" value={client.phone ?? "-"} />
             <Info label="WhatsApp" value={client.whatsapp ?? "-"} />
             <Info label="E-mail" value={client.email ?? "-"} />
-            <Info label="Inscricao estadual" value={client.stateRegistration ?? "-"} />
-            <Info label="Responsavel tecnico" value={client.technicalContactName ?? "-"} />
-            <Info label="Responsavel comercial" value={client.commercialContactName ?? "-"} />
+            <Info label="Inscrição estadual" value={client.stateRegistration ?? "-"} />
+            <Info label="Responsável técnico" value={client.technicalContactName ?? "-"} />
+            <Info label="Responsável comercial" value={client.commercialContactName ?? "-"} />
           </dl>
           <div>
-            <p className="text-xs uppercase tracking-wide text-graphite-400">Servicos contratados</p>
+            <p className="text-xs uppercase tracking-wide text-graphite-400">Serviços contratados</p>
             {client.contractedServices && client.contractedServices.length > 0 ? (
               <ul className="mt-2 flex flex-wrap gap-2">
                 {client.contractedServices.map((s) => (
@@ -110,13 +110,13 @@ export default function ClientDetail() {
                 ))}
               </ul>
             ) : (
-              <p className="mt-1 text-sm text-graphite-500">Nenhum servico marcado.</p>
+              <p className="mt-1 text-sm text-graphite-500">Nenhum serviço marcado.</p>
             )}
           </div>
 
           {client.notes && (
             <div>
-              <p className="text-xs uppercase tracking-wide text-graphite-400">Observacoes</p>
+              <p className="text-xs uppercase tracking-wide text-graphite-400">Observações</p>
               <p className="mt-1 text-sm text-graphite-700">{client.notes}</p>
             </div>
           )}
@@ -126,13 +126,13 @@ export default function ClientDetail() {
           <div className="card p-5">
             <h2 className="mb-3 font-semibold text-navy-900">Plano</h2>
             {!client.plan ? (
-              <p className="text-sm text-graphite-500">Sem plano atribuido - sem limite de usuarios ou ativos.</p>
+              <p className="text-sm text-graphite-500">Sem plano atribuído - sem limite de usuários ou ativos.</p>
             ) : (
               <div className="space-y-2">
                 <p className="text-sm font-medium text-navy-900">{client.plan.name}</p>
                 {client.planUsage && (
                   <>
-                    <UsageBar label="Usuarios" usage={client.planUsage.users} />
+                    <UsageBar label="Usuários" usage={client.planUsage.users} />
                     <UsageBar label="Ativos" usage={client.planUsage.instruments} />
                   </>
                 )}
@@ -145,7 +145,7 @@ export default function ClientDetail() {
             <div className="space-y-2 text-sm">
               <SummaryRow icon={Gauge} label="Ativos" value={client._count?.instruments ?? 0} to={`/gestao/ativos?clientId=${id}`} />
               <SummaryRow icon={ShieldCheck} label="Planos preventivos" value={plansPage?.total ?? 0} to={`/gestao/manutencao/planos?clientId=${id}`} />
-              <SummaryRow icon={ClipboardList} label="Ordens de manutencao" value={workOrdersPage?.total ?? 0} to={`/gestao/manutencao/ordens?clientId=${id}`} />
+              <SummaryRow icon={ClipboardList} label="Ordens de manutenção" value={workOrdersPage?.total ?? 0} to={`/gestao/manutencao/ordens?clientId=${id}`} />
             </div>
           </div>
 
@@ -160,8 +160,8 @@ export default function ClientDetail() {
             </div>
             {!client.users || client.users.length === 0 ? (
               <p className="text-sm text-graphite-600">
-                Esta empresa ainda nao tem login no portal. Libere o acesso para que ela veja, pela area dos servicos
-                contratados, seus ativos, planos preventivos e ordens de manutencao.
+                Esta empresa ainda não tem login no portal. Libere o acesso para que ela veja, pela área dos serviços
+                contratados, seus ativos, planos preventivos e ordens de manutenção.
               </p>
             ) : (
               <ul className="divide-y divide-gray-100">
@@ -171,7 +171,7 @@ export default function ClientDetail() {
                       <p className="truncate font-medium text-graphite-800">{u.name}</p>
                       <p className="truncate text-xs text-graphite-400">{u.email}</p>
                       <p className="truncate text-xs text-graphite-400">
-                        {u.lastLoginAt ? `Ultimo acesso: ${formatDateTime(u.lastLoginAt)}` : "Nunca acessou"}
+                        {u.lastLoginAt ? `Último acesso: ${formatDateTime(u.lastLoginAt)}` : "Nunca acessou"}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
@@ -183,8 +183,8 @@ export default function ClientDetail() {
             )}
             {client.contractedServices.length === 0 && (
               <p className="mt-3 flex items-center gap-1.5 text-xs text-amber-700">
-                <KeyRound className="h-3.5 w-3.5 shrink-0" /> Nenhum servico contratado marcado: o portal ficara vazio
-                ate voce marcar ao menos um em "Editar".
+                <KeyRound className="h-3.5 w-3.5 shrink-0" /> Nenhum serviço contratado marcado: o portal ficará vazio
+                até você marcar ao menos um em "Editar".
               </p>
             )}
           </div>
@@ -217,7 +217,7 @@ export default function ClientDetail() {
       <ConfirmDialog
         open={confirmDelete}
         title="Remover cliente"
-        description={`Tem certeza que deseja remover ${client.companyName}? O historico sera preservado, mas o cliente deixara de aparecer nas listagens.`}
+        description={`Tem certeza que deseja remover ${client.companyName}? O histórico será preservado, mas o cliente deixará de aparecer nas listagens.`}
         confirmLabel="Remover"
         danger
         loading={deleting}
