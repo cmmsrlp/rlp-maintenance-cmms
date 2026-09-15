@@ -312,7 +312,11 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
             error={errors.level?.message}
             {...register("level", { onChange: () => setValue("type", "") })}
           />
-          {level && <AssetTypeInput nivel={level} currentValue={instrument?.type} error={errors.type?.message} {...register("type")} />}
+          {/* Classe so faz sentido em equipamento (Maquina/Subconjunto/Parte) - Planta e
+              Area sao nivel estrutural, nao tem "classe" pra escolher. */}
+          {level && level !== "PLANT" && level !== "AREA" && (
+            <AssetTypeInput nivel={level} currentValue={instrument?.type} error={errors.type?.message} {...register("type")} />
+          )}
           <SelectInput
             label="Criticidade"
             hint="Quanto uma parada pesa pra empresa."

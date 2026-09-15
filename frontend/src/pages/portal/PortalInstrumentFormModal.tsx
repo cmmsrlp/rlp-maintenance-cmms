@@ -180,7 +180,11 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
               onChange: () => setValue("type", ""),
             })}
           />
-          {nivel && <AssetTypeInput nivel={nivel} currentValue={instrument?.type} {...register("type")} />}
+          {/* Classe so faz sentido em equipamento (Maquina/Subconjunto/Parte) - Planta e
+              Area sao nivel estrutural, nao tem "classe" pra escolher. */}
+          {nivel && nivel !== "PLANT" && nivel !== "AREA" && (
+            <AssetTypeInput nivel={nivel} currentValue={instrument?.type} {...register("type")} />
+          )}
           <SelectInput
             label="Criticidade"
             hint="Quanto uma parada deste ativo pesa pra sua operação."
