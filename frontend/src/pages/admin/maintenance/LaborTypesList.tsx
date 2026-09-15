@@ -16,7 +16,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-const schema = z.object({ name: z.string().min(2, "Informe o nome da funcao.") });
+const schema = z.object({ name: z.string().min(2, "Informe o nome da função.") });
 type FormValues = z.infer<typeof schema>;
 
 /**
@@ -67,10 +67,10 @@ export default function LaborTypesList() {
     try {
       if (editing) {
         await updateLaborType(editing.id, values);
-        notify("success", "Funcao atualizada.");
+        notify("success", "Função atualizada.");
       } else {
         await createLaborType(values);
-        notify("success", "Funcao cadastrada.");
+        notify("success", "Função cadastrada.");
       }
       reset();
       setFormOpen(false);
@@ -94,7 +94,7 @@ export default function LaborTypesList() {
   async function handleDelete(type: LaborType) {
     try {
       await deleteLaborType(type.id);
-      notify("success", "Funcao removida.");
+      notify("success", "Função removida.");
       refresh();
     } catch (error) {
       notify("error", getApiErrorMessage(error));
@@ -104,13 +104,13 @@ export default function LaborTypesList() {
   return (
     <div>
       <PageHeader
-        title="Tipos de mao de obra"
-        description="Funcoes da equipe usadas no cadastro de mao de obra e no HH planejado dos planos"
-        breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Tipos de mao de obra" }]}
+        title="Tipos de mão de obra"
+        description="Funções da equipe usadas no cadastro de mão de obra e no HH planejado dos planos"
+        breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Tipos de mão de obra" }]}
         actions={
           canManage && (
             <button className="btn-primary" onClick={openCreate}>
-              <Plus className="h-4 w-4" /> Nova funcao
+              <Plus className="h-4 w-4" /> Nova função
             </button>
           )
         }
@@ -120,12 +120,12 @@ export default function LaborTypesList() {
         loading={isLoading}
         rows={data ?? []}
         keyField={(r) => r.id}
-        emptyTitle="Nenhuma funcao cadastrada"
+        emptyTitle="Nenhuma função cadastrada"
         columns={[
-          { header: "Funcao", accessor: (r) => <span className="font-medium text-navy-900">{r.name}</span> },
+          { header: "Função", accessor: (r) => <span className="font-medium text-navy-900">{r.name}</span> },
           {
             header: "Origem",
-            accessor: (r) => <span className="text-xs text-graphite-500">{r.clientId ? "Meu catalogo" : "Padrao RLP Maintenance"}</span>,
+            accessor: (r) => <span className="text-xs text-graphite-500">{r.clientId ? "Meu catálogo" : "Padrão RLP Maintenance"}</span>,
           },
           {
             header: "Status",
@@ -158,7 +158,7 @@ export default function LaborTypesList() {
       <Modal
         open={formOpen}
         onClose={() => setFormOpen(false)}
-        title={editing ? "Editar funcao" : "Nova funcao"}
+        title={editing ? "Editar função" : "Nova função"}
         size="sm"
         footer={
           <>
@@ -170,7 +170,7 @@ export default function LaborTypesList() {
         }
       >
         <form id="labor-type-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-          <TextInput label="Funcao" required placeholder="Ex.: Tecnico mecanico" error={errors.name?.message} {...register("name")} />
+          <TextInput label="Função" required placeholder="Ex.: Técnico mecânico" error={errors.name?.message} {...register("name")} />
         </form>
       </Modal>
     </div>

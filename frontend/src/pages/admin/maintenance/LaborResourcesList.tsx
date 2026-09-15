@@ -33,7 +33,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 const schema = z.object({
-  type: z.string().min(1, "Selecione o tipo de mao de obra."),
+  type: z.string().min(1, "Selecione o tipo de mão de obra."),
   name: z.string().min(2, "Informe o nome."),
   registrationNumber: z.string().optional(),
   hourlyRate: numeroOpcional(z.coerce.number().nonnegative()),
@@ -121,7 +121,7 @@ export default function LaborResourcesList() {
       if (fotoNova) await uploadLaborResourcePhoto(recurso.id, fotoNova);
       else if (tirarFoto && editing?.photoUrl) await deleteLaborResourcePhoto(recurso.id);
 
-      notify("success", editing ? "Mao de obra atualizada." : "Mao de obra cadastrada.");
+      notify("success", editing ? "Mão de obra atualizada." : "Mão de obra cadastrada.");
       reset();
       setFormOpen(false);
       setEditing(null);
@@ -146,7 +146,7 @@ export default function LaborResourcesList() {
     if (!removendo) return;
     try {
       await deleteLaborResource(removendo.id);
-      notify("success", "Mao de obra removida.");
+      notify("success", "Mão de obra removida.");
       setRemovendo(null);
       atualizarListas();
     } catch (error) {
@@ -157,13 +157,13 @@ export default function LaborResourcesList() {
   return (
     <div>
       <PageHeader
-        title="Mao de obra"
-        description="Tecnicos, engenheiros e outros recursos que executam as OS - com valor/hora pra apurar custo de manutencao por ativo"
-        breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Mao de obra" }]}
+        title="Mão de obra"
+        description="Técnicos, engenheiros e outros recursos que executam as OS - com valor/hora pra apurar custo de manutenção por ativo"
+        breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Mão de obra" }]}
         actions={
           (isClient || clientId) && (
             <button className="btn-primary" onClick={() => abrirFormulario(null)}>
-              <Plus className="h-4 w-4" /> Nova mao de obra
+              <Plus className="h-4 w-4" /> Nova mão de obra
             </button>
           )
         }
@@ -193,7 +193,7 @@ export default function LaborResourcesList() {
       </div>
 
       {!isClient && !clientId ? (
-        <EmptyState title="Selecione um cliente" description="A mao de obra e' propria de cada empresa - escolha uma acima para ver os recursos dela." />
+        <EmptyState title="Selecione um cliente" description="A mão de obra é própria de cada empresa - escolha uma acima para ver os recursos dela." />
       ) : (
         <DataTable
           loading={isLoading}
@@ -201,7 +201,7 @@ export default function LaborResourcesList() {
           keyField={(r) => r.id}
           pagination={data}
           onPageChange={setPage}
-          emptyTitle="Nenhuma mao de obra cadastrada"
+          emptyTitle="Nenhuma mão de obra cadastrada"
           columns={[
             {
               header: "Nome",
@@ -226,7 +226,7 @@ export default function LaborResourcesList() {
                 r.user ? (
                   <span className="text-xs text-graphite-600">{r.user.email}</span>
                 ) : (
-                  <span className="text-xs text-graphite-400">nao entra no sistema</span>
+                  <span className="text-xs text-graphite-400">não entra no sistema</span>
                 ),
             },
             { header: "Valor/hora", accessor: (r) => (r.hourlyRate != null ? formatCurrency(r.hourlyRate) : "-") },
@@ -258,7 +258,7 @@ export default function LaborResourcesList() {
       <Modal
         open={formOpen}
         onClose={() => setFormOpen(false)}
-        title={editing ? "Editar mao de obra" : "Nova mao de obra"}
+        title={editing ? "Editar mão de obra" : "Nova mão de obra"}
         size="sm"
         footer={
           <>
@@ -307,22 +307,22 @@ export default function LaborResourcesList() {
                   <X className="h-3.5 w-3.5" /> Remover
                 </button>
               )}
-              <p className="mt-1 text-xs text-graphite-500">Aparece em miniatura na programacao do PCM.</p>
+              <p className="mt-1 text-xs text-graphite-500">Aparece em miniatura na programação do PCM.</p>
             </div>
           </div>
 
-          <TextInput label="Nome" required placeholder="Ex.: Joao Silva" error={errors.name?.message} {...register("name")} />
+          <TextInput label="Nome" required placeholder="Ex.: João Silva" error={errors.name?.message} {...register("name")} />
           <LaborTypeInput required currentValue={editing?.type} error={errors.type?.message} {...register("type")} />
           <div className="grid gap-4 sm:grid-cols-2">
-            <TextInput label="DRT (opcional)" hint="Registro profissional (CREA, CFT, DRT...), quando aplicavel." {...register("registrationNumber")} />
+            <TextInput label="DRT (opcional)" hint="Registro profissional (CREA, CFT, DRT...), quando aplicável." {...register("registrationNumber")} />
             <TextInput label="Valor/hora (opcional)" type="number" step="any" {...register("hourlyRate")} />
           </div>
           {/* Sem esta ligacao o proprio mantenedor nao consegue assumir uma OS: o sistema
               nao sabe que aquele login e' esta pessoa da equipe. */}
           <SelectInput
             label="Acesso no sistema (opcional)"
-            placeholder="Sem acesso - so aparece na programacao"
-            hint="Ligue quando esta pessoa entra no sistema. E' o que permite ela assumir OS sozinha."
+            placeholder="Sem acesso - só aparece na programação"
+            hint="Ligue quando esta pessoa entra no sistema. É o que permite ela assumir OS sozinha."
             options={(acessos?.items ?? [])
               .filter((u) => u.active)
               .map((u) => ({ value: u.id, label: `${u.name} - ${u.email}` }))}
@@ -330,16 +330,16 @@ export default function LaborResourcesList() {
           />
 
           <p className="text-xs text-graphite-500">
-            A funcao vem do catalogo em{" "}
-            <Link to={`${base}/tipos-mao-de-obra`} className="text-navy-700 underline">Tipos de mao de obra</Link>.
+            A função vem do catálogo em{" "}
+            <Link to={`${base}/tipos-mao-de-obra`} className="text-navy-700 underline">Tipos de mão de obra</Link>.
           </p>
         </form>
       </Modal>
 
       <ConfirmDialog
         open={!!removendo}
-        title="Remover mao de obra"
-        description={`"${removendo?.name ?? ""}" sai da lista e deixa de aparecer na programacao. O historico de OS ja executadas por essa pessoa nao e' apagado.`}
+        title="Remover mão de obra"
+        description={`"${removendo?.name ?? ""}" sai da lista e deixa de aparecer na programação. O histórico de OS já executadas por essa pessoa não é apagado.`}
         confirmLabel="Remover"
         danger
         onConfirm={confirmarRemocao}

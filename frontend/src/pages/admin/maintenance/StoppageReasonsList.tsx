@@ -98,7 +98,7 @@ export default function StoppageReasonsList() {
     <div>
       <PageHeader
         title="Motivos de parada"
-        description="Catalogo usado ao registrar uma parada de ativo durante a OS"
+        description="Catálogo usado ao registrar uma parada de ativo durante a OS"
         breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Motivos de parada" }]}
         actions={
           canManage && (
@@ -118,7 +118,7 @@ export default function StoppageReasonsList() {
           { header: "Nome", accessor: (r) => <span className="font-medium text-navy-900">{r.name}</span> },
           {
             header: "Origem",
-            accessor: (r) => <span className="text-xs text-graphite-500">{r.clientId ? "Meu catalogo" : "Padrao RLP Maintenance"}</span>,
+            accessor: (r) => <span className="text-xs text-graphite-500">{r.clientId ? "Meu catálogo" : "Padrão RLP Maintenance"}</span>,
           },
           {
             header: "Status",
