@@ -32,7 +32,7 @@ export function AutomationPanel({ onRodou }: { onRodou: () => void }) {
     try {
       const atualizado = await updateAutomationStatus(!status.planGenerationEnabled);
       queryClient.setQueryData(["automacao-planos"], atualizado);
-      notify("success", atualizado.planGenerationEnabled ? "Geracao automatica retomada." : "Geracao automatica pausada.");
+      notify("success", atualizado.planGenerationEnabled ? "Geração automática retomada." : "Geração automática pausada.");
     } catch (error) {
       notify("error", getApiErrorMessage(error));
     } finally {
@@ -48,7 +48,7 @@ export function AutomationPanel({ onRodou }: { onRodou: () => void }) {
         "success",
         resultado.gerados.length > 0
           ? `${resultado.gerados.length} OS gerada(s): ${resultado.gerados.map((g) => g.workOrderNumber).join(", ")}`
-          : "Rodada concluida - nenhum plano vencido no momento.",
+          : "Rodada concluída - nenhum plano vencido no momento.",
       );
       queryClient.invalidateQueries({ queryKey: ["automacao-planos"] });
       onRodou();
@@ -70,14 +70,14 @@ export function AutomationPanel({ onRodou }: { onRodou: () => void }) {
           <Zap className={`h-4 w-4 shrink-0 ${ativa ? "text-safety-green-dark" : "text-safety-yellow-dark"}`} />
           <div>
             <p className="text-sm font-medium text-navy-900">
-              Geracao automatica de OS {ativa ? "ativa" : "pausada"}
+              Geração automática de OS {ativa ? "ativa" : "pausada"}
             </p>
             <p className="text-xs text-graphite-500">
               {status.lastRunAt
-                ? `Ultima rodada: ${formatDateTime(status.lastRunAt)} - ${status.lastRunGeneratedCount ?? 0} gerada(s), ${status.lastRunIgnoredCount ?? 0} ignorada(s)${
+                ? `Última rodada: ${formatDateTime(status.lastRunAt)} - ${status.lastRunGeneratedCount ?? 0} gerada(s), ${status.lastRunIgnoredCount ?? 0} ignorada(s)${
                     status.lastRunErrorCount ? `, ${status.lastRunErrorCount} com erro` : ""
                   }`
-                : "Ainda nao rodou nesta instancia."}
+                : "Ainda não rodou nesta instância."}
             </p>
           </div>
         </div>
@@ -92,8 +92,8 @@ export function AutomationPanel({ onRodou }: { onRodou: () => void }) {
         </div>
       </div>
       <p className="mt-2 text-xs text-graphite-400">
-        Algumas vezes ao dia, gera a OS de cada plano seu que chegou na antecedencia configurada. Pausar aqui so afeta
-        essa varredura - "Rodar agora" e o botao "Gerar OS" de cada plano continuam funcionando normalmente.
+        Algumas vezes ao dia, gera a OS de cada plano seu que chegou na antecedência configurada. Pausar aqui só afeta
+        essa varredura - "Rodar agora" e o botão "Gerar OS" de cada plano continuam funcionando normalmente.
       </p>
     </div>
   );

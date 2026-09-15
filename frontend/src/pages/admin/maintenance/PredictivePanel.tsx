@@ -16,34 +16,34 @@ import { useCmms } from "../../../lib/cmms";
 
 const TECHNIQUE: Record<PredictiveTechnique, { label: string; icon: typeof Waves }> = {
   COUNTER: { label: "Contador de uso", icon: Gauge },
-  VIBRATION: { label: "Vibracao", icon: Waves },
+  VIBRATION: { label: "Vibração", icon: Waves },
   THERMOGRAPHY: { label: "Termografia", icon: Thermometer },
-  OIL_ANALYSIS: { label: "Analise de oleo", icon: Droplets },
+  OIL_ANALYSIS: { label: "Análise de óleo", icon: Droplets },
   ULTRASOUND: { label: "Ultrassom", icon: Volume2 },
-  MOTOR_CURRENT: { label: "Analise de corrente", icon: Zap },
-  VISUAL: { label: "Inspecao sensitiva", icon: Eye },
-  OTHER: { label: "Outra tecnica", icon: Activity },
+  MOTOR_CURRENT: { label: "Análise de corrente", icon: Zap },
+  VISUAL: { label: "Inspeção sensitiva", icon: Eye },
+  OTHER: { label: "Outra técnica", icon: Activity },
 };
 
 const SEVERITY: Record<ConditionSeverity, { label: string; chip: string; bar: string; action: string }> = {
-  NORMAL: { label: "Normal", chip: "bg-green-50 text-safety-green-dark border-green-200", bar: "bg-safety-green", action: "Operacao normal." },
+  NORMAL: { label: "Normal", chip: "bg-green-50 text-safety-green-dark border-green-200", bar: "bg-safety-green", action: "Operação normal." },
   WARNING: {
     label: "Alerta",
     chip: "bg-amber-50 text-safety-yellow-dark border-amber-200",
     bar: "bg-safety-yellow",
-    action: "Degradacao iniciada - aumente a frequencia de coleta e acompanhe a tendencia. Nao abre OS.",
+    action: "Degradação iniciada - aumente a frequência de coleta e acompanhe a tendência. Não abre OS.",
   },
   ALARM: {
     label: "Alarme",
     chip: "bg-orange-50 text-orange-700 border-orange-200",
     bar: "bg-orange-500",
-    action: "Programe a intervencao na proxima oportunidade. OS preditiva aberta como Programada.",
+    action: "Programe a intervenção na próxima oportunidade. OS preditiva aberta como Programada.",
   },
   CRITICAL: {
-    label: "Critico",
+    label: "Crítico",
     chip: "bg-red-50 text-safety-red border-red-200",
     bar: "bg-safety-red",
-    action: "Aja imediatamente - risco de falha funcional. OS preditiva aberta com prioridade critica.",
+    action: "Aja imediatamente - risco de falha funcional. OS preditiva aberta com prioridade crítica.",
   },
 };
 
@@ -67,15 +67,15 @@ export default function PredictivePanel() {
   return (
     <div>
       <PageHeader
-        title="Manutencao preditiva"
-        description="Condicao medida dos ativos por zona de severidade - agir antes da falha"
+        title="Manutenção preditiva"
+        description="Condição medida dos ativos por zona de severidade - agir antes da falha"
         breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Preditiva" }]}
       />
 
       <Tabs
         tabs={[
           { id: "pontos", label: "Pontos monitorados" },
-          { id: "laudos", label: "Analise de laudos" },
+          { id: "laudos", label: "Análise de laudos" },
         ]}
         active={aba}
         onChange={(id) => setAba(id as "pontos" | "laudos")}
@@ -102,8 +102,8 @@ export default function PredictivePanel() {
       ) : data.totals.points === 0 ? (
         <EmptyState
           icon={Radar}
-          title="Nenhum ponto de medicao preditiva"
-          description="A preditiva mede condicao (vibracao, temperatura, oleo, ultrassom) em pontos do ativo. Cadastre os pontos na ficha do ativo, aba Medidores, escolhendo a tecnica e os limites de alerta/alarme/critico."
+          title="Nenhum ponto de medição preditiva"
+          description="A preditiva mede condição (vibração, temperatura, óleo, ultrassom) em pontos do ativo. Cadastre os pontos na ficha do ativo, aba Medidores, escolhendo a técnica e os limites de alerta/alarme/crítico."
           action={
             <Link to={assetsBase} className="btn-primary">
               <Gauge className="h-4 w-4" /> Ir para os ativos
@@ -113,16 +113,16 @@ export default function PredictivePanel() {
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Criticos" value={data.totals.critical} icon={AlertTriangle} tone={data.totals.critical > 0 ? "red" : "navy"} />
+            <StatCard label="Críticos" value={data.totals.critical} icon={AlertTriangle} tone={data.totals.critical > 0 ? "red" : "navy"} />
             <StatCard label="Em alarme" value={data.totals.alarm} icon={Activity} tone={data.totals.alarm > 0 ? "yellow" : "navy"} />
             <StatCard label="Em alerta" value={data.totals.warning} icon={Radar} tone="yellow" />
             <StatCard label="Coleta atrasada" value={data.totals.collectionOverdue + data.totals.neverMeasured} icon={CalendarClock} tone={data.totals.collectionOverdue > 0 ? "yellow" : "navy"} />
           </div>
 
-          <h2 className="mb-3 mt-8 font-semibold text-navy-900">Exige atencao</h2>
+          <h2 className="mb-3 mt-8 font-semibold text-navy-900">Exige atenção</h2>
           {data.needsAttention.length === 0 ? (
             <div className="card p-5 text-sm text-graphite-500">
-              Todos os pontos medidos estao na zona normal. {data.totals.points} ponto(s) monitorado(s).
+              Todos os pontos medidos estão na zona normal. {data.totals.points} ponto(s) monitorado(s).
             </div>
           ) : (
             <div className="space-y-3">
@@ -136,7 +136,7 @@ export default function PredictivePanel() {
             <>
               <h2 className="mb-1 mt-8 font-semibold text-navy-900">Coleta atrasada</h2>
               <p className="mb-3 text-sm text-graphite-500">
-                Sem medicao na periodicidade definida nao da para afirmar a condicao do ativo - estes pontos estao cegos.
+                Sem medição na periodicidade definida não dá para afirmar a condição do ativo - estes pontos estão cegos.
               </p>
               <div className="card divide-y divide-gray-100">
                 {data.collectionOverdue.map((p) => (
@@ -153,7 +153,7 @@ export default function PredictivePanel() {
                     <span className="text-xs font-medium text-safety-yellow-dark">
                       {p.neverMeasured
                         ? "Nunca medido"
-                        : `Atrasado ha ${Math.abs(p.dueInDays ?? 0)} dia(s) - ultima em ${formatDate(p.lastReadingAt)}`}
+                        : `Atrasado há ${Math.abs(p.dueInDays ?? 0)} dia(s) - última em ${formatDate(p.lastReadingAt)}`}
                     </span>
                   </div>
                 ))}
@@ -194,7 +194,7 @@ function PointCard({ point, assetsBase, compact }: { point: PredictivePoint; ass
           </div>
           <p className="mt-0.5 text-xs text-graphite-400">
             {TECHNIQUE[point.technique].label}
-            {point.criterion ? ` - criterio ${point.criterion}` : ""}
+            {point.criterion ? ` - critério ${point.criterion}` : ""}
             {point.instrument.description ? ` - ${point.instrument.description}` : ""}
           </p>
         </div>
@@ -240,7 +240,7 @@ function Trend({ point }: { point: PredictivePoint }) {
         <span>
           {point.limits.warning != null && `alerta ${point.limits.warning}`}
           {point.limits.alarm != null && ` · alarme ${point.limits.alarm}`}
-          {point.limits.critical != null && ` · critico ${point.limits.critical}`}
+          {point.limits.critical != null && ` · crítico ${point.limits.critical}`}
           {point.limits.warning == null && point.limits.alarm == null && point.limits.critical == null && "sem limites definidos"}
         </span>
         <span>{formatDate(point.trend[point.trend.length - 1]?.readAt)}</span>

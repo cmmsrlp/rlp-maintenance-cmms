@@ -19,10 +19,10 @@ import type { MaintenanceWorkOrder } from "../../../api/types";
 export type FaixaId = "sem-dono" | "pendente" | "liberada" | "concluida";
 
 const NOME_DA_FAIXA: Record<FaixaId, string> = {
-  "sem-dono": "Sem responsavel",
+  "sem-dono": "Sem responsável",
   pendente: "Pendente",
   liberada: "Liberada",
-  concluida: "Concluida",
+  concluida: "Concluída",
 };
 
 interface Props {
@@ -61,9 +61,9 @@ export function MoverOrdemModal({ ordem, destino, base, onClose, onMovida }: Pro
   const ehQuebra = ficha?.type === "CORRECTIVE" && ficha?.correctiveType === "BREAKDOWN";
   const faltaNaFalha = ehQuebra
     ? [
-        !ficha?.failureStartedAt ? "inicio da falha" : null,
+        !ficha?.failureStartedAt ? "início da falha" : null,
         !ficha?.failureEndedAt ? "fim da falha" : null,
-        !ficha?.failureCodeId ? "codigo de falha" : null,
+        !ficha?.failureCodeId ? "código de falha" : null,
       ].filter(Boolean)
     : [];
 
@@ -71,11 +71,11 @@ export function MoverOrdemModal({ ordem, destino, base, onClose, onMovida }: Pro
   const impedimentos: string[] = [];
   if (destino === "concluida") {
     if (checklistPendente > 0) impedimentos.push(`${checklistPendente} item(ns) do checklist ainda pendente(s)`);
-    if (ficha?.type === "CORRECTIVE" && !ficha?.correctiveType) impedimentos.push("dizer se a corretiva foi em operacao ou de quebra");
+    if (ficha?.type === "CORRECTIVE" && !ficha?.correctiveType) impedimentos.push("dizer se a corretiva foi em operação ou de quebra");
     if (faltaNaFalha.length > 0) impedimentos.push(`registro da falha (falta: ${faltaNaFalha.join(", ")})`);
   }
   if (destino === "pendente" && ordem.startedAt) {
-    impedimentos.push("esta OS ja foi iniciada - voltar para pendente apagaria o inicio da execucao");
+    impedimentos.push("esta OS já foi iniciada - voltar para pendente apagaria o início da execução");
   }
 
   const precisaDeResponsavel = destino === "pendente" || destino === "liberada";
@@ -87,19 +87,19 @@ export function MoverOrdemModal({ ordem, destino, base, onClose, onMovida }: Pro
     try {
       if (destino === "sem-dono") {
         await definirResponsavel(ordem.id, null);
-        notify("success", `${ordem.number} voltou para "Sem responsavel".`);
+        notify("success", `${ordem.number} voltou para "Sem responsável".`);
       } else if (destino === "pendente") {
         if (responsavelId !== (ordem.assignedResourceId ?? "")) await definirResponsavel(ordem.id, responsavelId);
         // Sai de "liberada" quando o arrasto e' para tras: a OS volta a esperar.
         if (ordem.status === "RELEASED") await updateMaintenanceWorkOrder(ordem.id, { status: "PLANNED" });
-        notify("success", `${ordem.number} esta em "Pendente".`);
+        notify("success", `${ordem.number} está em "Pendente".`);
       } else if (destino === "liberada") {
         if (responsavelId !== (ordem.assignedResourceId ?? "")) await definirResponsavel(ordem.id, responsavelId);
         await liberarOrdem(ordem.id);
-        notify("success", `${ordem.number} liberada para execucao.`);
+        notify("success", `${ordem.number} liberada para execução.`);
       } else {
         await completeMaintenanceWorkOrder(ordem.id, leitura ? Number(leitura) : undefined, observacoes || undefined);
-        notify("success", `${ordem.number} concluida.`);
+        notify("success", `${ordem.number} concluída.`);
       }
       onMovida();
       onClose();
@@ -151,13 +151,13 @@ export function MoverOrdemModal({ ordem, destino, base, onClose, onMovida }: Pro
           <>
             {precisaDeResponsavel && (
               <LaborResourcePicker
-                label="Responsavel"
+                label="Responsável"
                 required
                 placeholder="Escolha quem vai executar"
                 hint={
                   destino === "liberada"
-                    ? "Liberar sem dono deixaria a OS pronta e parada - alguem precisa pegar."
-                    : "E' o que tira a OS da fila dos sem responsavel."
+                    ? "Liberar sem dono deixaria a OS pronta e parada - alguém precisa pegar."
+                    : "É o que tira a OS da fila dos sem responsável."
                 }
                 name="responsavelId"
                 clientId={ordem.clientId}
@@ -169,14 +169,14 @@ export function MoverOrdemModal({ ordem, destino, base, onClose, onMovida }: Pro
             {destino === "concluida" && (
               <>
                 <p className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50/50 px-3 py-2 text-sm text-safety-green-dark">
-                  <CheckCircle2 className="h-4 w-4 shrink-0" /> Tudo o que a OS exige para fechar ja esta preenchido.
+                  <CheckCircle2 className="h-4 w-4 shrink-0" /> Tudo o que a OS exige para fechar já está preenchido.
                 </p>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-graphite-700">Observacoes de fechamento</label>
+                  <label className="mb-1 block text-sm font-medium text-graphite-700">Observações de fechamento</label>
                   <textarea
                     className="input"
                     rows={3}
-                    placeholder="O que foi feito, o que ficou pendente para uma proxima..."
+                    placeholder="O que foi feito, o que ficou pendente para uma próxima..."
                     value={observacoes}
                     onChange={(e) => setObservacoes(e.target.value)}
                   />
@@ -184,7 +184,7 @@ export function MoverOrdemModal({ ordem, destino, base, onClose, onMovida }: Pro
                 <TextInput
                   label="Leitura do medidor (opcional)"
                   type="number"
-                  hint="Horimetro, contador de ciclos - alimenta os planos por medidor."
+                  hint="Horímetro, contador de ciclos - alimenta os planos por medidor."
                   value={leitura}
                   onChange={(e) => setLeitura(e.target.value)}
                 />
@@ -193,7 +193,7 @@ export function MoverOrdemModal({ ordem, destino, base, onClose, onMovida }: Pro
 
             {destino === "sem-dono" && (
               <p className="text-sm text-graphite-700">
-                A OS fica sem responsavel e volta para a primeira coluna. O que ja foi lancado nela nao se perde.
+                A OS fica sem responsável e volta para a primeira coluna. O que já foi lançado nela não se perde.
               </p>
             )}
           </>

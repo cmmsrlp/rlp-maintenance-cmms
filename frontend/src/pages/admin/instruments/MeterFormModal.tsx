@@ -42,7 +42,7 @@ const schema = z
     frequencyDays: numeroOpcional(z.coerce.number().int().positive()),
   })
   .refine((v) => v.minThreshold == null || v.maxThreshold == null || v.minThreshold <= v.maxThreshold, {
-    message: "O limite minimo nao pode ser maior que o maximo.",
+    message: "O limite mínimo não pode ser maior que o máximo.",
     path: ["maxThreshold"],
   });
 type FormValues = z.infer<typeof schema>;
@@ -124,42 +124,42 @@ export function MeterFormModal({
       }
     >
       <form id="meter-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-        <TextInput label="Nome" required placeholder="Ex.: Horimetro, Vibracao do mancal" error={errors.name?.message} {...register("name")} />
+        <TextInput label="Nome" required placeholder="Ex.: Horímetro, Vibração do mancal" error={errors.name?.message} {...register("name")} />
         <div className="grid gap-4 sm:grid-cols-2">
           <TextInput label="Unidade" required placeholder="Ex.: h, km, ciclos, mm/s, °C" error={errors.unit?.message} {...register("unit")} />
           <TextInput label="Leitura atual" type="number" step="any" {...register("currentValue")} />
         </div>
         <SelectInput
-          label="Tecnica"
-          hint="COUNTER (contador) alimenta plano por uso, mas nao entra no painel de condicao - so as outras tecnicas viram Preditiva de verdade."
+          label="Técnica"
+          hint="COUNTER (contador) alimenta plano por uso, mas não entra no painel de condição - só as outras técnicas viram Preditiva de verdade."
           options={OPCOES_DE_TECNICA}
           {...register("technique")}
         />
         {!ehContador && (
           <>
-            <SelectInput label="Direcao da leitura" options={OPCOES_DE_DIRECAO} {...register("direction")} />
+            <SelectInput label="Direção da leitura" options={OPCOES_DE_DIRECAO} {...register("direction")} />
             <div className="rounded-lg border border-navy-200 bg-navy-50 p-4 space-y-3">
               <p className="text-xs text-graphite-600">
-                Zonas de severidade, da mais branda a mais grave. So a zona Alarme (ou Critico) abre OS sozinha; Alerta so acende no painel.
+                Zonas de severidade, da mais branda a mais grave. Só a zona Alarme (ou Crítico) abre OS sozinha; Alerta só acende no painel.
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <TextInput label="Alerta (aviso antecipado)" type="number" step="any" {...register("warningLimit")} />
-                <TextInput label="Critico" type="number" step="any" {...register("criticalLimit")} />
+                <TextInput label="Crítico" type="number" step="any" {...register("criticalLimit")} />
               </div>
             </div>
-            <TextInput label="Criterio tecnico (opcional)" placeholder='Ex.: "ISO 10816-3 Classe II"' {...register("criterion")} />
-            <TextInput label="Frequencia de coleta (dias, opcional)" type="number" hint="O painel acusa coleta atrasada quando passar desse prazo." {...register("frequencyDays")} />
+            <TextInput label="Critério técnico (opcional)" placeholder='Ex.: "ISO 10816-3 Classe II"' {...register("criterion")} />
+            <TextInput label="Frequência de coleta (dias, opcional)" type="number" hint="O painel acusa coleta atrasada quando passar desse prazo." {...register("frequencyDays")} />
           </>
         )}
         <div className="rounded-lg border border-navy-200 bg-navy-50 p-4">
           <p className="mb-3 text-xs text-graphite-600">
             {ehContador
-              ? "Faixa normal de operacao (opcional). Uma leitura fora dela abre sozinha uma OS de manutencao preditiva."
-              : "Limite de alarme (zona ALARME - a leitura ultrapassou a faixa historica, mas ainda nao chegou no limite Critico acima)."}
+              ? "Faixa normal de operação (opcional). Uma leitura fora dela abre sozinha uma OS de manutenção preditiva."
+              : "Limite de alarme (zona ALARME - a leitura ultrapassou a faixa histórica, mas ainda não chegou no limite Crítico acima)."}
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
-            <TextInput label="Limite minimo" type="number" step="any" error={errors.minThreshold?.message} {...register("minThreshold")} />
-            <TextInput label="Limite maximo" type="number" step="any" error={errors.maxThreshold?.message} {...register("maxThreshold")} />
+            <TextInput label="Limite mínimo" type="number" step="any" error={errors.minThreshold?.message} {...register("minThreshold")} />
+            <TextInput label="Limite máximo" type="number" step="any" error={errors.maxThreshold?.message} {...register("maxThreshold")} />
           </div>
         </div>
       </form>
