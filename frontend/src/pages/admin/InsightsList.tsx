@@ -9,8 +9,8 @@ import { getApiErrorMessage } from "../../api/client";
 import { formatDateTime, clientDisplayName } from "../../lib/format";
 
 const SEVERITY_META: Record<InsightSeverity, { label: string; icon: typeof CheckCircle2; className: string }> = {
-  CRITICAL: { label: "Critico", icon: AlertOctagon, className: "bg-red-50 text-safety-red ring-1 ring-red-200" },
-  ATTENTION: { label: "Atencao", icon: AlertTriangle, className: "bg-amber-50 text-amber-700 ring-1 ring-amber-200" },
+  CRITICAL: { label: "Crítico", icon: AlertOctagon, className: "bg-red-50 text-safety-red ring-1 ring-red-200" },
+  ATTENTION: { label: "Atenção", icon: AlertTriangle, className: "bg-amber-50 text-amber-700 ring-1 ring-amber-200" },
   OK: { label: "Ok", icon: CheckCircle2, className: "bg-green-50 text-green-700 ring-1 ring-green-200" },
 };
 
@@ -52,7 +52,7 @@ export default function InsightsList() {
     <div>
       <PageHeader
         title="Insights"
-        description="Sugestoes geradas por IA a partir dos dados de cada cliente - revise antes de agir, nada aqui e' automatico."
+        description="Sugestões geradas por IA a partir dos dados de cada cliente - revise antes de agir, nada aqui é automático."
         breadcrumbs={[{ label: "Insights" }]}
         actions={
           <button className="btn-primary" onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending}>

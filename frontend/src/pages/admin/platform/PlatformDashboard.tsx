@@ -15,7 +15,7 @@ export default function PlatformDashboard() {
   return (
     <div>
       <PageHeader
-        title="Administracao da plataforma"
+        title="Administração da plataforma"
         description="Planos, assinaturas e limites de uso dos clientes"
         actions={
           <Link to="/gestao/plataforma/planos" className="btn-outline">
@@ -30,13 +30,13 @@ export default function PlatformDashboard() {
         <>
           <div className="grid gap-4 sm:grid-cols-3">
             <StatCard label="Clientes ativos" value={data.totalActiveClients} icon={Building2} tone="navy" />
-            <StatCard label="Sem plano atribuido" value={data.clientsWithoutPlan} icon={ShieldAlert} tone="yellow" />
+            <StatCard label="Sem plano atribuído" value={data.clientsWithoutPlan} icon={ShieldAlert} tone="yellow" />
             <StatCard label="Planos cadastrados" value={data.plans.length} icon={Package} tone="navy" />
           </div>
 
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
             <div className="card p-5">
-              <h2 className="mb-3 font-semibold text-navy-900">Distribuicao por plano</h2>
+              <h2 className="mb-3 font-semibold text-navy-900">Distribuição por plano</h2>
               {data.plans.length === 0 ? (
                 <EmptyState title="Nenhum plano cadastrado" description="Crie planos para atribuir aos clientes." />
               ) : (
@@ -56,7 +56,7 @@ export default function PlatformDashboard() {
                 <AlertTriangle className="h-4 w-4 text-safety-yellow" /> Clientes perto do limite (80%+)
               </h2>
               {data.nearLimitClients.length === 0 ? (
-                <EmptyState title="Nenhum cliente perto do limite" description="Todos os clientes com plano estao com folga de uso." />
+                <EmptyState title="Nenhum cliente perto do limite" description="Todos os clientes com plano estão com folga de uso." />
               ) : (
                 <ul className="divide-y divide-gray-100">
                   {data.nearLimitClients.map((c) => (
@@ -66,7 +66,7 @@ export default function PlatformDashboard() {
                       <div className="mt-1 flex gap-4 text-xs">
                         {c.users.limit != null && (
                           <span className={c.users.pct != null && c.users.pct >= 100 ? "font-medium text-safety-red" : "text-graphite-600"}>
-                            Usuarios: {c.users.current}/{c.users.limit} ({c.users.pct}%)
+                            Usuários: {c.users.current}/{c.users.limit} ({c.users.pct}%)
                           </span>
                         )}
                         {c.instruments.limit != null && (

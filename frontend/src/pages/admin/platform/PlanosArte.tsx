@@ -35,9 +35,9 @@ export default function PlanosArte() {
       <div className="print:hidden">
         <PageHeader
           title="Arte de planos para compartilhar"
-          description="Gerada agora, a partir dos planos ativos cadastrados - sempre reflete o preco e os limites de verdade."
+          description="Gerada agora, a partir dos planos ativos cadastrados - sempre reflete o preço e os limites de verdade."
           breadcrumbs={[
-            { label: "Administracao da plataforma", to: "/gestao/plataforma" },
+            { label: "Administração da plataforma", to: "/gestao/plataforma" },
             { label: "Planos", to: "/gestao/plataforma/planos" },
             { label: "Arte" },
           ]}
@@ -52,7 +52,7 @@ export default function PlanosArte() {
       {ordenados.length === 0 ? (
         <EmptyState
           title="Nenhum plano ativo"
-          description="Cadastre ou reative um plano em Administracao da plataforma > Planos para gerar a arte."
+          description="Cadastre ou reative um plano em Administração da plataforma > Planos para gerar a arte."
         />
       ) : (
         <div className="rounded-2xl bg-navy-900 print:rounded-none">
@@ -60,8 +60,8 @@ export default function PlanosArte() {
             <CmmsLogo variant="light" size="md" className="mx-auto" />
             <h1 className="mt-6 text-3xl font-extrabold text-white">Escolha o plano do seu CMMS</h1>
             <p className="mx-auto mt-3 max-w-xl text-sm text-navy-200">
-              Ativos, planos preventivos, ordens de servico e almoxarifado num so lugar - sem letra miuda, sem
-              integracao de cobranca escondida.
+              Ativos, planos preventivos, ordens de serviço e almoxarifado num só lugar - sem letra miúda, sem
+              integração de cobrança escondida.
             </p>
           </div>
 
@@ -93,7 +93,7 @@ export default function PlanosArte() {
                       {plano.priceMonthly != null ? formatCurrency(plano.priceMonthly) : "Sob consulta"}
                     </span>
                     {plano.priceMonthly != null && (
-                      <span className={"text-xs font-semibold " + (destaque ? "text-graphite-400" : "text-navy-300")}>/mes</span>
+                      <span className={"text-xs font-semibold " + (destaque ? "text-graphite-400" : "text-navy-300")}>/mês</span>
                     )}
                   </div>
 
@@ -102,7 +102,7 @@ export default function PlanosArte() {
                       <span className={"block text-base font-extrabold tabular-nums " + (destaque ? "text-navy-900" : "text-white")}>
                         {plano.maxUsers ?? "∞"}
                       </span>
-                      <span className={destaque ? "text-graphite-400" : "text-navy-300"}>usuarios</span>
+                      <span className={destaque ? "text-graphite-400" : "text-navy-300"}>usuários</span>
                     </div>
                     <div className="flex-1">
                       <span className={"block text-base font-extrabold tabular-nums " + (destaque ? "text-navy-900" : "text-white")}>

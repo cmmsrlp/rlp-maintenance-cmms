@@ -118,8 +118,8 @@ export default function PlansList() {
     <div>
       <PageHeader
         title="Planos"
-        description="Planos comerciais oferecidos aos clientes - definem limites de usuarios e ativos"
-        breadcrumbs={[{ label: "Administracao da plataforma", to: "/gestao/plataforma" }, { label: "Planos" }]}
+        description="Planos comerciais oferecidos aos clientes - definem limites de usuários e ativos"
+        breadcrumbs={[{ label: "Administração da plataforma", to: "/gestao/plataforma" }, { label: "Planos" }]}
         actions={
           <>
             <Link to="/gestao/plataforma/planos/arte" className="btn-outline">
@@ -139,8 +139,8 @@ export default function PlansList() {
         emptyTitle="Nenhum plano cadastrado"
         columns={[
           { header: "Plano", accessor: (p) => <span className="font-medium text-navy-900">{p.name}</span> },
-          { header: "Preco mensal", accessor: (p) => (p.priceMonthly != null ? formatCurrency(p.priceMonthly) : "Sob consulta") },
-          { header: "Limite de usuarios", accessor: (p) => p.maxUsers ?? "Sem limite" },
+          { header: "Preço mensal", accessor: (p) => (p.priceMonthly != null ? formatCurrency(p.priceMonthly) : "Sob consulta") },
+          { header: "Limite de usuários", accessor: (p) => p.maxUsers ?? "Sem limite" },
           { header: "Limite de ativos", accessor: (p) => p.maxInstruments ?? "Sem limite" },
           { header: "Clientes", accessor: (p) => p._count?.clients ?? 0 },
           {
@@ -182,10 +182,10 @@ export default function PlansList() {
       >
         <form id="plan-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <TextInput label="Nome do plano" required placeholder="Ex.: Plus, Pro, Advanced" error={errors.name?.message} {...register("name")} />
-          <TextareaInput label="Descricao (opcional)" rows={2} {...register("description")} />
+          <TextareaInput label="Descrição (opcional)" rows={2} {...register("description")} />
           <div className="grid gap-4 sm:grid-cols-3">
-            <TextInput label="Preco mensal (opcional)" type="number" step="any" hint="Vazio = Sob consulta (ex.: Enterprise). Sem cobranca automatica." error={errors.priceMonthly?.message} {...register("priceMonthly")} />
-            <TextInput label="Limite de usuarios (opcional)" type="number" hint="Vazio = sem limite." error={errors.maxUsers?.message} {...register("maxUsers")} />
+            <TextInput label="Preço mensal (opcional)" type="number" step="any" hint="Vazio = Sob consulta (ex.: Enterprise). Sem cobrança automática." error={errors.priceMonthly?.message} {...register("priceMonthly")} />
+            <TextInput label="Limite de usuários (opcional)" type="number" hint="Vazio = sem limite." error={errors.maxUsers?.message} {...register("maxUsers")} />
             <TextInput label="Limite de ativos (opcional)" type="number" hint="Vazio = sem limite." error={errors.maxInstruments?.message} {...register("maxInstruments")} />
           </div>
 
@@ -199,7 +199,7 @@ export default function PlansList() {
             <div className="space-y-2">
               {fields.map((field, index) => (
                 <div key={field.id} className="flex items-center gap-2">
-                  <TextInput className="flex-1" placeholder={`Ex.: Suporte prioritario`} error={errors.features?.[index]?.value?.message} {...register(`features.${index}.value`)} />
+                  <TextInput className="flex-1" placeholder={`Ex.: Suporte prioritário`} error={errors.features?.[index]?.value?.message} {...register(`features.${index}.value`)} />
                   <button type="button" onClick={() => remove(index)} className="text-graphite-400 hover:text-safety-red" aria-label="Remover item">
                     <X className="h-4 w-4" />
                   </button>
