@@ -21,7 +21,7 @@ import { getApiErrorMessage } from "../../../api/client";
 import { clientDisplayName, formatDateTime } from "../../../lib/format";
 import { useCmms } from "../../../lib/cmms";
 
-const PRIORITY_LABELS: Record<string, string> = { LOW: "Baixa", MEDIUM: "Media", HIGH: "Alta", CRITICAL: "Critica" };
+const PRIORITY_LABELS: Record<string, string> = { LOW: "Baixa", MEDIUM: "Média", HIGH: "Alta", CRITICAL: "Crítica" };
 
 export default function ServiceRequestDetail() {
   const { id = "" } = useParams<{ id: string }>();
@@ -51,13 +51,13 @@ export default function ServiceRequestDetail() {
       return;
     }
     if (decision === "reject" && !rejectionReason.trim()) {
-      notify("error", "Informe o motivo da rejeicao.");
+      notify("error", "Informe o motivo da rejeição.");
       return;
     }
     setBusy(true);
     try {
       await triageServiceRequest(id, { decision, notes: triageNotes || undefined, rejectionReason: rejectionReason || undefined });
-      notify("success", decision === "approve" ? "Solicitacao aprovada." : decision === "reject" ? "Solicitacao rejeitada." : "Solicitado mais informacao ao solicitante.");
+      notify("success", decision === "approve" ? "Solicitação aprovada." : decision === "reject" ? "Solicitação rejeitada." : "Solicitado mais informação ao solicitante.");
       setTriageNotes("");
       setRejectionReason("");
       setShowRejectField(false);
@@ -89,7 +89,7 @@ export default function ServiceRequestDetail() {
     setDeleting(true);
     try {
       await deleteServiceRequest(id);
-      notify("success", "Solicitacao removida.");
+      notify("success", "Solicitação removida.");
       navigate(`${base}/solicitacoes`);
     } catch (error) {
       notify("error", getApiErrorMessage(error));
@@ -108,11 +108,11 @@ export default function ServiceRequestDetail() {
   return (
     <div>
       <PageHeader
-        title={`Solicitacao ${request.number}`}
+        title={`Solicitação ${request.number}`}
         description={clientDisplayName(request.client)}
         breadcrumbs={[
           { label: "RLP Maintenance CMMS", to: base },
-          { label: "Solicitacoes", to: `${base}/solicitacoes` },
+          { label: "Solicitações", to: `${base}/solicitacoes` },
           { label: request.number },
         ]}
         actions={
@@ -131,7 +131,7 @@ export default function ServiceRequestDetail() {
           <span className="inline-flex items-center gap-1 text-xs font-medium text-safety-yellow-dark">
             <AlertTriangle className="h-3.5 w-3.5" />
             Impacto:{" "}
-            {[request.safetyImpact && "seguranca", request.qualityImpact && "qualidade", request.productionImpact && "producao"]
+            {[request.safetyImpact && "segurança", request.qualityImpact && "qualidade", request.productionImpact && "produção"]
               .filter(Boolean)
               .join(", ")}
           </span>
@@ -142,7 +142,7 @@ export default function ServiceRequestDetail() {
         <div className="space-y-6 lg:col-span-2">
           <div className="card space-y-4 p-5">
             <dl className="grid gap-4 sm:grid-cols-2">
-              <Info label="Area" value={request.area?.name ?? "-"} />
+              <Info label="Área" value={request.area?.name ?? "-"} />
               <Info label="Ativo" value={request.instrument ? `TAG ${request.instrument.tag ?? request.instrument.type}` : "-"} />
               <Info label="Local" value={request.location ?? "-"} />
               <Info label="Categoria" value={request.category?.name ?? "-"} />
@@ -150,7 +150,7 @@ export default function ServiceRequestDetail() {
               <Info label="Aberta em" value={formatDateTime(request.createdAt)} />
             </dl>
             <div>
-              <p className="text-xs uppercase tracking-wide text-graphite-400">Descricao do problema</p>
+              <p className="text-xs uppercase tracking-wide text-graphite-400">Descrição do problema</p>
               <p className="mt-1 whitespace-pre-wrap text-sm text-graphite-800">{request.description}</p>
             </div>
           </div>
@@ -158,9 +158,9 @@ export default function ServiceRequestDetail() {
           {(request.triageBy || request.triageNotes || request.rejectionReason) && (
             <div className="card space-y-2 p-5">
               <h2 className="font-semibold text-navy-900">Triagem</h2>
-              {request.triageBy && <p className="text-sm text-graphite-600">Responsavel: {request.triageBy.name}</p>}
+              {request.triageBy && <p className="text-sm text-graphite-600">Responsável: {request.triageBy.name}</p>}
               {request.triageNotes && <p className="text-sm text-graphite-600">Parecer: {request.triageNotes}</p>}
-              {request.rejectionReason && <p className="text-sm text-safety-red">Motivo da rejeicao: {request.rejectionReason}</p>}
+              {request.rejectionReason && <p className="text-sm text-safety-red">Motivo da rejeição: {request.rejectionReason}</p>}
             </div>
           )}
 
@@ -182,8 +182,8 @@ export default function ServiceRequestDetail() {
             <div className="card p-5">
               <h2 className="mb-3 font-semibold text-navy-900">Planejada</h2>
               <p className="mb-3 text-sm text-graphite-500">
-                Aprovada na triagem. Ao gerar a OS voce reescreve a descricao e diz como o servico sera executado -
-                quem abriu a solicitacao relatou o sintoma, nao o servico.
+                Aprovada na triagem. Ao gerar a OS você reescreve a descrição e diz como o serviço será executado -
+                quem abriu a solicitação relatou o sintoma, não o serviço.
               </p>
               <button className="btn-primary w-full justify-center" onClick={() => setConversaoAberta(true)} disabled={busy}>
                 <Wrench className="h-4 w-4" /> Gerar OS
@@ -205,7 +205,7 @@ export default function ServiceRequestDetail() {
                 <textarea
                   className="input"
                   rows={2}
-                  placeholder="Motivo da rejeicao"
+                  placeholder="Motivo da rejeição"
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
                 />
@@ -215,10 +215,10 @@ export default function ServiceRequestDetail() {
                   <CheckCircle2 className="h-4 w-4" /> Aprovar
                 </button>
                 <button className="btn-outline justify-center" onClick={() => handleTriage("request_info")} disabled={busy}>
-                  <HelpCircle className="h-4 w-4" /> Pedir informacao
+                  <HelpCircle className="h-4 w-4" /> Pedir informação
                 </button>
                 <button className="btn-danger justify-center" onClick={() => handleTriage("reject")} disabled={busy}>
-                  <XCircle className="h-4 w-4" /> {showRejectField ? "Confirmar rejeicao" : "Rejeitar"}
+                  <XCircle className="h-4 w-4" /> {showRejectField ? "Confirmar rejeição" : "Rejeitar"}
                 </button>
               </div>
             </div>
@@ -228,11 +228,11 @@ export default function ServiceRequestDetail() {
 
       <ConfirmDialog
         open={confirmDelete}
-        title="Remover solicitacao"
+        title="Remover solicitação"
         description={
           isConverted
-            ? "Esta solicitacao ja foi convertida em OS. Remove-la apaga so o registro da solicitacao (a OS gerada continua existindo normalmente, sem vinculo com ela). Tem certeza?"
-            : "Tem certeza que deseja remover esta solicitacao de servico?"
+            ? "Esta solicitação já foi convertida em OS. Removê-la apaga só o registro da solicitação (a OS gerada continua existindo normalmente, sem vínculo com ela). Tem certeza?"
+            : "Tem certeza que deseja remover esta solicitação de serviço?"
         }
         confirmLabel="Remover"
         danger

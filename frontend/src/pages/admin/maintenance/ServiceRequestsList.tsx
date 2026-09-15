@@ -28,12 +28,12 @@ export default function ServiceRequestsList() {
   return (
     <div>
       <PageHeader
-        title="Solicitacoes de servico"
-        description="Porta de entrada do CMMS - qualquer necessidade de manutencao antes de virar OS"
-        breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Solicitacoes" }]}
+        title="Solicitações de serviço"
+        description="Porta de entrada do CMMS - qualquer necessidade de manutenção antes de virar OS"
+        breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Solicitações" }]}
         actions={
           <button className="btn-primary" onClick={() => navigate(`${base}/solicitacoes/novo`)}>
-            <Plus className="h-4 w-4" /> Nova solicitacao
+            <Plus className="h-4 w-4" /> Nova solicitação
           </button>
         }
       />
@@ -43,7 +43,7 @@ export default function ServiceRequestsList() {
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-graphite-400" />
           <input
             className="input pl-9"
-            placeholder="Buscar por numero..."
+            placeholder="Buscar por número..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
@@ -52,7 +52,7 @@ export default function ServiceRequestsList() {
           <option value="">Todos os status</option>
           <option value="OPEN">Aberta</option>
           <option value="IN_TRIAGE">Em triagem</option>
-          <option value="AWAITING_INFO">Aguardando informacao</option>
+          <option value="AWAITING_INFO">Aguardando informação</option>
           <option value="PLANNED">Planejada</option>
           <option value="CONVERTED">Convertida em OS</option>
           <option value="REJECTED">Rejeitada</option>
@@ -67,12 +67,12 @@ export default function ServiceRequestsList() {
         onRowClick={(r) => navigate(`${base}/solicitacoes/${r.id}`)}
         pagination={data}
         onPageChange={setPage}
-        emptyTitle="Nenhuma solicitacao de servico"
+        emptyTitle="Nenhuma solicitação de serviço"
         columns={[
-          { header: "Numero", accessor: (r) => <span className="font-medium text-navy-900">{r.number}</span> },
+          { header: "Número", accessor: (r) => <span className="font-medium text-navy-900">{r.number}</span> },
           ...(isClient ? [] : [{ header: "Cliente", accessor: (r: ServiceRequest) => clientDisplayName(r.client) }]),
           { header: "Ativo", accessor: (r) => r.instrument?.tag ?? "-" },
-          { header: "Descricao", accessor: (r) => <span className="line-clamp-1 max-w-xs">{r.description}</span> },
+          { header: "Descrição", accessor: (r) => <span className="line-clamp-1 max-w-xs">{r.description}</span> },
           {
             header: "Impacto",
             accessor: (r) => (r.safetyImpact || r.qualityImpact || r.productionImpact

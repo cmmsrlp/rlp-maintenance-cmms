@@ -20,7 +20,7 @@ const schema = z.object({
   clientId: z.string().uuid("Selecione o cliente."),
   // Obrigatoria: e' a area que diz de quem e' o problema e quem atende. Sem ela, a
   // solicitacao cai numa fila sem dono e a lista de ativos vira o parque inteiro.
-  areaId: z.string().uuid("Selecione a area."),
+  areaId: z.string().uuid("Selecione a área."),
   instrumentId: z.string().uuid().optional().or(z.literal("")),
   location: z.string().optional(),
   categoryId: z.string().uuid().optional().or(z.literal("")),
@@ -34,8 +34,8 @@ type FormValues = z.infer<typeof schema>;
 
 const ROTULO_DO_CAMPO: Partial<Record<keyof FormValues, string>> = {
   clientId: "Cliente",
-  areaId: "Area",
-  description: "Descricao do problema",
+  areaId: "Área",
+  description: "Descrição do problema",
 };
 
 /** Porta de entrada simples do CMMS: qualquer um (operador, solicitante, cliente)
@@ -80,7 +80,7 @@ export default function ServiceRequestForm() {
         categoryId: values.categoryId || null,
       };
       const saved = await createServiceRequest(payload);
-      notify("success", `Solicitacao ${saved.number} aberta.`);
+      notify("success", `Solicitação ${saved.number} aberta.`);
       navigate(`${base}/solicitacoes/${saved.id}`);
     } catch (error) {
       notify("error", getApiErrorMessage(error));
@@ -91,17 +91,17 @@ export default function ServiceRequestForm() {
     const campos = Object.keys(erros)
       .map((campo) => ROTULO_DO_CAMPO[campo as keyof FormValues] ?? campo)
       .filter((v, i, arr) => arr.indexOf(v) === i);
-    notify("error", campos.length ? `Falta preencher: ${campos.join(", ")}.` : "Ha campos obrigatorios nao preenchidos.");
+    notify("error", campos.length ? `Falta preencher: ${campos.join(", ")}.` : "Há campos obrigatórios não preenchidos.");
   }
 
   return (
     <div>
       <PageHeader
-        title="Nova solicitacao de servico"
-        description="Relate uma necessidade de manutencao - a equipe faz a triagem e gera a OS quando aprovada."
+        title="Nova solicitação de serviço"
+        description="Relate uma necessidade de manutenção - a equipe faz a triagem e gera a OS quando aprovada."
         breadcrumbs={[
           { label: "RLP Maintenance CMMS", to: base },
-          { label: "Solicitacoes de servico", to: `${base}/solicitacoes` },
+          { label: "Solicitações de serviço", to: `${base}/solicitacoes` },
           { label: "Nova" },
         ]}
       />
@@ -118,10 +118,10 @@ export default function ServiceRequestForm() {
               <ClientPicker required error={errors.clientId?.message} {...register("clientId")} />
             )}
             <SelectInput
-              label="Area"
+              label="Área"
               required
-              placeholder="Selecione a area"
-              hint="A lista de ativos abaixo mostra so os desta area."
+              placeholder="Selecione a área"
+              hint="A lista de ativos abaixo mostra só os desta área."
               error={errors.areaId?.message}
               options={(areas ?? []).map((a) => ({ value: a.id, label: a.name }))}
               {...register("areaId", {
@@ -136,8 +136,8 @@ export default function ServiceRequestForm() {
               label="Ativo (opcional)"
               clientId={clientId}
               areaId={areaId}
-              bloqueadoMsg="Selecione a area primeiro"
-              hint="So os ativos da area escolhida."
+              bloqueadoMsg="Selecione a área primeiro"
+              hint="Só os ativos da área escolhida."
               error={errors.instrumentId?.message}
               {...register("instrumentId")}
             />
@@ -148,25 +148,25 @@ export default function ServiceRequestForm() {
               {...register("categoryId")}
             />
           </div>
-          <TextInput label="Local (opcional)" placeholder="Ex.: proximo a entrada da linha 2" {...register("location")} />
-          <TextareaInput label="Descricao do problema" required rows={4} error={errors.description?.message} {...register("description")} />
+          <TextInput label="Local (opcional)" placeholder="Ex.: próximo à entrada da linha 2" {...register("location")} />
+          <TextareaInput label="Descrição do problema" required rows={4} error={errors.description?.message} {...register("description")} />
           <SelectInput
             label="Prioridade sugerida"
             hint="A equipe pode ajustar na triagem."
             options={[
               { value: "LOW", label: "Baixa" },
-              { value: "MEDIUM", label: "Media" },
+              { value: "MEDIUM", label: "Média" },
               { value: "HIGH", label: "Alta" },
-              { value: "CRITICAL", label: "Critica" },
+              { value: "CRITICAL", label: "Crítica" },
             ]}
             {...register("suggestedPriority")}
           />
           <div>
             <p className="field-label">Impacto percebido</p>
             <div className="mt-2 flex flex-wrap gap-4">
-              <CheckboxInput label="Seguranca" {...register("safetyImpact")} />
+              <CheckboxInput label="Segurança" {...register("safetyImpact")} />
               <CheckboxInput label="Qualidade" {...register("qualityImpact")} />
-              <CheckboxInput label="Producao" {...register("productionImpact")} />
+              <CheckboxInput label="Produção" {...register("productionImpact")} />
             </div>
           </div>
         </div>
@@ -174,7 +174,7 @@ export default function ServiceRequestForm() {
         <div className="flex justify-end gap-3">
           <button type="button" className="btn-outline" onClick={() => navigate(-1)}>Cancelar</button>
           <button type="submit" className="btn-primary" disabled={isSubmitting}>
-            {isSubmitting ? "Enviando..." : "Abrir solicitacao"}
+            {isSubmitting ? "Enviando..." : "Abrir solicitação"}
           </button>
         </div>
       </form>

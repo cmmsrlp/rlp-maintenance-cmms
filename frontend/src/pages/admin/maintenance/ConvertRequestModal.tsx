@@ -52,12 +52,12 @@ export function ConvertRequestModal({ open, request, salvando, onClose, onConfir
   // exatamente o que falta em vez de nao fazer nada.
   function handleConfirmClick() {
     if (!request.instrumentId) {
-      notify("error", "Esta solicitacao nao tem um ativo selecionado - defina o ativo antes de gerar a OS.");
+      notify("error", "Esta solicitação não tem um ativo selecionado - defina o ativo antes de gerar a OS.");
       return;
     }
     const faltando: string[] = [];
-    if ((dados.title ?? "").trim().length < 3) faltando.push("Titulo da OS (minimo 3 caracteres)");
-    if ((dados.description ?? "").trim().length < 5) faltando.push("Descricao do servico (minimo 5 caracteres)");
+    if ((dados.title ?? "").trim().length < 3) faltando.push("Título da OS (mínimo 3 caracteres)");
+    if ((dados.description ?? "").trim().length < 5) faltando.push("Descrição do serviço (mínimo 5 caracteres)");
     if (faltando.length > 0) {
       notify("error", `Falta preencher: ${faltando.join(", ")}.`);
       return;
@@ -69,7 +69,7 @@ export function ConvertRequestModal({ open, request, salvando, onClose, onConfir
     <Modal
       open={open}
       onClose={onClose}
-      title="Gerar OS a partir desta solicitacao"
+      title="Gerar OS a partir desta solicitação"
       size="lg"
       footer={
         <>
@@ -95,17 +95,17 @@ export function ConvertRequestModal({ open, request, salvando, onClose, onConfir
         </div>
 
         <TextInput
-          label="Titulo da OS"
+          label="Título da OS"
           required
           placeholder="Ex.: Trocar rolamento do mancal LA"
-          hint="O que sera feito, em uma linha - e' o que aparece na programacao."
+          hint="O que será feito, em uma linha - é o que aparece na programação."
           value={dados.title ?? ""}
           onChange={(e) => setDados({ ...dados, title: e.target.value })}
         />
 
         <div>
           <label className="mb-1 block text-sm font-medium text-graphite-700">
-            Descricao do servico <span className="text-safety-red">*</span>
+            Descrição do serviço <span className="text-safety-red">*</span>
           </label>
           <textarea
             className="input"
@@ -115,14 +115,14 @@ export function ConvertRequestModal({ open, request, salvando, onClose, onConfir
             onChange={(e) => setDados({ ...dados, description: e.target.value })}
           />
           <p className="mt-1 text-xs text-graphite-500">
-            Comeca com o texto do relato. Reescreva no vocabulario da manutencao - o relato original fica guardado
-            na solicitacao.
+            Começa com o texto do relato. Reescreva no vocabulário da manutenção - o relato original fica guardado
+            na solicitação.
           </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <SelectInput
-            label="Tipo de servico"
+            label="Tipo de serviço"
             options={OPCOES_DE_TIPO.map((o) => ({ value: o.valor, label: o.rotulo }))}
             value={tipo}
             onChange={(e) => setTipo(e.target.value)}
@@ -131,9 +131,9 @@ export function ConvertRequestModal({ open, request, salvando, onClose, onConfir
             label="Prioridade"
             options={[
               { value: "LOW", label: "Baixa" },
-              { value: "MEDIUM", label: "Media" },
+              { value: "MEDIUM", label: "Média" },
               { value: "HIGH", label: "Alta" },
-              { value: "CRITICAL", label: "Critica" },
+              { value: "CRITICAL", label: "Crítica" },
             ]}
             value={dados.priority ?? "MEDIUM"}
             onChange={(e) => setDados({ ...dados, priority: e.target.value as ConversaoDaSolicitacao["priority"] })}
@@ -141,12 +141,12 @@ export function ConvertRequestModal({ open, request, salvando, onClose, onConfir
         </div>
 
         <SelectInput
-          label="Condicao de execucao"
-          hint="Escolher 'parada programada' ja abre a OS aguardando a parada, em vez de ela ficar na fila como se pudesse ser feita hoje."
+          label="Condição de execução"
+          hint="Escolher 'parada programada' já abre a OS aguardando a parada, em vez de ela ficar na fila como se pudesse ser feita hoje."
           options={[
-            { value: "MACHINE_RUNNING", label: "Com a maquina em operacao" },
-            { value: "OPPORTUNITY_STOP", label: "Na proxima parada de oportunidade" },
-            { value: "PLANNED_SHUTDOWN", label: "So na parada programada" },
+            { value: "MACHINE_RUNNING", label: "Com a máquina em operação" },
+            { value: "OPPORTUNITY_STOP", label: "Na próxima parada de oportunidade" },
+            { value: "PLANNED_SHUTDOWN", label: "Só na parada programada" },
           ]}
           value={dados.executionCondition ?? "MACHINE_RUNNING"}
           onChange={(e) =>
@@ -165,12 +165,12 @@ export function ConvertRequestModal({ open, request, salvando, onClose, onConfir
               <textarea
                 className="input mt-3"
                 rows={2}
-                placeholder="O que precisa ser comprado - peca, quantidade, fornecedor, prazo..."
+                placeholder="O que precisa ser comprado - peça, quantidade, fornecedor, prazo..."
                 value={dados.purchaseNotes ?? ""}
                 onChange={(e) => setDados({ ...dados, purchaseNotes: e.target.value })}
               />
               <p className="mt-1 text-xs text-graphite-500">
-                A OS nasce em "Aguardando material": ela nao entra na programacao como se pudesse ser executada.
+                A OS nasce em "Aguardando material": ela não entra na programação como se pudesse ser executada.
               </p>
             </>
           )}

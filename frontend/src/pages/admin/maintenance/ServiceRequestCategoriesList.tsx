@@ -107,9 +107,9 @@ export default function ServiceRequestCategoriesList() {
   return (
     <div>
       <PageHeader
-        title="Categorias de solicitacao"
-        description="Catalogo usado para classificar uma solicitacao de servico ao abri-la"
-        breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Categorias de solicitacao" }]}
+        title="Categorias de solicitação"
+        description="Catálogo usado para classificar uma solicitação de serviço ao abri-la"
+        breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Categorias de solicitação" }]}
         actions={
           canManage && (
             <button className="btn-primary" onClick={openCreate}>
@@ -128,7 +128,7 @@ export default function ServiceRequestCategoriesList() {
           { header: "Nome", accessor: (r) => <span className="font-medium text-navy-900">{r.name}</span> },
           {
             header: "Origem",
-            accessor: (r) => <span className="text-xs text-graphite-500">{r.clientId ? "Meu catalogo" : "Padrao RLP Maintenance"}</span>,
+            accessor: (r) => <span className="text-xs text-graphite-500">{r.clientId ? "Meu catálogo" : "Padrão RLP Maintenance"}</span>,
           },
           {
             header: "Status",
@@ -161,7 +161,7 @@ export default function ServiceRequestCategoriesList() {
       <Modal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        title={editing ? "Editar categoria" : "Nova categoria de solicitacao"}
+        title={editing ? "Editar categoria" : "Nova categoria de solicitação"}
         size="sm"
         footer={
           <>
@@ -173,7 +173,7 @@ export default function ServiceRequestCategoriesList() {
         }
       >
         <form id="service-request-category-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-          <TextInput label="Nome" required placeholder="Ex.: Eletrica" error={errors.name?.message} {...register("name")} />
+          <TextInput label="Nome" required placeholder="Ex.: Elétrica" error={errors.name?.message} {...register("name")} />
         </form>
       </Modal>
     </div>
