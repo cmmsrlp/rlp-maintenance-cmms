@@ -1,4 +1,5 @@
 import { Router } from "express";
+import multer from "multer";
 import { requireAuth } from "../../middleware/auth";
 import { requireRole, CMMS_ROLES, CMMS_ADMIN_ROLES } from "../../middleware/rbac";
 import {
@@ -19,6 +20,23 @@ import {
   getNextRotableCode,
   getRotableInstallationHistory,
 } from "./controller";
+import { baixarModeloRotable, simularImportacaoRotable, confirmarImportacaoRotable, exportarRotable } from "./importExport";
+
+/** Planilha e' arquivo de escritorio, nao imagem nem PDF - mesmo filtro do modulo de
+ * importacao geral (imports/routes.ts). */
+const uploadPlanilha = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const permitidos = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+      "application/octet-stream",
+    ];
+    if (permitidos.includes(file.mimetype) || file.originalname.toLowerCase().endsWith(".xlsx")) cb(null, true);
+    else cb(new Error("Envie a planilha em .xlsx."));
+  },
+});
 
 export const rotableEquipmentRouter = Router();
 
@@ -28,6 +46,10 @@ rotableEquipmentRouter.use(requireAuth, requireRole(...CMMS_ROLES));
 rotableEquipmentRouter.post("/substituir", substituteRotableEquipment);
 rotableEquipmentRouter.get("/proximo-codigo", getNextRotableCode);
 rotableEquipmentRouter.get("/historico-do-ativo/:instrumentId", getRotableInstallationHistory);
+rotableEquipmentRouter.get("/importar/modelo", baixarModeloRotable);
+rotableEquipmentRouter.post("/importar/simular", requireRole(...CMMS_ADMIN_ROLES), uploadPlanilha.single("file"), simularImportacaoRotable);
+rotableEquipmentRouter.post("/importar/confirmar", requireRole(...CMMS_ADMIN_ROLES), uploadPlanilha.single("file"), confirmarImportacaoRotable);
+rotableEquipmentRouter.get("/exportar", exportarRotable);
 
 rotableEquipmentRouter.get("/", listRotableEquipment);
 rotableEquipmentRouter.get("/:id", getRotableEquipment);

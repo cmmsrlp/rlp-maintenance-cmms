@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Upload, Download } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { listRotableEquipment, createRotableEquipment, getNextRotableCode } from "../../../api/rotableEquipment";
+import { listRotableEquipment, createRotableEquipment, getNextRotableCode, exportarRotable } from "../../../api/rotableEquipment";
 import type { RotableEquipmentStatus } from "../../../api/types";
 import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import { PageHeader } from "../../../components/PageHeader";
 import { DataTable } from "../../../components/DataTable";
 import { StatusBadge } from "../../../components/StatusBadge";
 import { Modal } from "../../../components/Modal";
+import { RotableImportModal } from "../../../components/RotableImportModal";
 import { TextInput, SelectInput } from "../../../components/form/Field";
 import { RotableTypeInput } from "../../../components/RotableTypeInput";
 import { useToast } from "../../../components/Toast";
@@ -57,6 +58,8 @@ export default function RotableEquipmentList() {
   const [status, setStatus] = useState<RotableEquipmentStatus | "">("");
   const [page, setPage] = useState(1);
   const [createOpen, setCreateOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [exportando, setExportando] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["rotable-equipment", clientId, search, status, page],
@@ -101,6 +104,23 @@ export default function RotableEquipmentList() {
     }
   }
 
+  async function exportar() {
+    setExportando(true);
+    try {
+      const blob = await exportarRotable(clientId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "equipamentos-recondicionaveis.xlsx";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      notify("error", getApiErrorMessage(error));
+    } finally {
+      setExportando(false);
+    }
+  }
+
   return (
     <div>
       <PageHeader
@@ -109,9 +129,17 @@ export default function RotableEquipmentList() {
         breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Equipamentos recondicionaveis" }]}
         actions={
           clientId && (
-            <button className="btn-primary" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4" /> Novo equipamento
-            </button>
+            <>
+              <button className="btn-outline" onClick={exportar} disabled={exportando}>
+                <Download className="h-4 w-4" /> {exportando ? "Exportando..." : "Exportar"}
+              </button>
+              <button className="btn-outline" onClick={() => setImportOpen(true)}>
+                <Upload className="h-4 w-4" /> Importar
+              </button>
+              <button className="btn-primary" onClick={() => setCreateOpen(true)}>
+                <Plus className="h-4 w-4" /> Novo equipamento
+              </button>
+            </>
           )
         }
       />
@@ -249,6 +277,13 @@ export default function RotableEquipmentList() {
           <p className="text-xs text-graphite-500">O equipamento nasce em estoque - instale num ativo na própria ficha dele, depois de salvar.</p>
         </form>
       </Modal>
+
+      <RotableImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        clientId={clientId}
+        onImported={() => queryClient.invalidateQueries({ queryKey: ["rotable-equipment"] })}
+      />
     </div>
   );
 }

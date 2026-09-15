@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { RotableEquipment, RotableEquipmentStatus, RotableInstallation, RotableRepairOrder, RotableRepairOutcome } from "./types";
+import type { ModoDeImportacao, ResultadoDaImportacao, RotableEquipment, RotableEquipmentStatus, RotableInstallation, RotableRepairOrder, RotableRepairOutcome } from "./types";
 
 export interface RotableEquipmentInput {
   clientId?: string;
@@ -46,6 +46,40 @@ export async function getNextRotableCode(params: { type: string; clientId?: stri
 export async function getRotableInstallationHistory(instrumentId: string): Promise<RotableInstallation[]> {
   const { data } = await api.get<RotableInstallation[]>(`/rotable-equipment/historico-do-ativo/${instrumentId}`);
   return data;
+}
+
+// ---------------------------------------------------------------------------
+// Importacao / exportacao por planilha - uma aba por tipo de equipamento
+// ---------------------------------------------------------------------------
+
+export async function baixarModeloImportacaoRotable(clientId?: string): Promise<Blob> {
+  const { data } = await api.get("/rotable-equipment/importar/modelo", { params: { clientId }, responseType: "blob" });
+  return data as Blob;
+}
+
+export async function simularImportacaoRotable(file: File, clientId?: string, modo: ModoDeImportacao = "ignorar"): Promise<ResultadoDaImportacao> {
+  const form = new FormData();
+  form.append("file", file);
+  if (clientId) form.append("clientId", clientId);
+  form.append("modo", modo);
+  const { data } = await api.post<ResultadoDaImportacao>("/rotable-equipment/importar/simular", form);
+  return data;
+}
+
+export async function confirmarImportacaoRotable(file: File, clientId?: string, modo: ModoDeImportacao = "ignorar"): Promise<ResultadoDaImportacao> {
+  const form = new FormData();
+  form.append("file", file);
+  if (clientId) form.append("clientId", clientId);
+  form.append("modo", modo);
+  const { data } = await api.post<ResultadoDaImportacao>("/rotable-equipment/importar/confirmar", form);
+  return data;
+}
+
+/** Tudo que esta cadastrado, separado por aba/tipo - mesmo layout do modelo de importacao,
+ * com colunas extras de status/instalacao/data de cadastro. */
+export async function exportarRotable(clientId?: string): Promise<Blob> {
+  const { data } = await api.get("/rotable-equipment/exportar", { params: { clientId }, responseType: "blob" });
+  return data as Blob;
 }
 
 export async function getRotableEquipment(id: string): Promise<RotableEquipment> {
