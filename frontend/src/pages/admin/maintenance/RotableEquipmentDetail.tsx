@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Wrench, LogOut, LogIn, CheckCircle2, XCircle, PackageCheck, FileDown } from "lucide-react";
+import { Pencil, Wrench, LogOut, LogIn, CheckCircle2, XCircle, PackageCheck, FileDown, DollarSign } from "lucide-react";
 import {
   getRotableEquipment,
   updateRotableEquipment,
   installRotableEquipment,
   removeRotableEquipment,
   createRepairOrder,
+  updateRepairOrder,
   approveRepairBudget,
   rejectRepairBudget,
   returnFromRepair,
@@ -70,6 +71,7 @@ export default function RotableEquipmentDetail() {
   const [removeOpen, setRemoveOpen] = useState(false);
   const [repairOpen, setRepairOpen] = useState(false);
   const [returnOpen, setReturnOpen] = useState<string | null>(null);
+  const [budgetOpen, setBudgetOpen] = useState<string | null>(null);
 
   const { data: rotable, isLoading } = useQuery({ queryKey: ["rotable-equipment", id], queryFn: () => getRotableEquipment(id) });
   const { data: failureCodes } = useQuery({ queryKey: ["failure-codes-picker"], queryFn: () => listFailureCodes({ active: true }) });
@@ -251,7 +253,11 @@ export default function RotableEquipmentDetail() {
                   </div>
                 ) : canManage ? (
                   <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-3">
-                    {order.budgetStatus === "PENDING" && (
+                    {order.budgetValue == null ? (
+                      <button className="btn-outline btn-sm" onClick={() => setBudgetOpen(order.id)}>
+                        <DollarSign className="h-4 w-4" /> Informar orçamento
+                      </button>
+                    ) : order.budgetStatus === "PENDING" && (
                       <>
                         <button
                           className="btn-outline btn-sm"
@@ -320,6 +326,14 @@ export default function RotableEquipmentDetail() {
           orderId={returnOpen}
           onClose={() => setReturnOpen(null)}
           onDone={() => { setReturnOpen(null); invalidar(); }}
+        />
+      )}
+
+      {budgetOpen && (
+        <BudgetModal
+          orderId={budgetOpen}
+          onClose={() => setBudgetOpen(null)}
+          onDone={() => { setBudgetOpen(null); invalidar(); }}
         />
       )}
     </div>
@@ -545,7 +559,6 @@ function RepairOrderModal({ rotableId, rotableCode, failureCodes, onClose, onDon
     vendor: "",
     purpose: "REPAIR" as RotableRepairPurpose,
     budgetNumber: "",
-    budgetValue: "",
   });
   const [saving, setSaving] = useState(false);
   // Depois de aberta, a ordem fica visivel aqui so' para oferecer a ficha de envio - fechar
@@ -563,7 +576,6 @@ function RepairOrderModal({ rotableId, rotableCode, failureCodes, onClose, onDon
         vendor: values.vendor || null,
         purpose: values.purpose,
         budgetNumber: values.budgetNumber || null,
-        budgetValue: values.budgetValue ? Number(values.budgetValue) : null,
       });
       notify("success", "Ordem de reparo aberta.");
       setCriada(order);
@@ -623,10 +635,12 @@ function RepairOrderModal({ rotableId, rotableCode, failureCodes, onClose, onDon
             onChange={(e) => setValues({ ...values, purpose: e.target.value as RotableRepairPurpose })}
           />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <TextInput label="Número do orçamento" value={values.budgetNumber} onChange={(e) => setValues({ ...values, budgetNumber: e.target.value })} />
-          <TextInput label="Valor orçado" type="number" step="any" value={values.budgetValue} onChange={(e) => setValues({ ...values, budgetValue: e.target.value })} />
-        </div>
+        <TextInput
+          label="Número do orçamento (se já tiver)"
+          hint="O valor orçado se preenche depois, quando o fornecedor responder - veja o botão 'Informar orçamento' na aba Reparos."
+          value={values.budgetNumber}
+          onChange={(e) => setValues({ ...values, budgetNumber: e.target.value })}
+        />
       </div>
     </Modal>
   );
@@ -690,6 +704,47 @@ function ReturnModal({ orderId, onClose, onDone }: { orderId: string; onClose: (
           <TextInput label="Garantia (meses)" type="number" value={values.warrantyMonths} onChange={(e) => setValues({ ...values, warrantyMonths: e.target.value })} />
           <TextInput label="Valor final" type="number" step="any" value={values.finalCost} onChange={(e) => setValues({ ...values, finalCost: e.target.value })} />
         </div>
+      </div>
+    </Modal>
+  );
+}
+
+/** Preenche o orçamento depois que o fornecedor responde - separado do envio porque, na
+ * hora de mandar o equipamento, esse valor ainda nao existe. */
+function BudgetModal({ orderId, onClose, onDone }: { orderId: string; onClose: () => void; onDone: () => void }) {
+  const { notify } = useToast();
+  const [budgetNumber, setBudgetNumber] = useState("");
+  const [budgetValue, setBudgetValue] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function submit() {
+    if (!budgetValue) {
+      notify("error", "Falta preencher: Valor orçado.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await updateRepairOrder(orderId, { budgetNumber: budgetNumber || null, budgetValue: Number(budgetValue) });
+      notify("success", "Orçamento informado.");
+      onDone();
+    } catch (error) {
+      notify("error", getApiErrorMessage(error));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title="Informar orçamento"
+      size="sm"
+      footer={<><button type="button" className="btn-outline" onClick={onClose}>Cancelar</button><button type="button" className="btn-primary" disabled={saving} onClick={submit}>{saving ? "Salvando..." : "Salvar"}</button></>}
+    >
+      <div className="space-y-4">
+        <TextInput label="Número do orçamento" value={budgetNumber} onChange={(e) => setBudgetNumber(e.target.value)} />
+        <TextInput label="Valor orçado" required type="number" step="any" value={budgetValue} onChange={(e) => setBudgetValue(e.target.value)} />
       </div>
     </Modal>
   );
