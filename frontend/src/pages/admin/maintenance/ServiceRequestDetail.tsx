@@ -32,8 +32,11 @@ export default function ServiceRequestDetail() {
   const { base } = useCmms();
   // O CMMS e' operado pelo proprio cliente (programa independente) - o backend ja
   // restringe cada um a propria empresa, entao o cliente triagem/converte a propria
-  // solicitacao do mesmo jeito que ja gerencia planos, OS e checklist.
-  const canTriageOrConvert = user?.role === "ADMIN" || user?.role === "CLIENT";
+  // solicitacao do mesmo jeito que ja gerencia planos, OS e checklist. Quem decide o
+  // que fazer com uma SS e' Planejador, Tecnico ou Administrador - o Solicitante so
+  // abre e acompanha (mesmo escopo ja aplicado pelo backend em CMMS_ROLES).
+  const canTriageOrConvert =
+    user?.role === "ADMIN" || user?.role === "CLIENT" || user?.role === "CLIENT_PLANNER" || user?.role === "CLIENT_TECHNICIAN";
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
