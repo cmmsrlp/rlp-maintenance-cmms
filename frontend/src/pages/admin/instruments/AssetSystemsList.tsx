@@ -121,8 +121,8 @@ export default function AssetSystemsList() {
     <div>
       <PageHeader
         title="Sistemas"
-        description="Sistemas/maquinas dentro de cada area (ex.: Peneira 01)"
-        breadcrumbs={[{ label: "Ativos", to: assetsBase }, { label: "Cadastros tecnicos", to: `${assetsBase}/cadastros` }, { label: "Sistemas" }]}
+        description="Sistemas/máquinas dentro de cada área (ex.: Peneira 01)"
+        breadcrumbs={[{ label: "Ativos", to: assetsBase }, { label: "Cadastros técnicos", to: `${assetsBase}/cadastros` }, { label: "Sistemas" }]}
         actions={
           canManage &&
           areaId && (
@@ -153,7 +153,7 @@ export default function AssetSystemsList() {
         )}
         {plantId && (
           <select className="input sm:w-56" value={areaId} onChange={(e) => setParam("areaId", e.target.value)}>
-            <option value="">Selecione uma area</option>
+            <option value="">Selecione uma área</option>
             {(areas ?? []).map((a) => (
               <option key={a.id} value={a.id}>{a.name}</option>
             ))}
@@ -162,15 +162,15 @@ export default function AssetSystemsList() {
       </div>
 
       {!clientId ? (
-        <p className="text-sm text-graphite-500">Selecione um cliente para comecar.</p>
+        <p className="text-sm text-graphite-500">Selecione um cliente para começar.</p>
       ) : !plants || plants.length === 0 ? (
-        <EmptyState title="Nenhuma planta cadastrada" description="Cadastre uma planta e uma area antes de organizar os sistemas." />
+        <EmptyState title="Nenhuma planta cadastrada" description="Cadastre uma planta e uma área antes de organizar os sistemas." />
       ) : !plantId ? (
         <p className="text-sm text-graphite-500">Selecione uma planta.</p>
       ) : !areas || areas.length === 0 ? (
-        <EmptyState title="Nenhuma area cadastrada nesta planta" description="Cadastre uma area antes de organizar os sistemas." />
+        <EmptyState title="Nenhuma área cadastrada nesta planta" description="Cadastre uma área antes de organizar os sistemas." />
       ) : !areaId ? (
-        <p className="text-sm text-graphite-500">Selecione uma area para ver os sistemas dela.</p>
+        <p className="text-sm text-graphite-500">Selecione uma área para ver os sistemas dela.</p>
       ) : (
         <DataTable
           loading={isLoading}
@@ -179,7 +179,7 @@ export default function AssetSystemsList() {
           emptyTitle="Nenhum sistema cadastrado"
           columns={[
             { header: "Nome", accessor: (s) => <span className="font-medium text-navy-900">{s.name}</span> },
-            { header: "Codigo", accessor: (s) => <span className="text-xs text-graphite-500">{s.code ?? "-"}</span> },
+            { header: "Código", accessor: (s) => <span className="text-xs text-graphite-500">{s.code ?? "-"}</span> },
             {
               header: "Status",
               accessor: (s) =>
@@ -225,7 +225,7 @@ export default function AssetSystemsList() {
       >
         <form id="asset-system-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <TextInput label="Nome" required placeholder="Ex.: Peneira 01" error={errors.name?.message} {...register("name")} />
-          <TextInput label="Codigo (opcional)" placeholder="Ex.: PE01" error={errors.code?.message} {...register("code")} />
+          <TextInput label="Código (opcional)" placeholder="Ex.: PE01" error={errors.code?.message} {...register("code")} />
         </form>
       </Modal>
     </div>

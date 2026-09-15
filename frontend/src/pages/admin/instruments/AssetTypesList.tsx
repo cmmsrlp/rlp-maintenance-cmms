@@ -19,7 +19,7 @@ import { z } from "zod";
 const schema = z.object({
   name: z.string().min(2, "Informe o nome do tipo."),
   level: z.enum(["PLANT", "AREA", "MACHINE", "SUBASSEMBLY", "PART"]).optional().or(z.literal("")),
-  codePrefix: z.string().trim().max(10, "No maximo 10 caracteres.").optional(),
+  codePrefix: z.string().trim().max(10, "No máximo 10 caracteres.").optional(),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -106,8 +106,8 @@ export default function AssetTypesList() {
     <div>
       <PageHeader
         title="Tipos de ativo"
-        description="Catalogo usado no campo Tipo de ativo do cadastro"
-        breadcrumbs={[{ label: "Ativos", to: base }, { label: "Cadastros tecnicos", to: `${base}/cadastros` }, { label: "Tipos de ativo" }]}
+        description="Catálogo usado no campo Tipo de ativo do cadastro"
+        breadcrumbs={[{ label: "Ativos", to: base }, { label: "Cadastros técnicos", to: `${base}/cadastros` }, { label: "Tipos de ativo" }]}
         actions={
           canManage && (
             <button className="btn-primary" onClick={openCreate}>
@@ -125,16 +125,16 @@ export default function AssetTypesList() {
         columns={[
           { header: "Nome", accessor: (t) => <span className="font-medium text-navy-900">{t.name}</span> },
           {
-            header: "Nivel",
+            header: "Nível",
             accessor: (t) => <span className="text-xs text-graphite-500">{t.level ? ASSET_LEVEL_LABELS[t.level] : "-"}</span>,
           },
           {
-            header: "Prefixo do codigo",
+            header: "Prefixo do código",
             accessor: (t) => <span className="font-mono text-xs text-graphite-500">{t.codePrefix ?? "-"}</span>,
           },
           {
             header: "Origem",
-            accessor: (t) => <span className="text-xs text-graphite-500">{t.clientId ? "Meu catalogo" : "Padrao RLP Maintenance"}</span>,
+            accessor: (t) => <span className="text-xs text-graphite-500">{t.clientId ? "Meu catálogo" : "Padrão RLP Maintenance"}</span>,
           },
           {
             header: "Status",
@@ -179,19 +179,19 @@ export default function AssetTypesList() {
         }
       >
         <form id="asset-type-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-          <TextInput label="Nome" required placeholder="Ex.: Planta, Maquina, Subconjunto" error={errors.name?.message} {...register("name")} />
+          <TextInput label="Nome" required placeholder="Ex.: Planta, Máquina, Subconjunto" error={errors.name?.message} {...register("name")} />
           <SelectInput
-            label="Nivel na arvore"
-            hint="Define o icone deste tipo na arvore de ativos. Deixe em branco para um tipo antigo/especifico."
-            placeholder="Sem nivel definido"
+            label="Nível na árvore"
+            hint="Define o ícone deste tipo na árvore de ativos. Deixe em branco para um tipo antigo/específico."
+            placeholder="Sem nível definido"
             options={ASSET_LEVEL_OPTIONS}
             error={errors.level?.message}
             {...register("level")}
           />
           <TextInput
-            label="Prefixo do codigo (opcional)"
+            label="Prefixo do código (opcional)"
             placeholder="Ex.: MOT"
-            hint='Usado so pelo cadastro de Equipamentos recondicionaveis - com isso preenchido, o codigo (ex.: "MOT-001") e sugerido sozinho ao escolher este tipo.'
+            hint='Usado só pelo cadastro de Equipamentos recondicionáveis - com isso preenchido, o código (ex.: "MOT-001") é sugerido sozinho ao escolher este tipo.'
             error={errors.codePrefix?.message}
             {...register("codePrefix")}
           />

@@ -23,7 +23,7 @@ import { useAuth } from "../../../auth/AuthContext";
 import { useCmms } from "../../../lib/cmms";
 
 const schema = z.object({
-  name: z.string().min(2, "Informe o nome da area."),
+  name: z.string().min(2, "Informe o nome da área."),
   code: z.string().optional(),
   // Centro de custo padrao: todo ativo dentro da area herda este centro de custo.
   costCenterCode: z.string().optional(),
@@ -82,10 +82,10 @@ export default function AreasList() {
     try {
       if (editing) {
         await updateArea(editing.id, payload);
-        notify("success", "Area atualizada.");
+        notify("success", "Área atualizada.");
       } else {
         await createArea({ ...payload, plantId, clientId });
-        notify("success", "Area cadastrada.");
+        notify("success", "Área cadastrada.");
       }
       reset();
       setCreateOpen(false);
@@ -108,7 +108,7 @@ export default function AreasList() {
   async function handleDelete(area: Area) {
     try {
       await deleteArea(area.id);
-      notify("success", "Area removida.");
+      notify("success", "Área removida.");
       queryClient.invalidateQueries({ queryKey: ["areas"] });
     } catch (error) {
       notify("error", getApiErrorMessage(error));
@@ -118,14 +118,14 @@ export default function AreasList() {
   return (
     <div>
       <PageHeader
-        title="Areas / Centros de custo"
-        description="Cada area da planta e o centro de custo em que ela rateia - um cadastro so, porque o centro existe por causa da area"
-        breadcrumbs={[{ label: "Ativos", to: assetsBase }, { label: "Cadastros tecnicos", to: `${assetsBase}/cadastros` }, { label: "Areas / Centros de custo" }]}
+        title="Áreas / Centros de custo"
+        description="Cada área da planta e o centro de custo em que ela rateia - um cadastro só, porque o centro existe por causa da área"
+        breadcrumbs={[{ label: "Ativos", to: assetsBase }, { label: "Cadastros técnicos", to: `${assetsBase}/cadastros` }, { label: "Áreas / Centros de custo" }]}
         actions={
           canManage &&
           plantId && (
             <button className="btn-primary" onClick={openCreate}>
-              <Plus className="h-4 w-4" /> Nova area
+              <Plus className="h-4 w-4" /> Nova área
             </button>
           )
         }
@@ -158,18 +158,18 @@ export default function AreasList() {
       {!clientId ? (
         <p className="text-sm text-graphite-500">Selecione um cliente para ver as plantas.</p>
       ) : !plants || plants.length === 0 ? (
-        <EmptyState title="Nenhuma planta cadastrada" description="Cadastre uma planta antes de organizar as areas." />
+        <EmptyState title="Nenhuma planta cadastrada" description="Cadastre uma planta antes de organizar as áreas." />
       ) : !plantId ? (
-        <p className="text-sm text-graphite-500">Selecione uma planta para ver as areas dela.</p>
+        <p className="text-sm text-graphite-500">Selecione uma planta para ver as áreas dela.</p>
       ) : (
         <DataTable
           loading={isLoading}
           rows={data ?? []}
           keyField={(a) => a.id}
-          emptyTitle="Nenhuma area cadastrada"
+          emptyTitle="Nenhuma área cadastrada"
           columns={[
             { header: "Nome", accessor: (a) => <span className="font-medium text-navy-900">{a.name}</span> },
-            { header: "Codigo", accessor: (a) => <span className="text-xs text-graphite-500">{a.code ?? "-"}</span> },
+            { header: "Código", accessor: (a) => <span className="text-xs text-graphite-500">{a.code ?? "-"}</span> },
             { header: "Centro de custo", accessor: (a) => (a.costCenter ? centroDeCustoComDescricao(a.costCenter) : <span className="text-graphite-400">Nenhum</span>) },
             {
               header: "Status",
@@ -203,7 +203,7 @@ export default function AreasList() {
       <Modal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        title={editing ? "Editar area" : "Nova area"}
+        title={editing ? "Editar área" : "Nova área"}
         size="sm"
         footer={
           <>
@@ -215,13 +215,13 @@ export default function AreasList() {
         }
       >
         <form id="area-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-          <TextInput label="Nome" required placeholder="Ex.: Recebimento de materia-prima" error={errors.name?.message} {...register("name")} />
-          <TextInput label="Codigo (opcional)" placeholder="Ex.: RMP" error={errors.code?.message} {...register("code")} />
+          <TextInput label="Nome" required placeholder="Ex.: Recebimento de matéria-prima" error={errors.name?.message} {...register("name")} />
+          <TextInput label="Código (opcional)" placeholder="Ex.: RMP" error={errors.code?.message} {...register("code")} />
           <TextInput
-            label="Centro de custo (numero)"
+            label="Centro de custo (número)"
             placeholder="Ex.: 108"
             list="centros-de-custo-existentes"
-            hint="Digite o numero. Se ja existir, e' reaproveitado; se nao, e' criado agora. Todo ativo desta area - e todos os filhos dele - herdam este centro de custo."
+            hint="Digite o número. Se já existir, é reaproveitado; se não, é criado agora. Todo ativo desta área - e todos os filhos dele - herdam este centro de custo."
             error={errors.costCenterCode?.message}
             {...register("costCenterCode")}
           />

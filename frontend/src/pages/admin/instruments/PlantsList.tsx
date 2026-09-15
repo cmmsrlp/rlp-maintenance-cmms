@@ -7,10 +7,10 @@ export default function PlantsList() {
   return (
     <SimpleCatalogList
       title="Plantas"
-      description="Unidades/fabricas da empresa - primeiro nivel da localizacao do ativo"
+      description="Unidades/fábricas da empresa - primeiro nível da localização do ativo"
       itemLabel="Planta"
-      namePlaceholder="Ex.: Fabrica Unidade Belo Horizonte"
-      breadcrumbs={[{ label: "Ativos", to: assetsBase }, { label: "Cadastros tecnicos", to: `${assetsBase}/cadastros` }, { label: "Plantas" }]}
+      namePlaceholder="Ex.: Fábrica Unidade Belo Horizonte"
+      breadcrumbs={[{ label: "Ativos", to: assetsBase }, { label: "Cadastros técnicos", to: `${assetsBase}/cadastros` }, { label: "Plantas" }]}
       base="plants"
       list={listPlants}
       create={createPlant}

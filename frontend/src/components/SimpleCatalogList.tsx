@@ -21,7 +21,7 @@ import { useAuth } from "../auth/AuthContext";
 function montarSchema(numeroObrigatorio: boolean) {
   return z.object({
     name: z.string().min(2, "Informe o nome."),
-    code: numeroObrigatorio ? z.string().min(1, "Informe o numero.") : z.string().optional(),
+    code: numeroObrigatorio ? z.string().min(1, "Informe o número.") : z.string().optional(),
   });
 }
 type FormValues = { name: string; code?: string };
@@ -171,12 +171,12 @@ export function SimpleCatalogList<T extends CatalogItem>({
           columns={[
             ...(codeFirst
               ? [
-                  { header: codeLabel ?? "Codigo", accessor: (i: T) => <span className="font-medium text-navy-900">{i.code ?? "-"}</span> },
+                  { header: codeLabel ?? "Código", accessor: (i: T) => <span className="font-medium text-navy-900">{i.code ?? "-"}</span> },
                   { header: nameLabel ?? "Nome", accessor: (i: T) => <span className="text-graphite-700">{i.name}</span> },
                 ]
               : [
                   { header: nameLabel ?? "Nome", accessor: (i: T) => <span className="font-medium text-navy-900">{i.name}</span> },
-                  { header: codeLabel ?? "Codigo", accessor: (i: T) => <span className="text-xs text-graphite-500">{i.code ?? "-"}</span> },
+                  { header: codeLabel ?? "Código", accessor: (i: T) => <span className="text-xs text-graphite-500">{i.code ?? "-"}</span> },
                 ]),
             {
               header: "Status",
@@ -227,7 +227,7 @@ export function SimpleCatalogList<T extends CatalogItem>({
           {codeFirst ? (
             <>
               <TextInput
-                label={codeLabel ?? "Codigo"}
+                label={codeLabel ?? "Código"}
                 required={codeRequired}
                 placeholder={codePlaceholder ?? "Ex.: F01"}
                 error={errors.code?.message}
@@ -239,7 +239,7 @@ export function SimpleCatalogList<T extends CatalogItem>({
             <>
               <TextInput label={nameLabel ?? "Nome"} required placeholder={namePlaceholder} error={errors.name?.message} {...register("name")} />
               <TextInput
-                label={codeLabel ?? "Codigo (opcional)"}
+                label={codeLabel ?? "Código (opcional)"}
                 required={codeRequired}
                 placeholder={codePlaceholder ?? "Ex.: F01"}
                 error={errors.code?.message}
