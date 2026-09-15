@@ -30,10 +30,10 @@ export default function PortalInstruments() {
         actions={
           <>
             <button className="btn-outline" onClick={() => navigate("/portal/manutencao/arvore")}>
-              <GitBranch className="h-4 w-4" /> Ver arvore
+              <GitBranch className="h-4 w-4" /> Ver árvore
             </button>
             <button className="btn-outline" onClick={() => navigate("/portal/ativos/cadastros")}>
-              <Tags className="h-4 w-4" /> Cadastros tecnicos
+              <Tags className="h-4 w-4" /> Cadastros técnicos
             </button>
             <button className="btn-primary" onClick={() => setCreateOpen(true)}>
               <Plus className="h-4 w-4" /> Novo ativo
@@ -49,9 +49,9 @@ export default function PortalInstruments() {
           onChange={(e) => { setCriticality(e.target.value as MaintenancePriority | ""); setPage(1); }}
         >
           <option value="">Todas as criticidades</option>
-          <option value="CRITICAL">Critica</option>
+          <option value="CRITICAL">Crítica</option>
           <option value="HIGH">Alta</option>
-          <option value="MEDIUM">Media</option>
+          <option value="MEDIUM">Média</option>
           <option value="LOW">Baixa</option>
         </select>
       </div>
@@ -82,9 +82,9 @@ export default function PortalInstruments() {
           },
           { header: "Ativo", accessor: (i) => (<div><p className="font-medium text-navy-900">{i.description || i.type}</p><p className="text-xs text-graphite-400">{i.type}{i.model ? ` - ${i.model}` : ""}</p></div>) },
           { header: "Componente de", accessor: (i) => (i.parent ? `TAG ${i.parent.tag ?? i.parent.type}` : "-") },
-          { header: "Numero de serie", accessor: (i) => i.serialNumber },
+          { header: "Número de série", accessor: (i) => i.serialNumber },
           { header: "Criticidade", accessor: (i) => <StatusBadge status={i.criticality} /> },
-          { header: "Proxima calibracao", accessor: (i) => formatDate(i.nextDueDate) },
+          { header: "Próxima calibração", accessor: (i) => formatDate(i.nextDueDate) },
           { header: "Status", accessor: (i) => <StatusBadge status={i.derivedStatus ?? i.status} /> },
         ]}
       />

@@ -21,7 +21,7 @@ const schema = z.object({
   level: z.enum(["PLANT", "AREA", "MACHINE", "SUBASSEMBLY", "PART"]).optional().or(z.literal("")),
   type: z.string().optional(),
   tag: z.string().min(1, "Informe o TAG do ativo."),
-  description: z.string().min(2, "Informe a descricao do ativo."),
+  description: z.string().min(2, "Informe a descrição do ativo."),
   manufacturer: z.string().optional(),
   model: z.string().optional(),
   serialNumber: z.string().optional(),
@@ -154,12 +154,12 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
             label="TAG"
             required
             placeholder="Ex.: VTP-VOT-L4-CP01"
-            hint="Codigo unico deste ativo na sua empresa."
+            hint="Código único deste ativo na sua empresa."
             error={errors.tag?.message}
             {...register("tag")}
           />
           <TextInput
-            label="Descricao"
+            label="Descrição"
             placeholder="Ex.: Compressor de ar da Linha 4"
             hint="Nome do ativo em linguagem de gente."
             {...register("description")}
@@ -177,24 +177,24 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
           {nivel && <AssetTypeInput nivel={nivel} currentValue={instrument?.type} {...register("type")} />}
           <SelectInput
             label="Criticidade"
-            hint="Quanto uma parada deste ativo pesa pra sua operacao."
+            hint="Quanto uma parada deste ativo pesa pra sua operação."
             options={[
               { value: "LOW", label: "Baixa" },
-              { value: "MEDIUM", label: "Media" },
+              { value: "MEDIUM", label: "Média" },
               { value: "HIGH", label: "Alta" },
-              { value: "CRITICAL", label: "Critica" },
+              { value: "CRITICAL", label: "Crítica" },
             ]}
             {...register("criticality")}
           />
           <SelectInput
-            label="Condicao operacional"
-            hint="O que esta acontecendo com o ativo agora."
+            label="Condição operacional"
+            hint="O que está acontecendo com o ativo agora."
             options={[
-              { value: "IN_OPERATION", label: "Em operacao" },
+              { value: "IN_OPERATION", label: "Em operação" },
               { value: "STOPPED", label: "Parado" },
               { value: "STANDBY", label: "Reserva" },
               { value: "DEACTIVATED", label: "Desativado" },
-              { value: "IN_MAINTENANCE", label: "Em manutencao" },
+              { value: "IN_MAINTENANCE", label: "Em manutenção" },
             ]}
             {...register("operationalStatus")}
           />
@@ -202,7 +202,7 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
 
         <InstrumentPicker
           label="Faz parte de (ativo pai)"
-          hint="A estrutura e' uma arvore: Planta > Linha > Maquina > Componente. Vazio = ativo no topo."
+          hint="A estrutura é uma árvore: Planta > Linha > Máquina > Componente. Vazio = ativo no topo."
           excludeId={instrument?.id}
           error={errors.parentId?.message}
           {...register("parentId")}
@@ -215,7 +215,7 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
           <div className="rounded-lg border border-gray-200 p-4">
             <p className="text-xs font-medium uppercase tracking-wide text-graphite-400">Onde fica</p>
             <p className="mt-0.5 text-xs text-graphite-500">
-              A planta vem do ativo pai - um componente nao muda de fabrica.
+              A planta vem do ativo pai - um componente não muda de fábrica.
             </p>
             <p className="mt-2 text-sm">
               <span className="text-xs text-graphite-400">Planta: </span>
@@ -228,11 +228,11 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
                 que e' exatamente o que aconteceu antes desta correcao. */}
             <div className="mt-3">
               <SelectInput
-                label="Area / Centro de custo"
+                label="Área / Centro de custo"
                 placeholder={
-                  pai?.area ? `Herdar do pai: ${areaComCentroDeCusto(pai.area, pai.costCenter)}` : "Herdar do pai (sem area definida)"
+                  pai?.area ? `Herdar do pai: ${areaComCentroDeCusto(pai.area, pai.costCenter)}` : "Herdar do pai (sem área definida)"
                 }
-                hint="Preencha no ativo que representa a linha/area. Tudo abaixo dele herda daqui, com o centro de custo junto."
+                hint="Preencha no ativo que representa a linha/área. Tudo abaixo dele herda daqui, com o centro de custo junto."
                 options={(areasDaPlantaDoPai ?? []).map((a) => ({
                   value: a.id,
                   label: areaComCentroDeCusto(a, a.costCenter),
@@ -245,7 +245,7 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
           <div className="rounded-lg border border-gray-200 p-4">
             <p className="text-sm font-medium text-graphite-700">Onde fica</p>
             <p className="mt-0.5 text-xs text-graphite-500">
-              Como este ativo nao tem pai, e' aqui que planta e area sao definidas - todo ativo abaixo dele herda.
+              Como este ativo não tem pai, é aqui que planta e área são definidas - todo ativo abaixo dele herda.
             </p>
             <div className="mt-3">
               <LocationPicker clientId={user?.clientId ?? undefined} register={register} watch={watch} setValue={setValue} hideCostCenter />
@@ -254,9 +254,9 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
               <p className="mt-3 text-xs text-graphite-500">
                 Centro de custo:{" "}
                 <span className="font-medium text-graphite-800">
-                  {centroDaArea ? centroDeCustoComDescricao(centroDaArea) : "a area escolhida ainda nao tem um numero"}
+                  {centroDaArea ? centroDeCustoComDescricao(centroDaArea) : "a área escolhida ainda não tem um número"}
                 </span>{" "}
-                - vem junto da area, e todo ativo abaixo deste herda os dois.
+                - vem junto da área, e todo ativo abaixo deste herda os dois.
               </p>
             )}
           </div>
@@ -264,9 +264,9 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
         <div className="grid gap-4 sm:grid-cols-3">
           <TextInput label="Fabricante" {...register("manufacturer")} />
           <TextInput label="Modelo" {...register("model")} />
-          <TextInput label="Numero de serie" {...register("serialNumber")} />
+          <TextInput label="Número de série" {...register("serialNumber")} />
         </div>
-        <TextInput label="Local de instalacao" {...register("installationLocation")} />
+        <TextInput label="Local de instalação" {...register("installationLocation")} />
 
         {/* As duas marcas que ligam este ativo aos outros dois modulos. A periodicidade de
             calibracao saiu daqui: era um numero solto na ficha, digitado uma vez e nunca
@@ -275,20 +275,20 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
         <div className="space-y-3 rounded-lg border border-gray-200 p-4">
           <p className="text-sm font-medium text-graphite-700">Este ativo participa de</p>
           <CheckboxInput
-            label="Calibracao - rastreia frequencia e vencimento de calibracao"
+            label="Calibração - rastreia frequência e vencimento de calibração"
             {...register("calibratable")}
           />
           <p className="-mt-1 pl-6 text-xs text-graphite-500">
-            Ao marcar, o ativo passa a rastrear calibracao periodica. Depois e' preciso criar o plano de
-            calibracao, que define de quanto em quanto tempo - a ficha lembra disso enquanto faltar.
+            Ao marcar, o ativo passa a rastrear calibração periódica. Depois é preciso criar o plano de
+            calibração, que define de quanto em quanto tempo - a ficha lembra disso enquanto faltar.
           </p>
           <CheckboxInput
-            label="Lubrificacao - este ativo tem ponto de lubrificacao"
+            label="Lubrificação - este ativo tem ponto de lubrificação"
             {...register("lubricatable")}
           />
           <p className="-mt-1 pl-6 text-xs text-graphite-500">
-            Ao marcar, o ponto e' cadastrado na ficha do ativo ja com o ativo e o nome preenchidos, e passa a
-            aparecer em Lubrificacao.
+            Ao marcar, o ponto é cadastrado na ficha do ativo já com o ativo e o nome preenchidos, e passa a
+            aparecer em Lubrificação.
           </p>
         </div>
       </form>

@@ -29,7 +29,7 @@ import { useAuth } from "../../auth/AuthContext";
 import { useToast } from "../../components/Toast";
 import { getApiErrorMessage } from "../../api/client";
 
-const PRIORITY_LABELS: Record<string, string> = { LOW: "Baixa", MEDIUM: "Media", HIGH: "Alta", CRITICAL: "Critica" };
+const PRIORITY_LABELS: Record<string, string> = { LOW: "Baixa", MEDIUM: "Média", HIGH: "Alta", CRITICAL: "Crítica" };
 
 /**
  * O texto da confirmacao diz o TAMANHO do que esta pendurado no ativo.
@@ -39,16 +39,16 @@ const PRIORITY_LABELS: Record<string, string> = { LOW: "Baixa", MEDIUM: "Media",
  */
 function descricaoDaRemocao(tag: string | null, impacto?: ImpactoDaRemocao): string {
   const nome = tag ? `O ativo ${tag}` : "O ativo";
-  const base = `${nome} sai das listas, da arvore e da programacao. Nada e' apagado: o historico continua guardado.`;
+  const base = `${nome} sai das listas, da árvore e da programação. Nada é apagado: o histórico continua guardado.`;
   if (!impacto) return base;
 
   const ligados = [
     impacto.planos > 0 ? `${impacto.planos} plano(s)` : null,
-    impacto.pontos > 0 ? `${impacto.pontos} ponto(s) de lubrificacao` : null,
-    impacto.ordens > 0 ? `${impacto.ordens} ordem(ns) no historico` : null,
+    impacto.pontos > 0 ? `${impacto.pontos} ponto(s) de lubrificação` : null,
+    impacto.ordens > 0 ? `${impacto.ordens} ordem(ns) no histórico` : null,
   ].filter(Boolean);
 
-  return ligados.length > 0 ? `${base} Estao ligados a ele: ${ligados.join(", ")}.` : base;
+  return ligados.length > 0 ? `${base} Estão ligados a ele: ${ligados.join(", ")}.` : base;
 }
 
 export default function PortalInstrumentDetail() {
@@ -165,9 +165,9 @@ export default function PortalInstrumentDetail() {
   if (isLoading || !instrument) return <FullPageSpinner />;
 
   const tabs = [
-    { id: "overview", label: "Visao geral" },
+    { id: "overview", label: "Visão geral" },
     { id: "structure", label: "Estrutura" },
-    ...(hasCmms ? [{ id: "maintenance", label: "Manutencao" }, { id: "costs", label: "Custos" }] : []),
+    ...(hasCmms ? [{ id: "maintenance", label: "Manutenção" }, { id: "costs", label: "Custos" }] : []),
     { id: "documents", label: "Documentos" },
   ];
 
@@ -241,19 +241,19 @@ export default function PortalInstrumentDetail() {
         <div className="card p-5">
           <dl className="grid gap-4 sm:grid-cols-3">
             <Info label="Fabricante" value={instrument.manufacturer ?? "-"} />
-            <Info label="Numero de serie" value={instrument.serialNumber ?? "-"} />
-            <Info label="Faixa de medicao" value={instrument.measurementRange ?? "-"} />
-            <Info label="Local de instalacao" value={instrument.installationLocation ?? "-"} />
+            <Info label="Número de série" value={instrument.serialNumber ?? "-"} />
+            <Info label="Faixa de medição" value={instrument.measurementRange ?? "-"} />
+            <Info label="Local de instalação" value={instrument.installationLocation ?? "-"} />
             <Info label="Planta" value={instrument.plant?.name ?? "-"} />
             {/* Um campo so: o centro de custo vem da area e nao se escolhe separado.
                 "Sistema" saiu - era um nivel da propria arvore repetido aqui. */}
             <Info
-              label={instrument.parentId ? "Area / Centro de custo (herdado do pai)" : "Area / Centro de custo"}
+              label={instrument.parentId ? "Área / Centro de custo (herdado do pai)" : "Área / Centro de custo"}
               value={areaComCentroDeCusto(instrument.area, instrument.costCenter)}
             />
-            <Info label="Periodicidade" value={instrument.calibrationFrequencyMonths ? `${instrument.calibrationFrequencyMonths} meses` : "Nao rastreada"} />
-            <Info label="Ultima calibracao" value={formatDate(instrument.lastCalibrationDate)} />
-            <Info label="Proxima calibracao" value={formatDate(instrument.nextDueDate)} />
+            <Info label="Periodicidade" value={instrument.calibrationFrequencyMonths ? `${instrument.calibrationFrequencyMonths} meses` : "Não rastreada"} />
+            <Info label="Última calibração" value={formatDate(instrument.lastCalibrationDate)} />
+            <Info label="Próxima calibração" value={formatDate(instrument.nextDueDate)} />
           </dl>
         </div>
       )}
@@ -268,7 +268,7 @@ export default function PortalInstrumentDetail() {
               </button>
             </div>
             {!instrument.children || instrument.children.length === 0 ? (
-              <EmptyState title="Nenhum componente" description="Ex.: motor, valvula, painel - componentes deste ativo com ficha propria." />
+              <EmptyState title="Nenhum componente" description="Ex.: motor, válvula, painel - componentes deste ativo com ficha própria." />
             ) : (
               <ul className="divide-y divide-gray-100">
                 {instrument.children.map((c) => (
@@ -285,7 +285,7 @@ export default function PortalInstrumentDetail() {
 
           {hasCmms && (
             <div className="card p-5">
-              <h2 className="mb-3 font-semibold text-navy-900">Pecas compativeis (BOM)</h2>
+              <h2 className="mb-3 font-semibold text-navy-900">Peças compatíveis (BOM)</h2>
               <div className="mb-3 flex gap-2">
                 <SparePartPicker
                   className="flex-1"
@@ -298,7 +298,7 @@ export default function PortalInstrumentDetail() {
                 </button>
               </div>
               {!assetParts || assetParts.length === 0 ? (
-                <EmptyState title="Nenhuma peca vinculada" description="Vincule as pecas do seu almoxarifado usadas neste ativo." />
+                <EmptyState title="Nenhuma peça vinculada" description="Vincule as peças do seu almoxarifado usadas neste ativo." />
               ) : (
                 <ul className="divide-y divide-gray-100">
                   {assetParts.map((link) => (
@@ -328,7 +328,7 @@ export default function PortalInstrumentDetail() {
               </button>
             </div>
             {!meters || meters.length === 0 ? (
-              <EmptyState title="Nenhum medidor" description="Cadastre um horimetro ou odometro para manutencao por uso ou condicao (preditiva)." />
+              <EmptyState title="Nenhum medidor" description="Cadastre um horímetro ou odômetro para manutenção por uso ou condição (preditiva)." />
             ) : (
               <ul className="divide-y divide-gray-100">
                 {meters.map((m) => {
@@ -361,7 +361,7 @@ export default function PortalInstrumentDetail() {
           <div className="card p-5">
             <h2 className="mb-3 font-semibold text-navy-900">Planos preventivos</h2>
             {!plans || plans.items.length === 0 ? (
-              <EmptyState title="Nenhum plano" description="Este ativo ainda nao tem plano de manutencao." />
+              <EmptyState title="Nenhum plano" description="Este ativo ainda não tem plano de manutenção." />
             ) : (
               <ul className="divide-y divide-gray-100">
                 {plans.items.map((p) => (
@@ -377,7 +377,7 @@ export default function PortalInstrumentDetail() {
           <div className="card p-5">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-semibold text-navy-900">
-                Ordens de manutencao
+                Ordens de manutenção
                 {workOrders && <span className="ml-2 text-sm font-normal text-graphite-500">({workOrders.total})</span>}
               </h2>
               {/* Numa linha, o servico acontece nas maquinas abaixo dela: o historico util
@@ -398,8 +398,8 @@ export default function PortalInstrumentDetail() {
                 title="Nenhuma ordem"
                 description={
                   incluirComponentes
-                    ? "Nem este ativo nem os componentes abaixo dele tem ordem de manutencao."
-                    : "Este ativo nao tem ordem propria - marque acima para incluir os componentes."
+                    ? "Nem este ativo nem os componentes abaixo dele tem ordem de manutenção."
+                    : "Este ativo não tem ordem própria - marque acima para incluir os componentes."
                 }
               />
             ) : (
@@ -411,7 +411,7 @@ export default function PortalInstrumentDetail() {
                       <th className="px-3 py-2">Tipo</th>
                       <th className="px-3 py-2">Ativo</th>
                       <th className="px-3 py-2">Abertura</th>
-                      <th className="px-3 py-2">Conclusao</th>
+                      <th className="px-3 py-2">Conclusão</th>
                       <th className="px-3 py-2">Status</th>
                     </tr>
                   </thead>
@@ -451,24 +451,24 @@ export default function PortalInstrumentDetail() {
             <div className="card p-5">
               <h2 className="mb-3 font-semibold text-navy-900">Gastos deste ativo</h2>
               <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Info label="Pecas" value={costSummary.partsCost != null ? formatCurrency(costSummary.partsCost) : "Nao rastreado"} />
+                <Info label="Peças" value={costSummary.partsCost != null ? formatCurrency(costSummary.partsCost) : "Não rastreado"} />
                 <Info
-                  label="Mao de obra"
-                  value={costSummary.laborCost != null ? `${formatCurrency(costSummary.laborCost)} (${costSummary.totalLaborHours}h)` : `Nao rastreado (${costSummary.totalLaborHours}h)`}
+                  label="Mão de obra"
+                  value={costSummary.laborCost != null ? `${formatCurrency(costSummary.laborCost)} (${costSummary.totalLaborHours}h)` : `Não rastreado (${costSummary.totalLaborHours}h)`}
                 />
-                <Info label="Terceiros" value={costSummary.thirdPartyCost != null ? formatCurrency(costSummary.thirdPartyCost) : "Nao rastreado"} />
+                <Info label="Terceiros" value={costSummary.thirdPartyCost != null ? formatCurrency(costSummary.thirdPartyCost) : "Não rastreado"} />
                 <Info label="Total" value={costSummary.totalCost != null ? formatCurrency(costSummary.totalCost) : "-"} />
               </dl>
             </div>
           ) : (
-            <EmptyState title="Nenhum custo rastreado" description="Aparece aqui assim que uma OS deste ativo lancar pecas ou mao de obra." />
+            <EmptyState title="Nenhum custo rastreado" description="Aparece aqui assim que uma OS deste ativo lançar peças ou mão de obra." />
           )}
 
           <div className="card p-5">
-            <h2 className="mb-1 font-semibold text-navy-900">Historico de pecas consumidas</h2>
-            <p className="mb-3 text-xs text-graphite-500">O que ja foi baixado do seu almoxarifado nas OS deste ativo.</p>
+            <h2 className="mb-1 font-semibold text-navy-900">Histórico de peças consumidas</h2>
+            <p className="mb-3 text-xs text-graphite-500">O que já foi baixado do seu almoxarifado nas OS deste ativo.</p>
             {!partsHistory || partsHistory.length === 0 ? (
-              <EmptyState title="Nenhum consumo registrado" description="Aparece aqui assim que uma OS deste ativo consumir uma peca do almoxarifado." />
+              <EmptyState title="Nenhum consumo registrado" description="Aparece aqui assim que uma OS deste ativo consumir uma peça do almoxarifado." />
             ) : (
               <ul className="divide-y divide-gray-100">
                 {partsHistory.map((entry) => (
@@ -481,7 +481,7 @@ export default function PortalInstrumentDetail() {
                       </span>
                     </div>
                     <p className="text-xs text-graphite-400">
-                      Usada {entry.timesUsed}x · ultima vez {formatDate(entry.lastUsedAt)}
+                      Usada {entry.timesUsed}x · última vez {formatDate(entry.lastUsedAt)}
                       {entry.lastWorkOrder && (
                         <>
                           {" "}·{" "}
