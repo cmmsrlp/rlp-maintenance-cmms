@@ -71,7 +71,7 @@ export default function KanbanBoard() {
     <div>
       <PageHeader
         title="Kanban de manutenção"
-        description="OS agrupadas por estagio do fluxo"
+        description="OS agrupadas por estágio do fluxo"
         breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Kanban" }]}
       />
 

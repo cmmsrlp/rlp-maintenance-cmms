@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Radar, Gauge, TrendingUp, AlertTriangle, Repeat, MessageCircle } from "lucide-react";
+import { ArrowRight, Radar, Gauge, TrendingUp, AlertTriangle, Repeat, MessageCircle, Sparkles, CheckCircle2, FileText } from "lucide-react";
 import { buildWhatsAppLink } from "../../lib/publicContact";
 import { Seo } from "../../components/Seo";
 
@@ -28,6 +28,12 @@ const CAPACIDADES = [
     description:
       "Histórico de leituras por medidor mostra a curva de degradação - decida a intervenção antes da quebra, não depois dela.",
   },
+  {
+    icon: FileText,
+    title: "Análise de laudos por IA",
+    description:
+      "Anexe o PDF de uma análise de vibração, óleo ou termografia e receba um resumo com severidade em segundos - sem esperar alguém ler o laudo inteiro para saber se é urgente.",
+  },
 ];
 
 export default function PredictiveMaintenance() {
@@ -35,7 +41,7 @@ export default function PredictiveMaintenance() {
     <div>
       <Seo
         title="Manutenção preditiva industrial"
-        description="Medidores de condição com zonas de severidade disparam ordens automaticamente antes da quebra - manutenção preditiva no CMMS RLP Maintenance."
+        description="Medidores de condição, zonas de severidade e análise de laudos técnicos por IA - manutenção preditiva do CMMS RLP Maintenance."
         path="/manutencao-preditiva"
       />
       <section className="relative overflow-hidden bg-navy-900">
@@ -104,7 +110,7 @@ export default function PredictiveMaintenance() {
             Do medidor à ordem de serviço, sem ninguém olhar o gráfico todo dia
           </h2>
         </div>
-        <div className="mt-16 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-16 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
           {CAPACIDADES.map((c) => (
             <div key={c.title}>
               <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-navy-900">
@@ -114,6 +120,48 @@ export default function PredictiveMaintenance() {
               <p className="mt-2 text-sm leading-relaxed text-graphite-500">{c.description}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="bg-navy-900 py-24">
+        <div className="mx-auto grid max-w-7xl gap-14 px-4 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-brand-lime">Inteligência artificial</span>
+            <h2 className="mt-3 text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl">
+              A IA lê o laudo e avisa o que fazer
+            </h2>
+            <p className="mt-4 text-navy-200">
+              A mesma IA que resume um laudo técnico também analisa os dados do seu parque sob demanda e aponta o
+              que está atrasado, arriscado ou fora do padrão - sempre para a sua equipe revisar, nunca para agir
+              sozinha.
+            </p>
+            <ul className="mt-6 space-y-3">
+              {[
+                "Leitura automática de laudos em PDF (vibração, óleo, termografia)",
+                "Resumo com severidade, não só o arquivo anexado",
+                "Insights sob demanda a partir dos seus próprios dados - planos atrasados, ordens abertas, estoque",
+                "Revisão sempre humana - a IA nunca abre ordem de serviço sozinha",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2.5 text-sm text-navy-100">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand-lime" /> {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-xl bg-white p-5 shadow-2xl">
+            <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+              <FileText className="h-4 w-4 shrink-0 text-navy-600" />
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-graphite-400">Laudo · Análise de vibração LE-01.pdf</p>
+            </div>
+            <div className="mt-3 flex items-center gap-2 rounded-lg bg-amber-50 px-3.5 py-2.5 text-xs font-semibold text-amber-700">
+              <Sparkles className="h-4 w-4 shrink-0" /> Atenção - degradação inicial no mancal
+            </div>
+            <p className="mt-3 text-sm leading-relaxed text-graphite-600">
+              "O espectro mostra frequência de defeito de rolamento acima do padrão. Recomenda-se aumentar a
+              frequência de coleta e planejar a substituição na próxima parada programada."
+            </p>
+            <p className="mt-3 text-[11px] text-graphite-400">Resumo gerado por IA a partir do PDF anexado - revise antes de agir.</p>
+          </div>
         </div>
       </section>
 

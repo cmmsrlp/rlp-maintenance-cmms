@@ -9,7 +9,6 @@ import {
   Camera,
   CheckCircle2,
   MessageCircle,
-  Boxes,
 } from "lucide-react";
 import { buildWhatsAppLink } from "../../lib/publicContact";
 import { Seo } from "../../components/Seo";
@@ -101,34 +100,12 @@ export default function AssetManagement() {
           </div>
 
           <div className="relative mx-auto w-full max-w-md lg:mx-0">
-            <div className="rounded-xl bg-white p-5 shadow-2xl">
-              <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-graphite-400">Árvore de ativos</p>
-              <div className="space-y-1.5 text-sm">
-                <div className="flex items-center gap-2 font-bold text-navy-900">
-                  <Boxes className="h-4 w-4 text-brand-lime-dark" /> Planta 1 - Extrusão
-                </div>
-                <div className="ml-5 flex items-center gap-2 text-graphite-700">
-                  <span className="h-1.5 w-1.5 rounded-full bg-graphite-300" /> Área de extrusão
-                </div>
-                <div className="ml-10 flex items-center justify-between rounded-lg bg-graphite-50 px-3 py-2">
-                  <span className="text-graphite-700">Extrusora EX-04</span>
-                  <span className="rounded-full bg-brand-lime/15 px-2 py-0.5 text-[11px] font-bold text-brand-lime-dark">
-                    Crítico
-                  </span>
-                </div>
-                <div className="ml-14 flex items-center justify-between rounded-lg bg-graphite-50/60 px-3 py-2">
-                  <span className="text-graphite-500">Motor principal</span>
-                  <span className="text-[11px] text-graphite-400">Em operação</span>
-                </div>
-                <div className="ml-14 flex items-center justify-between rounded-lg bg-graphite-50/60 px-3 py-2">
-                  <span className="text-graphite-500">Redutor RD-04</span>
-                  <span className="text-[11px] text-graphite-400">Em operação</span>
-                </div>
-              </div>
-            </div>
-            <div className="absolute -bottom-5 -left-5 hidden rounded-lg bg-white px-4 py-3 shadow-xl sm:block">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-graphite-400">Ativos cadastrados</p>
-              <p className="text-xl font-extrabold text-navy-900">1.240</p>
+            <div className="overflow-hidden rounded-xl bg-white shadow-2xl">
+              <img
+                src="/screenshots/arvore-de-ativos.png"
+                alt="Tela de árvore de ativos do RLP Maintenance CMMS"
+                className="block h-[220px] w-full object-cover object-top"
+              />
             </div>
           </div>
         </div>
@@ -161,29 +138,12 @@ export default function AssetManagement() {
       <section className="bg-navy-900 py-24">
         <div className="mx-auto grid max-w-7xl gap-14 px-4 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
           <div className="order-2 lg:order-1">
-            <div className="rounded-xl bg-white p-5 shadow-2xl">
-              <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-graphite-400">Ficha técnica · Extrusora EX-04</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg bg-graphite-50 p-3">
-                  <p className="text-[11px] font-medium text-graphite-500">Tipo</p>
-                  <p className="text-sm font-bold text-navy-900">Extrusora</p>
-                </div>
-                <div className="rounded-lg bg-graphite-50 p-3">
-                  <p className="text-[11px] font-medium text-graphite-500">Centro de custo</p>
-                  <p className="text-sm font-bold text-navy-900">CC-102</p>
-                </div>
-                <div className="rounded-lg bg-graphite-50 p-3">
-                  <p className="text-[11px] font-medium text-graphite-500">Potência</p>
-                  <p className="text-sm font-bold text-navy-900">75 cv</p>
-                </div>
-                <div className="rounded-lg bg-graphite-50 p-3">
-                  <p className="text-[11px] font-medium text-graphite-500">Capacidade</p>
-                  <p className="text-sm font-bold text-navy-900">450 kg/h</p>
-                </div>
-              </div>
-              <div className="mt-4 flex items-center gap-2 rounded-lg bg-brand-lime/10 px-3.5 py-3 text-xs font-semibold text-brand-lime-dark">
-                <ShieldAlert className="h-4 w-4 shrink-0" /> Criticidade alta - prioridade automática nas ordens
-              </div>
+            <div className="overflow-hidden rounded-xl bg-white shadow-2xl">
+              <img
+                src="/screenshots/ficha-tecnica.png"
+                alt="Ficha técnica de um ativo no RLP Maintenance CMMS"
+                className="block h-[300px] w-full object-cover object-top"
+              />
             </div>
           </div>
           <div className="order-1 lg:order-2">
