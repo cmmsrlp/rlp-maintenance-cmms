@@ -28,6 +28,7 @@ import { getApiErrorMessage } from "../../../api/client";
 import { useCmms } from "../../../lib/cmms";
 import { formatDate, formatDateTime, formatCurrency } from "../../../lib/format";
 import { camposDoTipo } from "../../../lib/camposPorTipoDeAtivo";
+import { rotuloDeStatusRotable } from "../../../lib/rotableStatus";
 
 const OPCOES_DE_RESULTADO: { value: RotableRepairOutcome; label: string }[] = [
   { value: "REPAIRED", label: "Reparado" },
@@ -119,7 +120,7 @@ export default function RotableEquipmentDetail() {
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <div className="card p-5">
           <p className="text-xs uppercase tracking-wide text-graphite-400">Status</p>
-          <div className="mt-1"><StatusBadge status={rotable.status} /></div>
+          <div className="mt-1"><StatusBadge status={rotable.status} label={rotuloDeStatusRotable(rotable)} /></div>
         </div>
         <div className="card p-5">
           <p className="text-xs uppercase tracking-wide text-graphite-400">Instalado em</p>
@@ -334,6 +335,7 @@ function EditModal({ rotable, onClose, onSaved }: { rotable: RotableEquipment; o
     model: rotable.model ?? "",
     serialNumber: rotable.serialNumber ?? "",
     weightKg: rotable.weightKg != null ? String(rotable.weightKg) : "",
+    acquisitionCost: rotable.acquisitionCost != null ? String(rotable.acquisitionCost) : "",
     notes: rotable.notes ?? "",
   });
   const [specificAttributes, setSpecificAttributes] = useState<Record<string, string>>(
@@ -355,8 +357,14 @@ function EditModal({ rotable, onClose, onSaved }: { rotable: RotableEquipment; o
     try {
       const attrsPreenchidos = Object.fromEntries(Object.entries(specificAttributes).filter(([, v]) => v?.trim()));
       await updateRotableEquipment(rotable.id, {
-        ...values,
+        code: values.code,
+        type: values.type,
+        manufacturer: values.manufacturer.trim() || null,
+        model: values.model.trim() || null,
+        serialNumber: values.serialNumber.trim() || null,
+        notes: values.notes.trim() || null,
         weightKg: values.weightKg ? Number(values.weightKg) : null,
+        acquisitionCost: values.acquisitionCost ? Number(values.acquisitionCost) : null,
         specificAttributes: Object.keys(attrsPreenchidos).length > 0 ? attrsPreenchidos : null,
       });
       notify("success", "Equipamento atualizado.");
@@ -393,8 +401,15 @@ function EditModal({ rotable, onClose, onSaved }: { rotable: RotableEquipment; o
           <TextInput label="Fabricante" value={values.manufacturer} onChange={(e) => setValues({ ...values, manufacturer: e.target.value })} />
           <TextInput label="Modelo" value={values.model} onChange={(e) => setValues({ ...values, model: e.target.value })} />
         </div>
+        <TextInput label="Número de série" value={values.serialNumber} onChange={(e) => setValues({ ...values, serialNumber: e.target.value })} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextInput label="Número de série" value={values.serialNumber} onChange={(e) => setValues({ ...values, serialNumber: e.target.value })} />
+          <TextInput
+            label="Custo de aquisição"
+            type="number"
+            step="any"
+            value={values.acquisitionCost}
+            onChange={(e) => setValues({ ...values, acquisitionCost: e.target.value })}
+          />
           <TextInput
             label="Peso (kg)"
             type="number"

@@ -44,6 +44,23 @@ const rotableSelect = {
   createdAt: true,
 } as const;
 
+/** Filtro Prisma da ordem de reparo ainda aberta (nao retornou) de um equipamento - usado
+ * so' para a tela distinguir "em reparo, ja com orcamento" de "em reparo, aguardando o
+ * fornecedor mandar o orcamento". Nome de campo nao pode ser alias no select do Prisma
+ * (tem que ser "repairOrders", o nome de verdade da relacao), entao o resultado e'
+ * remapeado para "openRepairOrder" depois da consulta - ver mapOpenRepairOrder. */
+const openRepairOrderSelect = {
+  where: { returnedAt: null },
+  orderBy: { sentAt: "desc" as const },
+  take: 1,
+  select: { id: true, budgetValue: true },
+} as const;
+
+function mapOpenRepairOrder<T extends { repairOrders?: { id: string; budgetValue: number | null }[] }>(item: T) {
+  const { repairOrders, ...rest } = item;
+  return { ...rest, openRepairOrder: repairOrders?.[0] ?? null };
+}
+
 /**
  * Sugere o proximo codigo (ex.: "MOT-004") a partir do prefixo cadastrado no Tipo de
  * ativo escolhido - mesmo raciocinio do proximo-codigo de ponto de lubrificacao: numera a
@@ -140,11 +157,16 @@ export const listRotableEquipment = asyncHandler(async (req: Request, res: Respo
   };
 
   const [items, total] = await Promise.all([
-    prisma.rotableEquipment.findMany({ where, select: rotableSelect, orderBy: { code: "asc" }, ...toSkipTake(pageParams) }),
+    prisma.rotableEquipment.findMany({
+      where,
+      select: { ...rotableSelect, repairOrders: openRepairOrderSelect },
+      orderBy: { code: "asc" },
+      ...toSkipTake(pageParams),
+    }),
     prisma.rotableEquipment.count({ where }),
   ]);
 
-  res.json(buildPagedResult(items, total, pageParams));
+  res.json(buildPagedResult(items.map(mapOpenRepairOrder), total, pageParams));
 });
 
 export const getRotableEquipment = asyncHandler(async (req: Request, res: Response) => {
@@ -166,7 +188,8 @@ export const getRotableEquipment = asyncHandler(async (req: Request, res: Respon
     },
   });
   if (!rotable) throw new NotFoundError("Equipamento recondicionavel");
-  res.json(rotable);
+  const openRepairOrder = rotable.repairOrders.find((o) => !o.returnedAt) ?? null;
+  res.json({ ...rotable, openRepairOrder: openRepairOrder ? { id: openRepairOrder.id, budgetValue: openRepairOrder.budgetValue } : null });
 });
 
 const rotableSchema = z.object({

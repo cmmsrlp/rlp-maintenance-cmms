@@ -20,6 +20,7 @@ import { getApiErrorMessage } from "../../../api/client";
 import { useCmms } from "../../../lib/cmms";
 import { numeroOpcional } from "../../../lib/zodHelpers";
 import { camposDoTipo } from "../../../lib/camposPorTipoDeAtivo";
+import { rotuloDeStatusRotable } from "../../../lib/rotableStatus";
 
 const schema = z.object({
   code: z.string().min(1, "Informe o código do equipamento."),
@@ -242,7 +243,7 @@ export default function RotableEquipmentList() {
             { header: "Tipo", accessor: (r) => r.type },
             { header: "Fabricante / modelo", accessor: (r) => [r.manufacturer, r.model].filter(Boolean).join(" - ") || "-" },
             { header: "Número de série", accessor: (r) => r.serialNumber ?? "-" },
-            { header: "Status", accessor: (r) => <StatusBadge status={r.status} /> },
+            { header: "Status", accessor: (r) => <StatusBadge status={r.status} label={rotuloDeStatusRotable(r)} /> },
             {
               header: "Instalado em",
               accessor: (r) =>

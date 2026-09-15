@@ -9,6 +9,7 @@ import { Modal } from "./Modal";
 import { TextInput, SelectInput } from "./form/Field";
 import { useToast } from "./Toast";
 import { getApiErrorMessage } from "../api/client";
+import { rotuloDeStatusRotable } from "../lib/rotableStatus";
 
 interface Props {
   instrumentId: string;
@@ -86,7 +87,7 @@ export function AssetRotableCard({ instrumentId, clientId, base }: Props) {
               {instalado.serialNumber ? ` - S/N ${instalado.serialNumber}` : ""}
             </p>
           </div>
-          <StatusBadge status={instalado.status} />
+          <StatusBadge status={instalado.status} label={rotuloDeStatusRotable(instalado)} />
         </Link>
       )}
 

@@ -472,6 +472,10 @@ export interface RotableEquipment {
   createdAt: string;
   installations?: RotableInstallation[];
   repairOrders?: RotableRepairOrder[];
+  /** Ordem de reparo ainda aberta (nao retornou) - so' preenchida quando status e'
+   * IN_RECONDITIONING. Usada pra distinguir "em reparo, aguardando orcamento" de "em
+   * reparo, orcamento ja informado". */
+  openRepairOrder?: { id: string; budgetValue: number | null } | null;
 }
 
 export interface RotableInstallation {
