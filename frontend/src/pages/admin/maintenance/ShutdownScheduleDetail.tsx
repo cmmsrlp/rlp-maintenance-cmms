@@ -116,6 +116,15 @@ function combinarDataHora(data: string, hora: string): string {
   const [h, min] = (hora || "00:00").split(":").map(Number);
   return new Date(y, m - 1, d, h, min, 0, 0).toISOString();
 }
+/** So pro Gantt (frappe-gantt): o parser de data dele e' proprio e simplorio - separa
+ * data/hora por ESPACO e nao entende ISO com "T"/"Z"/milissegundos (`date.split(' ')[1]`
+ * fica vazio pra "2026-09-21T09:00:00.000Z", e ele silenciosamente assume meia-noite). Sem
+ * conversao de fuso nenhuma aqui de proposito - e' so o mesmo y/m/d/h/min digitado na tela,
+ * do jeito que a lib espera ("YYYY-MM-DD HH:mm:ss"). */
+function paraGanttDataHora(data: string, hora: string): string {
+  const h = (hora || "00:00").length === 5 ? `${hora}:00` : hora || "00:00:00";
+  return `${data} ${h}`;
+}
 
 function novaTarefa(horaInicio = "07:00", horaFim = "17:00"): EditorTask {
   const d = hoje();
@@ -355,6 +364,51 @@ function flattenForGantt(nodes: EditorTask[], depth: number, list: { task: Edito
     list.push({ task: node, depth });
     flattenForGantt(node.children, depth + 1, list);
   }
+}
+
+interface GanttBarInterno {
+  task: { _start: Date; _end: Date; actual_duration: number; ignored_duration: number };
+  gantt: { config: { unit: string; step: number } };
+  duration: number;
+  actual_duration_raw: number;
+  ignored_duration_raw: number;
+}
+
+/**
+ * Corrige um bug do frappe-gantt 1.2.2: em QUALQUER view mode a duracao da barra e'
+ * calculada contando dias inteiros de calendario tocados (passo de 1 dia no loop interno),
+ * nunca o tempo real decorrido - entao nos modos "Hour"/"Quarter Day"/"Half Day" (feitos
+ * justamente pra precisao de horas) toda tarefa dentro do mesmo dia virava uma barra do dia
+ * inteiro, como se uma tarefa de 1h e uma de 10h tivessem a mesma largura. So troca o
+ * calculo quando o passo do modo de visualizacao e' em horas (config.unit === "hour");
+ * Day/Week/Month/Year continuam usando o calculo original da lib (chamado via `original`),
+ * sem risco de regressao la. O patch e' no PROTOTIPO da classe Bar (nao exportada pela lib,
+ * por isso pego via Object.getPrototypeOf de uma barra ja criada) - roda uma unica vez por
+ * carregamento da pagina, marcado em `__horaDurationPatched`.
+ */
+function corrigirDuracaoEmHoras(gantt: Gantt) {
+  const bars = (gantt as unknown as { bars?: GanttBarInterno[] }).bars;
+  const primeiraBarra = bars?.[0];
+  if (!primeiraBarra) return;
+  const proto = Object.getPrototypeOf(primeiraBarra) as {
+    compute_duration: (this: GanttBarInterno) => void;
+    __horaDurationPatched?: boolean;
+  };
+  if (proto.__horaDurationPatched) return;
+  const original = proto.compute_duration;
+  proto.compute_duration = function (this: GanttBarInterno) {
+    if (this.gantt.config.unit !== "hour") {
+      original.call(this);
+      return;
+    }
+    const horas = (this.task._end.getTime() - this.task._start.getTime()) / 3_600_000;
+    this.task.actual_duration = horas;
+    this.task.ignored_duration = 0;
+    this.duration = horas / this.gantt.config.step;
+    this.actual_duration_raw = this.duration;
+    this.ignored_duration_raw = 0;
+  };
+  proto.__horaDurationPatched = true;
 }
 
 const STATUS_OPTIONS: { value: ShutdownScheduleStatus; label: string }[] = [
@@ -633,8 +687,11 @@ export default function ShutdownScheduleDetail() {
     const ganttTasks = ganttFlat.map(({ task, depth }) => ({
       id: task.key,
       name: `${" ".repeat(depth)}${task.name || "(sem nome)"}${task.responsavelNome ? ` - ${task.responsavelNome}` : ""}`,
-      start: task.startDate,
-      end: task.endDate,
+      // Data+hora combinados - so a data (sem hora) fazia toda tarefa do mesmo dia virar
+      // uma barra de "dia inteiro" no grafico, sem nenhuma proporcao com a duracao real
+      // (1h e 10h ficavam identicas), mesmo nos modos de zoom por hora.
+      start: paraGanttDataHora(task.startDate, task.startTime),
+      end: paraGanttDataHora(task.endDate, task.endTime),
       progress: task.percentComplete,
       // Desenha a setinha de dependencia entre predecessora e sucessora, igual ao Project.
       dependencies: task.predecessorKey ?? "",
@@ -646,6 +703,10 @@ export default function ShutdownScheduleDetail() {
       } else {
         ganttInstance.current = new Gantt(ganttRef.current, ganttTasks, {
           view_mode: "Day",
+          // Deixa a pessoa trocar o zoom (Hour/Quarter Day/Half Day/Day/Week/Month) pelo
+          // seletor nativo da lib - sem isso toda tarefa de poucas horas ficava com a
+          // mesma largura de um dia inteiro na barra, escondendo a duracao real.
+          view_mode_select: true,
           readonly: false,
           // Datas arrastaveis na propria barra; progresso continua so' pelo campo "%
           // concluida" do formulario, pra nao confundir arraste com avanco.
@@ -662,7 +723,13 @@ export default function ShutdownScheduleDetail() {
           // mesmo assim (a lib usa o MAIOR entre os dois), entao nada fica cortado.
           container_height: Math.max(500, Math.floor(window.innerHeight * 0.75)),
           on_date_change: (task: { id: string }, start: Date, end: Date) => {
-            updateFieldRef.current(task.id, { startDate: dataLocalParaISO(start), endDate: dataLocalParaISO(end) });
+            const hora = (d: Date) => `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+            updateFieldRef.current(task.id, {
+              startDate: dataLocalParaISO(start),
+              startTime: hora(start),
+              endDate: dataLocalParaISO(end),
+              endTime: hora(end),
+            });
           },
           on_click: (task: { id: string; name: string }) => {
             if (!modoLigarRef.current) return;
@@ -681,6 +748,12 @@ export default function ShutdownScheduleDetail() {
             notifyRef.current("success", `"${task.name}" agora depende da tarefa marcada.`);
           },
         });
+        // As barras que acabaram de nascer no construtor acima ainda usaram o calculo
+        // original (o patch so vale pra chamadas FUTURAS de compute_duration) - atualiza
+        // de novo agora que o prototipo ja esta corrigido, pra essa primeira renderizacao
+        // tambem sair com a largura certa.
+        corrigirDuracaoEmHoras(ganttInstance.current);
+        ganttInstance.current.refresh(ganttTasks);
       }
     } catch {
       // Gantt lanca erro em estado transitorio incoerente (ex.: mudou o tipo de vista no

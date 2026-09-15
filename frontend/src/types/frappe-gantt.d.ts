@@ -9,8 +9,10 @@ declare module "frappe-gantt" {
     custom_class?: string;
   }
 
+  export type GanttViewMode = "Hour" | "Quarter Day" | "Half Day" | "Day" | "Week" | "Month" | "Year";
+
   export interface GanttOptions {
-    view_mode?: "Day" | "Week" | "Month";
+    view_mode?: GanttViewMode;
     view_mode_select?: boolean;
     readonly?: boolean;
     readonly_dates?: boolean;
