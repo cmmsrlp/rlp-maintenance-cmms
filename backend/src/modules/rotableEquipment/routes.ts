@@ -20,6 +20,7 @@ import {
   getNextRotableCode,
   getRotableInstallationHistory,
   getRotableSummary,
+  getRepairOrderShipmentPdf,
 } from "./controller";
 import { baixarModeloRotable, simularImportacaoRotable, confirmarImportacaoRotable, exportarRotable } from "./importExport";
 
@@ -71,3 +72,4 @@ rotableRepairOrdersRouter.patch("/:id", updateRepairOrder);
 rotableRepairOrdersRouter.post("/:id/aprovar-orcamento", approveRepairBudget);
 rotableRepairOrdersRouter.post("/:id/reprovar-orcamento", rejectRepairBudget);
 rotableRepairOrdersRouter.post("/:id/retorno", returnFromRepair);
+rotableRepairOrdersRouter.get("/:id/ficha-envio", getRepairOrderShipmentPdf);

@@ -448,6 +448,7 @@ export interface FailureCode {
 export type RotableEquipmentStatus = "IN_STOCK" | "INSTALLED" | "QUARANTINE" | "IN_RECONDITIONING" | "SCRAPPED";
 export type RepairBudgetStatus = "PENDING" | "APPROVED" | "REJECTED";
 export type RotableRepairOutcome = "REPAIRED" | "PARTIALLY_REPAIRED" | "SCRAPPED";
+export type RotableRepairPurpose = "REPAIR" | "WARRANTY" | "SIMPLE_SHIPMENT";
 
 export interface RotableEquipment {
   id: string;
@@ -463,6 +464,7 @@ export interface RotableEquipment {
   currentInstrument: { id: string; tag: string | null; description: string | null; type: string } | null;
   acquisitionDate: string | null;
   acquisitionCost: number | null;
+  weightKg: number | null;
   photoKey: string | null;
   photoFileName: string | null;
   notes: string | null;
@@ -500,6 +502,7 @@ export interface RotableRepairOrder {
   failureCodeId: string | null;
   failureCode?: { id: string; code: string; description: string } | null;
   vendor: string | null;
+  purpose: RotableRepairPurpose;
   sentAt: string;
   budgetNumber: string | null;
   budgetValue: number | null;

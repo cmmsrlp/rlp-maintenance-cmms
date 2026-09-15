@@ -1746,6 +1746,9 @@ model RotableEquipment {
   currentInstrument   Instrument?            @relation(fields: [currentInstrumentId], references: [id])
   acquisitionDate  DateTime?
   acquisitionCost  Float?
+  // Usado na ficha de envio (remessa para reparo/garantia) - a area que emite a nota fiscal
+  // precisa do peso para calcular o frete. Opcional: nem todo equipamento tem isso a mao.
+  weightKg         Float?
   photoKey         String?
   photoFileName    String?
   notes            String?
@@ -1814,6 +1817,15 @@ enum RotableRepairOutcome {
   SCRAPPED
 }
 
+// O que justifica a remessa, para a ficha de envio e a nota fiscal que a area de expedicao
+// emite em cima dela - o CFOP/natureza da operacao muda conforme e' conserto, garantia ou
+// so' uma remessa sem essas duas razoes (ex.: emprestimo, devolucao a um fornecedor).
+enum RotableRepairPurpose {
+  REPAIR
+  WARRANTY
+  SIMPLE_SHIPMENT
+}
+
 // Ordem de reparo do equipamento retirado: do defeito informado ate o laudo final. Nasce
 // junto com a substituicao (retirada abre a ordem), mas pode ser criada avulsa para um
 // equipamento que ja estava em estoque/quarentena.
@@ -1837,6 +1849,9 @@ model RotableRepairOrder {
   // (entityType ROTABLE_REPAIR_ORDER), igual ao resto do sistema - nao precisam de coluna
   // propria aqui.
   vendor           String?
+  // Motivo da remessa - decide o texto e a natureza sugerida na ficha de envio (conserto,
+  // garantia ou so' remessa). Reparo e' o padrao porque e' o caso mais comum.
+  purpose          RotableRepairPurpose @default(REPAIR)
   sentAt           DateTime  @default(now())
   budgetNumber     String?
   budgetValue      Float?

@@ -28,6 +28,7 @@ const schema = z.object({
   model: z.string().optional(),
   serialNumber: z.string().optional(),
   acquisitionCost: numeroOpcional(z.coerce.number().nonnegative()),
+  weightKg: numeroOpcional(z.coerce.number().nonnegative()),
   notes: z.string().optional(),
   specificAttributes: z.record(z.string(), z.string()).optional(),
 });
@@ -289,6 +290,13 @@ export default function RotableEquipmentList() {
             <TextInput label="Número de série" placeholder="Opcional" {...register("serialNumber")} />
             <TextInput label="Custo de aquisição (opcional)" type="number" step="any" {...register("acquisitionCost")} />
           </div>
+          <TextInput
+            label="Peso (opcional)"
+            type="number"
+            step="any"
+            hint="Usado na ficha de envio, para calcular o frete."
+            {...register("weightKg")}
+          />
           <TextInput label="Observações (opcional)" {...register("notes")} />
 
           {camposEspecificos.length > 0 && (

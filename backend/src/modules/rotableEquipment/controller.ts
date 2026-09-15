@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
-import { RotableEquipmentStatus, RotableRepairOutcome, Prisma } from "@prisma/client";
+import { RotableEquipmentStatus, RotableRepairOutcome, RotableRepairPurpose, Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { parsePageParams, toSkipTake, buildPagedResult } from "../../utils/pagination";
@@ -8,6 +8,8 @@ import { NotFoundError, ValidationError } from "../../utils/errors";
 import { writeAuditLog } from "../../utils/audit";
 import { clientScopeFilter, assertOwnClient, resolveClientId } from "../../middleware/rbac";
 import { recalcularCriticidade } from "../../lib/assetCriticality";
+import { buildRotableShipmentPdf } from "../../lib/rotableShipmentPdf";
+import { tipoPadraoDoNome } from "./camposPorTipo";
 
 function paraJson(valor: Record<string, string> | null | undefined): Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined {
   if (valor === undefined) return undefined;
@@ -34,6 +36,7 @@ const rotableSelect = {
   currentInstrument: { select: { id: true, tag: true, description: true, type: true } },
   acquisitionDate: true,
   acquisitionCost: true,
+  weightKg: true,
   photoKey: true,
   photoFileName: true,
   notes: true,
@@ -176,6 +179,7 @@ const rotableSchema = z.object({
   specificAttributes: z.record(z.string(), z.string()).nullish(),
   acquisitionDate: z.coerce.date().nullish(),
   acquisitionCost: z.coerce.number().nonnegative().nullish(),
+  weightKg: z.coerce.number().nonnegative().nullish(),
   notes: z.string().nullish(),
 });
 
@@ -523,6 +527,7 @@ const repairOrderSelect = {
   failureCodeId: true,
   failureCode: { select: { id: true, code: true, description: true } },
   vendor: true,
+  purpose: true,
   sentAt: true,
   budgetNumber: true,
   budgetValue: true,
@@ -557,6 +562,7 @@ const createRepairOrderSchema = z.object({
   diagnosis: z.string().nullish(),
   failureCodeId: z.string().uuid().nullish(),
   vendor: z.string().nullish(),
+  purpose: z.nativeEnum(RotableRepairPurpose).optional(),
   budgetNumber: z.string().nullish(),
   budgetValue: z.coerce.number().nonnegative().nullish(),
   promisedReturnAt: z.coerce.date().nullish(),
@@ -671,4 +677,30 @@ export const returnFromRepair = asyncHandler(async (req: Request, res: Response)
   });
 
   res.json(order);
+});
+
+/** Ficha de envio (PDF) da ordem de reparo - puxa os dados ja cadastrados do equipamento
+ * (codigo, tipo, fabricante, modelo, numero de serie, peso, valor, ficha tecnica) para a
+ * area que emite a nota fiscal de remessa (conserto, garantia ou simples remessa). */
+export const getRepairOrderShipmentPdf = asyncHandler(async (req: Request, res: Response) => {
+  const order = await getOwnRepairOrder(req, req.params.id);
+  const [client, failureCode] = await Promise.all([
+    prisma.client.findFirst({ where: { id: order.rotable.clientId } }),
+    order.failureCodeId ? prisma.failureCode.findFirst({ where: { id: order.failureCodeId } }) : null,
+  ]);
+  if (!client) throw new NotFoundError("Cliente");
+
+  const atributoLabels = Object.fromEntries((tipoPadraoDoNome(order.rotable.type)?.campos ?? []).map((c) => [c.chave, c.rotulo]));
+
+  const pdf = await buildRotableShipmentPdf({
+    rotable: order.rotable,
+    repairOrder: order,
+    client,
+    failureCode,
+    atributoLabels,
+  });
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `inline; filename="ficha-de-envio-${order.rotable.code}.pdf"`);
+  res.end(pdf);
 });

@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { ModoDeImportacao, ResultadoDaImportacao, RotableEquipment, RotableEquipmentStatus, RotableInstallation, RotableRepairOrder, RotableRepairOutcome } from "./types";
+import type { ModoDeImportacao, ResultadoDaImportacao, RotableEquipment, RotableEquipmentStatus, RotableInstallation, RotableRepairOrder, RotableRepairOutcome, RotableRepairPurpose } from "./types";
 
 export interface RotableEquipmentInput {
   clientId?: string;
@@ -11,6 +11,7 @@ export interface RotableEquipmentInput {
   specificAttributes?: Record<string, string> | null;
   acquisitionDate?: string | null;
   acquisitionCost?: number | null;
+  weightKg?: number | null;
   notes?: string | null;
 }
 
@@ -155,6 +156,7 @@ export interface RepairOrderInput {
   diagnosis?: string | null;
   failureCodeId?: string | null;
   vendor?: string | null;
+  purpose?: RotableRepairPurpose;
   budgetNumber?: string | null;
   budgetValue?: number | null;
   promisedReturnAt?: string | null;
@@ -169,6 +171,13 @@ export async function createRepairOrder(rotableId: string, input: RepairOrderInp
 export async function updateRepairOrder(id: string, input: Partial<RepairOrderInput>): Promise<RotableRepairOrder> {
   const { data } = await api.patch<RotableRepairOrder>(`/rotable-repair-orders/${id}`, input);
   return data;
+}
+
+/** Ficha de envio (PDF) da ordem de reparo - dados do equipamento (codigo, tipo, peso,
+ * valor, ficha tecnica) prontos para a area que emite a nota fiscal de remessa. */
+export async function baixarFichaDeEnvio(repairOrderId: string): Promise<Blob> {
+  const { data } = await api.get(`/rotable-repair-orders/${repairOrderId}/ficha-envio`, { responseType: "blob" });
+  return data as Blob;
 }
 
 export async function approveRepairBudget(id: string): Promise<RotableRepairOrder> {

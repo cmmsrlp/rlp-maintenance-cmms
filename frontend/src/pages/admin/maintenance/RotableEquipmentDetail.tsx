@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Wrench, LogOut, LogIn, CheckCircle2, XCircle, PackageCheck } from "lucide-react";
+import { Pencil, Wrench, LogOut, LogIn, CheckCircle2, XCircle, PackageCheck, FileDown } from "lucide-react";
 import {
   getRotableEquipment,
   updateRotableEquipment,
@@ -11,9 +11,10 @@ import {
   approveRepairBudget,
   rejectRepairBudget,
   returnFromRepair,
+  baixarFichaDeEnvio,
 } from "../../../api/rotableEquipment";
 import { listFailureCodes } from "../../../api/failureCodes";
-import type { RotableEquipment, RotableRepairOutcome } from "../../../api/types";
+import type { RotableEquipment, RotableRepairOutcome, RotableRepairOrder, RotableRepairPurpose } from "../../../api/types";
 import { PageHeader } from "../../../components/PageHeader";
 import { FullPageSpinner } from "../../../components/Spinner";
 import { StatusBadge } from "../../../components/StatusBadge";
@@ -33,6 +34,29 @@ const OPCOES_DE_RESULTADO: { value: RotableRepairOutcome; label: string }[] = [
   { value: "PARTIALLY_REPAIRED", label: "Reparo parcial" },
   { value: "SCRAPPED", label: "Sucateado" },
 ];
+
+const OPCOES_DE_MOTIVO: { value: RotableRepairPurpose; label: string }[] = [
+  { value: "REPAIR", label: "Conserto / reparo" },
+  { value: "WARRANTY", label: "Garantia" },
+  { value: "SIMPLE_SHIPMENT", label: "Remessa simples" },
+];
+
+/** Ficha de envio em PDF. Baixa em vez de abrir aba nova: window.open depois de um await
+ * perde o "gesto do usuario" e cai no bloqueador de pop-up do navegador - mesmo padrao de
+ * download ja usado no exportar/importar desta tela. */
+async function abrirFichaDeEnvio(repairOrderId: string, codigo: string, notify: (variant: "error", text: string) => void) {
+  try {
+    const blob = await baixarFichaDeEnvio(repairOrderId);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ficha-de-envio-${codigo}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    notify("error", getApiErrorMessage(error));
+  }
+}
 
 export default function RotableEquipmentDetail() {
   const { id = "" } = useParams<{ id: string }>();
@@ -92,7 +116,7 @@ export default function RotableEquipmentDetail() {
         }
       />
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <div className="card p-5">
           <p className="text-xs uppercase tracking-wide text-graphite-400">Status</p>
           <div className="mt-1"><StatusBadge status={rotable.status} /></div>
@@ -114,6 +138,10 @@ export default function RotableEquipmentDetail() {
         <div className="card p-5">
           <p className="text-xs uppercase tracking-wide text-graphite-400">Custo de aquisicao</p>
           <p className="mt-1 font-medium text-navy-900">{rotable.acquisitionCost != null ? formatCurrency(rotable.acquisitionCost) : "-"}</p>
+        </div>
+        <div className="card p-5">
+          <p className="text-xs uppercase tracking-wide text-graphite-400">Peso</p>
+          <p className="mt-1 font-medium text-navy-900">{rotable.weightKg != null ? `${rotable.weightKg} kg` : "-"}</p>
         </div>
       </div>
 
@@ -189,9 +217,14 @@ export default function RotableEquipmentDetail() {
                       {order.vendor ?? "Fornecedor não informado"}
                       {order.budgetNumber && ` - orçamento ${order.budgetNumber}`}
                     </p>
-                    <p className="text-xs text-graphite-500">Enviado em {formatDate(order.sentAt)}</p>
+                    <p className="text-xs text-graphite-500">
+                      {OPCOES_DE_MOTIVO.find((o) => o.value === order.purpose)?.label ?? order.purpose} - enviado em {formatDate(order.sentAt)}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
+                    <button className="btn-outline btn-sm" onClick={() => void abrirFichaDeEnvio(order.id, rotable.code, notify)}>
+                      <FileDown className="h-4 w-4" /> Ficha de envio
+                    </button>
                     <StatusBadge status={order.budgetStatus} />
                     {order.outcome && <StatusBadge status={order.outcome} />}
                   </div>
@@ -274,6 +307,7 @@ export default function RotableEquipmentDetail() {
       {repairOpen && (
         <RepairOrderModal
           rotableId={rotable.id}
+          rotableCode={rotable.code}
           failureCodes={failureCodes ?? []}
           onClose={() => setRepairOpen(false)}
           onDone={() => { setRepairOpen(false); invalidar(); }}
@@ -299,6 +333,7 @@ function EditModal({ rotable, onClose, onSaved }: { rotable: RotableEquipment; o
     manufacturer: rotable.manufacturer ?? "",
     model: rotable.model ?? "",
     serialNumber: rotable.serialNumber ?? "",
+    weightKg: rotable.weightKg != null ? String(rotable.weightKg) : "",
     notes: rotable.notes ?? "",
   });
   const [specificAttributes, setSpecificAttributes] = useState<Record<string, string>>(
@@ -321,6 +356,7 @@ function EditModal({ rotable, onClose, onSaved }: { rotable: RotableEquipment; o
       const attrsPreenchidos = Object.fromEntries(Object.entries(specificAttributes).filter(([, v]) => v?.trim()));
       await updateRotableEquipment(rotable.id, {
         ...values,
+        weightKg: values.weightKg ? Number(values.weightKg) : null,
         specificAttributes: Object.keys(attrsPreenchidos).length > 0 ? attrsPreenchidos : null,
       });
       notify("success", "Equipamento atualizado.");
@@ -357,7 +393,17 @@ function EditModal({ rotable, onClose, onSaved }: { rotable: RotableEquipment; o
           <TextInput label="Fabricante" value={values.manufacturer} onChange={(e) => setValues({ ...values, manufacturer: e.target.value })} />
           <TextInput label="Modelo" value={values.model} onChange={(e) => setValues({ ...values, model: e.target.value })} />
         </div>
-        <TextInput label="Número de série" value={values.serialNumber} onChange={(e) => setValues({ ...values, serialNumber: e.target.value })} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <TextInput label="Número de série" value={values.serialNumber} onChange={(e) => setValues({ ...values, serialNumber: e.target.value })} />
+          <TextInput
+            label="Peso (kg)"
+            type="number"
+            step="any"
+            hint="Usado na ficha de envio, para calcular o frete."
+            value={values.weightKg}
+            onChange={(e) => setValues({ ...values, weightKg: e.target.value })}
+          />
+        </div>
         <TextInput label="Observações" value={values.notes} onChange={(e) => setValues({ ...values, notes: e.target.value })} />
 
         {camposEspecificos.length > 0 && (
@@ -475,29 +521,64 @@ function RemoveModal({ rotableId, onClose, onDone }: { rotableId: string; onClos
   );
 }
 
-function RepairOrderModal({ rotableId, failureCodes, onClose, onDone }: { rotableId: string; failureCodes: { id: string; code: string; description: string }[]; onClose: () => void; onDone: () => void }) {
+function RepairOrderModal({ rotableId, rotableCode, failureCodes, onClose, onDone }: { rotableId: string; rotableCode: string; failureCodes: { id: string; code: string; description: string }[]; onClose: () => void; onDone: () => void }) {
   const { notify } = useToast();
-  const [values, setValues] = useState({ defectReported: "", diagnosis: "", failureCodeId: "", vendor: "", budgetNumber: "", budgetValue: "" });
+  const [values, setValues] = useState({
+    defectReported: "",
+    diagnosis: "",
+    failureCodeId: "",
+    vendor: "",
+    purpose: "REPAIR" as RotableRepairPurpose,
+    budgetNumber: "",
+    budgetValue: "",
+  });
   const [saving, setSaving] = useState(false);
+  // Depois de aberta, a ordem fica visivel aqui so' para oferecer a ficha de envio - fechar
+  // o modal nesse momento (como antes) faria a pessoa procurar a ordem de novo na aba
+  // Reparos so' para baixar o PDF que acabou de gerar o motivo de estar aqui.
+  const [criada, setCriada] = useState<RotableRepairOrder | null>(null);
 
   async function submit() {
     setSaving(true);
     try {
-      await createRepairOrder(rotableId, {
+      const order = await createRepairOrder(rotableId, {
         defectReported: values.defectReported || null,
         diagnosis: values.diagnosis || null,
         failureCodeId: values.failureCodeId || null,
         vendor: values.vendor || null,
+        purpose: values.purpose,
         budgetNumber: values.budgetNumber || null,
         budgetValue: values.budgetValue ? Number(values.budgetValue) : null,
       });
       notify("success", "Ordem de reparo aberta.");
-      onDone();
+      setCriada(order);
     } catch (error) {
       notify("error", getApiErrorMessage(error));
     } finally {
       setSaving(false);
     }
+  }
+
+  if (criada) {
+    return (
+      <Modal
+        open
+        onClose={onDone}
+        title="Ordem de reparo aberta"
+        size="sm"
+        footer={<button type="button" className="btn-primary" onClick={onDone}>Concluir</button>}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-graphite-700">
+            Quer gerar a ficha de envio (PDF) agora, com os dados do equipamento (código, tipo, peso, valor, ficha
+            técnica) para encaminhar à área que emite a nota fiscal de remessa?
+          </p>
+          <button className="btn-outline w-full justify-center" onClick={() => void abrirFichaDeEnvio(criada.id, rotableCode, notify)}>
+            <FileDown className="h-4 w-4" /> Gerar ficha de envio (PDF)
+          </button>
+        </div>
+      </Modal>
+    );
   }
 
   return (
@@ -518,7 +599,15 @@ function RepairOrderModal({ rotableId, failureCodes, onClose, onDone }: { rotabl
           value={values.failureCodeId}
           onChange={(e) => setValues({ ...values, failureCodeId: e.target.value })}
         />
-        <TextInput label="Empresa reparadora" value={values.vendor} onChange={(e) => setValues({ ...values, vendor: e.target.value })} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <TextInput label="Empresa reparadora" value={values.vendor} onChange={(e) => setValues({ ...values, vendor: e.target.value })} />
+          <SelectInput
+            label="Motivo do envio"
+            options={OPCOES_DE_MOTIVO}
+            value={values.purpose}
+            onChange={(e) => setValues({ ...values, purpose: e.target.value as RotableRepairPurpose })}
+          />
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <TextInput label="Número do orçamento" value={values.budgetNumber} onChange={(e) => setValues({ ...values, budgetNumber: e.target.value })} />
           <TextInput label="Valor orçado" type="number" step="any" value={values.budgetValue} onChange={(e) => setValues({ ...values, budgetValue: e.target.value })} />
