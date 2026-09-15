@@ -16,7 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 const schema = z.object({
-  name: z.string().min(2, "Informe o nome da peca."),
+  name: z.string().min(2, "Informe o nome da peça."),
   code: z.string().optional(),
   category: z.string().optional(),
   unit: z.string().optional(),
@@ -53,7 +53,7 @@ export default function PortalSpareParts() {
   async function onSubmit(values: FormValues) {
     try {
       await createSparePart({ ...values, unitCost: values.unitCost ?? null });
-      notify("success", "Peca cadastrada no seu almoxarifado.");
+      notify("success", "Peça cadastrada no seu almoxarifado.");
       reset({ unit: "un" });
       setCreateOpen(false);
       queryClient.invalidateQueries({ queryKey: ["portal-spare-parts"] });
@@ -72,7 +72,7 @@ export default function PortalSpareParts() {
     if (!movimento) return;
     const quantidade = Math.trunc(Number(quantidadeMovimento));
     if (!quantidadeMovimento || Number.isNaN(quantidade) || quantidade <= 0) {
-      notify("error", "Informe uma quantidade valida (maior que zero).");
+      notify("error", "Informe uma quantidade válida (maior que zero).");
       return;
     }
     const unitCost = movimento.type === "IN" && custoMovimento && !Number.isNaN(Number(custoMovimento)) && Number(custoMovimento) >= 0
@@ -95,11 +95,11 @@ export default function PortalSpareParts() {
     <div>
       <PageHeader
         title="Meu almoxarifado"
-        description="Pecas de manutencao dos seus ativos (rolamentos, retentores, disjuntores...) - so voce ve e mexe neste estoque"
+        description="Peças de manutenção dos seus ativos (rolamentos, retentores, disjuntores...) - só você vê e mexe neste estoque"
         breadcrumbs={[{ label: "RLP Maintenance CMMS", to: "/portal/manutencao" }, { label: "Meu almoxarifado" }]}
         actions={
           <button className="btn-primary" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4" /> Nova peca
+            <Plus className="h-4 w-4" /> Nova peça
           </button>
         }
       />
@@ -108,7 +108,7 @@ export default function PortalSpareParts() {
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-graphite-400" />
         <input
           className="input pl-9"
-          placeholder="Buscar por nome, codigo ou categoria..."
+          placeholder="Buscar por nome, código ou categoria..."
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
         />
@@ -116,7 +116,7 @@ export default function PortalSpareParts() {
 
       {data && data.items.some((p) => p.unitCost != null) && (
         <p className="mb-3 text-sm text-graphite-600">
-          Valor do estoque desta pagina:{" "}
+          Valor do estoque desta página:{" "}
           <span className="font-semibold text-navy-900">
             {formatCurrency(data.items.reduce((sum, p) => sum + (p.unitCost ?? 0) * p.stockQty, 0))}
           </span>
@@ -129,11 +129,11 @@ export default function PortalSpareParts() {
         keyField={(p) => p.id}
         pagination={data}
         onPageChange={setPage}
-        emptyTitle="Nenhuma peca cadastrada ainda"
-        emptyDescription="Cadastre as pecas que voce usa na manutencao dos seus ativos."
+        emptyTitle="Nenhuma peça cadastrada ainda"
+        emptyDescription="Cadastre as peças que você usa na manutenção dos seus ativos."
         columns={[
           {
-            header: "Peca",
+            header: "Peça",
             accessor: (p) => (
               <div>
                 <span className="font-medium text-navy-900">{p.name}</span>
@@ -170,7 +170,7 @@ export default function PortalSpareParts() {
                 <button onClick={() => handleMovement(p, "IN")} className="text-graphite-400 hover:text-safety-green" title="Entrada" aria-label="Registrar entrada">
                   <ArrowDownCircle className="h-4 w-4" />
                 </button>
-                <button onClick={() => handleMovement(p, "OUT")} className="text-graphite-400 hover:text-safety-red" title="Saida" aria-label="Registrar saida">
+                <button onClick={() => handleMovement(p, "OUT")} className="text-graphite-400 hover:text-safety-red" title="Saída" aria-label="Registrar saída">
                   <ArrowUpCircle className="h-4 w-4" />
                 </button>
               </div>
@@ -182,7 +182,7 @@ export default function PortalSpareParts() {
       <Modal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        title="Nova peca do almoxarifado"
+        title="Nova peça do almoxarifado"
         size="sm"
         footer={
           <>
@@ -196,18 +196,18 @@ export default function PortalSpareParts() {
         <form id="portal-spare-part-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <TextInput label="Nome" required placeholder="Ex.: Rolamento 6205" error={errors.name?.message} {...register("name")} />
           <div className="grid gap-4 sm:grid-cols-2">
-            <TextInput label="Codigo (opcional)" placeholder="Ex.: ROL-6205" {...register("code")} />
+            <TextInput label="Código (opcional)" placeholder="Ex.: ROL-6205" {...register("code")} />
             <TextInput label="Categoria (opcional)" placeholder="Ex.: Rolamentos" {...register("category")} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <TextInput label="Unidade" {...register("unit")} />
-            <TextInput label="Estoque minimo" type="number" {...register("minStock")} />
+            <TextInput label="Estoque mínimo" type="number" {...register("minStock")} />
           </div>
           <TextInput
-            label="Custo unitario (opcional)"
+            label="Custo unitário (opcional)"
             type="number"
             step="any"
-            hint="So alimenta o valor do estoque quando preenchido - pode deixar em branco."
+            hint="Só alimenta o valor do estoque quando preenchido - pode deixar em branco."
             {...register("unitCost")}
           />
         </form>
@@ -216,7 +216,7 @@ export default function PortalSpareParts() {
       <Modal
         open={!!movimento}
         onClose={() => setMovimento(null)}
-        title={movimento ? `${movimento.type === "IN" ? "Entrada" : "Saida"} - ${movimento.part.name}` : ""}
+        title={movimento ? `${movimento.type === "IN" ? "Entrada" : "Saída"} - ${movimento.part.name}` : ""}
         size="sm"
         footer={
           <>
@@ -241,7 +241,7 @@ export default function PortalSpareParts() {
           />
           {movimento?.type === "IN" && (
             <TextInput
-              label="Custo unitario desta compra (opcional)"
+              label="Custo unitário desta compra (opcional)"
               type="number"
               step="any"
               value={custoMovimento}

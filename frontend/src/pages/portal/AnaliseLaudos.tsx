@@ -15,8 +15,8 @@ import { getApiErrorMessage } from "../../api/client";
 import { formatDateTime, formatFileSize } from "../../lib/format";
 
 const SEVERITY_META: Record<InsightSeverity, { label: string; icon: typeof CheckCircle2; className: string }> = {
-  CRITICAL: { label: "Critico", icon: AlertOctagon, className: "bg-red-50 text-safety-red ring-1 ring-red-200" },
-  ATTENTION: { label: "Atencao", icon: AlertTriangle, className: "bg-amber-50 text-amber-700 ring-1 ring-amber-200" },
+  CRITICAL: { label: "Crítico", icon: AlertOctagon, className: "bg-red-50 text-safety-red ring-1 ring-red-200" },
+  ATTENTION: { label: "Atenção", icon: AlertTriangle, className: "bg-amber-50 text-amber-700 ring-1 ring-amber-200" },
   OK: { label: "Ok", icon: CheckCircle2, className: "bg-green-50 text-green-700 ring-1 ring-green-200" },
 };
 
@@ -56,14 +56,14 @@ export function AnaliseLaudosConteudo() {
   return (
     <div>
       <p className="mb-4 text-sm text-graphite-500">
-        Anexe um laudo tecnico (vibracao, analise de oleo, termografia...) e receba um resumo pratico gerado por IA. Revise antes de agir, nada aqui e' automatico.
+        Anexe um laudo técnico (vibração, análise de óleo, termografia...) e receba um resumo prático gerado por IA. Revise antes de agir, nada aqui é automático.
       </p>
 
       <div className="mb-6">
         <FileUpload
           accept="application/pdf"
           label="Anexar laudo em PDF"
-          hint="Ate 15 MB - vibracao, analise de oleo, termografia ou outro laudo tecnico"
+          hint="Até 15 MB - vibração, análise de óleo, termografia ou outro laudo técnico"
           onUpload={(file) => uploadMutation.mutateAsync(file).then(() => undefined)}
         />
       </div>

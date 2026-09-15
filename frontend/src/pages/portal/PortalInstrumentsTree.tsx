@@ -6,7 +6,7 @@ import { AssetTree } from "../../components/AssetTree";
 export default function PortalInstrumentsTree() {
   return (
     <div>
-      <PageHeader title="Arvore de ativos" description="Estrutura pai/filho dos seus ativos - clique no + para expandir os componentes" />
+      <PageHeader title="Árvore de ativos" description="Estrutura pai/filho dos seus ativos - clique no + para expandir os componentes" />
       <AssetTree clientId="" linkBase="/portal/ativos" />
     </div>
   );
