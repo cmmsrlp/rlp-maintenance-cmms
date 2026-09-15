@@ -21,6 +21,7 @@ import { useCmms } from "../../../lib/cmms";
 import { numeroOpcional } from "../../../lib/zodHelpers";
 import { camposDoTipo } from "../../../lib/camposPorTipoDeAtivo";
 import { rotuloDeStatusRotable } from "../../../lib/rotableStatus";
+import { formatCurrency } from "../../../lib/format";
 
 const schema = z.object({
   code: z.string().min(1, "Informe o código do equipamento."),
@@ -147,10 +148,10 @@ export default function RotableEquipmentList() {
           clientId && (
             <>
               <button className="btn-outline" onClick={exportar} disabled={exportando}>
-                <Download className="h-4 w-4" /> {exportando ? "Exportando..." : "Exportar"}
+                <Upload className="h-4 w-4" /> {exportando ? "Exportando..." : "Exportar"}
               </button>
               <button className="btn-outline" onClick={() => setImportOpen(true)}>
-                <Upload className="h-4 w-4" /> Importar
+                <Download className="h-4 w-4" /> Importar
               </button>
               <button className="btn-primary" onClick={() => setCreateOpen(true)}>
                 <Plus className="h-4 w-4" /> Novo equipamento
@@ -181,6 +182,7 @@ export default function RotableEquipmentList() {
           <IndicadorDeStatus
             label="Em reparo"
             value={resumo?.porStatus.IN_RECONDITIONING ?? 0}
+            hint={resumo?.custoPorStatus.IN_RECONDITIONING ? `${formatCurrency(resumo.custoPorStatus.IN_RECONDITIONING)} em equipamentos` : undefined}
             icon={Wrench}
             tone="yellow"
             ativo={status === "IN_RECONDITIONING"}
@@ -347,6 +349,7 @@ export default function RotableEquipmentList() {
 function IndicadorDeStatus({
   label,
   value,
+  hint,
   icon: Icon,
   tone,
   ativo,
@@ -354,6 +357,9 @@ function IndicadorDeStatus({
 }: {
   label: string;
   value: number;
+  /** Linha extra abaixo do rotulo - usada pro custo total em "Em reparo", pra saber o
+   * valor que esta fora sem precisar abrir cada equipamento. */
+  hint?: string;
   icon: LucideIcon;
   tone: "navy" | "green" | "yellow";
   ativo: boolean;
@@ -378,6 +384,7 @@ function IndicadorDeStatus({
       <div>
         <p className="text-2xl font-bold text-navy-900">{value}</p>
         <p className="text-sm text-graphite-500">{label}{ativo && " - filtrado"}</p>
+        {hint && <p className="mt-0.5 text-xs text-graphite-400">{hint}</p>}
       </div>
     </button>
   );

@@ -133,11 +133,18 @@ export const getRotableSummary = asyncHandler(async (req: Request, res: Response
     by: ["status"],
     where: { clientId: resolvedClientId, deletedAt: null },
     _count: { _all: true },
+    // Custo de aquisicao somado por status - o indicador "Em reparo" mostra quanto em
+    // equipamento esta fora agora, nao so quantos.
+    _sum: { acquisitionCost: true },
   });
 
   const porStatus: Partial<Record<RotableEquipmentStatus, number>> = {};
-  for (const g of grupos) porStatus[g.status] = g._count._all;
-  res.json({ porStatus, total: grupos.reduce((soma, g) => soma + g._count._all, 0) });
+  const custoPorStatus: Partial<Record<RotableEquipmentStatus, number>> = {};
+  for (const g of grupos) {
+    porStatus[g.status] = g._count._all;
+    if (g._sum.acquisitionCost) custoPorStatus[g.status] = g._sum.acquisitionCost;
+  }
+  res.json({ porStatus, custoPorStatus, total: grupos.reduce((soma, g) => soma + g._count._all, 0) });
 });
 
 export const listRotableEquipment = asyncHandler(async (req: Request, res: Response) => {

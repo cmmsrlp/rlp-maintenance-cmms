@@ -44,6 +44,7 @@ export async function getNextRotableCode(params: { type: string; clientId?: stri
 
 export interface RotableSummary {
   porStatus: Partial<Record<RotableEquipmentStatus, number>>;
+  custoPorStatus: Partial<Record<RotableEquipmentStatus, number>>;
   total: number;
 }
 
