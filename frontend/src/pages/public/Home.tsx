@@ -16,6 +16,8 @@ import {
   Wrench,
   FileSpreadsheet,
   MessageCircle,
+  CircleCheck,
+  Circle,
   RefreshCw,
   TrendingUp,
 } from "lucide-react";
@@ -144,14 +146,37 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Captura real do CMMS (Ordem de manutencao) - dados de uma empresa fictícia de demonstracao */}
+          {/* Mockup ilustrativo de uma ordem de manutencao - representacao, nao print exato da tela */}
           <div className="relative mx-auto w-full max-w-md lg:mx-0">
-            <div className="overflow-hidden rounded-xl bg-white shadow-2xl">
-              <img
-                src="/screenshots/ordem-execucao.png"
-                alt="Tela de ordem de manutenção do RLP Maintenance CMMS"
-                className="block h-[280px] w-full object-cover object-top"
-              />
+            <div className="rounded-xl bg-white p-5 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-graphite-400">Ordem de manutenção</p>
+                  <p className="font-bold text-navy-900">OS-482 · Troca de rolamento</p>
+                </div>
+                <span className="rounded-full bg-brand-lime/15 px-2.5 py-1 text-[11px] font-bold text-brand-lime-dark">Em execução</span>
+              </div>
+              <div className="mt-4 space-y-2.5">
+                {[
+                  { done: true, label: "Bloquear e sinalizar o equipamento" },
+                  { done: true, label: "Remover proteção do mancal" },
+                  { done: false, label: "Substituir rolamento e lubrificar" },
+                  { done: false, label: "Testar em vazio por 10 minutos" },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-2.5 text-sm">
+                    {item.done ? (
+                      <CircleCheck className="h-4.5 w-4.5 shrink-0 text-brand-lime-dark" />
+                    ) : (
+                      <Circle className="h-4.5 w-4.5 shrink-0 text-graphite-300" />
+                    )}
+                    <span className={item.done ? "text-graphite-400 line-through" : "text-graphite-700"}>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 flex items-center justify-between rounded-lg bg-graphite-50 px-3.5 py-3 text-xs">
+                <span className="font-medium text-graphite-500">Responsável</span>
+                <span className="font-semibold text-navy-900">Equipe de Manutenção</span>
+              </div>
             </div>
             <div className="absolute -bottom-5 -left-5 hidden rounded-lg bg-white px-4 py-3 shadow-xl sm:block">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-graphite-400">Disponibilidade</p>
@@ -216,12 +241,22 @@ export default function Home() {
       <section className="bg-navy-900 py-24">
         <div className="mx-auto grid max-w-7xl gap-14 px-4 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
           <div className="order-2 lg:order-1">
-            <div className="overflow-hidden rounded-xl bg-white shadow-2xl">
-              <img
-                src="/screenshots/planos-preventivos.png"
-                alt="Tela de planos de manutenção preventiva do RLP Maintenance CMMS"
-                className="block h-[260px] w-full object-cover object-top"
-              />
+            <div className="rounded-xl bg-white p-5 shadow-2xl">
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-graphite-400">Plano preventivo · PM-0032</p>
+              <p className="font-bold text-navy-900">Inspeção mensal - Compressor de ar</p>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="rounded-lg bg-graphite-50 p-3">
+                  <p className="text-[11px] font-medium text-graphite-500">Periodicidade</p>
+                  <p className="text-sm font-bold text-navy-900">A cada 30 dias</p>
+                </div>
+                <div className="rounded-lg bg-graphite-50 p-3">
+                  <p className="text-[11px] font-medium text-graphite-500">Próximo vencimento</p>
+                  <p className="text-sm font-bold text-navy-900">12/10/2026</p>
+                </div>
+              </div>
+              <div className="mt-4 flex items-center gap-2 rounded-lg bg-brand-lime/10 px-3.5 py-3 text-xs font-semibold text-brand-lime-dark">
+                <ShieldCheck className="h-4 w-4 shrink-0" /> Ordem gerada automaticamente no vencimento
+              </div>
             </div>
           </div>
           <div className="order-1 lg:order-2">

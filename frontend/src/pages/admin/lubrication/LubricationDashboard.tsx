@@ -31,7 +31,7 @@ export default function LubricationDashboard() {
         actions={
           <>
             <Link to={`${base}/lubrificacao/pontos`} className="btn-outline">Pontos</Link>
-            <Link to={`${base}/lubrificacao/previsao`} className="btn-primary">Previsão de consumo</Link>
+            <Link to={`${base}/lubrificacao/previsao`} className="btn-primary">Previsao de consumo</Link>
           </>
         }
       />
@@ -64,7 +64,7 @@ export default function LubricationDashboard() {
               </Link>
             )}
             <StatCard
-              label="Aderência"
+              label="Aderencia"
               /* Sem ponto cadastrado nao ha aderencia a mostrar - "100%" ali seria mentira. */
               value={data.aderenciaPct != null ? `${data.aderenciaPct}%` : "-"}
               icon={CheckCircle2}

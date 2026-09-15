@@ -94,12 +94,36 @@ export default function Lubrication() {
           </div>
 
           <div className="relative mx-auto w-full max-w-md lg:mx-0">
-            <div className="overflow-hidden rounded-xl bg-white shadow-2xl">
-              <img
-                src="/screenshots/lubrificacao.png"
-                alt="Painel de lubrificação do RLP Maintenance CMMS"
-                className="block h-[300px] w-full object-cover object-top"
-              />
+            <div className="rounded-xl bg-white p-5 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-graphite-400">Rota de lubrificação</p>
+                  <p className="font-bold text-navy-900">Área de extrusão - Turno manhã</p>
+                </div>
+                <span className="rounded-full bg-brand-lime/15 px-2.5 py-1 text-[11px] font-bold text-brand-lime-dark">6 pontos</span>
+              </div>
+              <div className="mt-4 space-y-2.5">
+                {[
+                  { done: true, label: "Mancal LE-01 · Graxa lítio EP2" },
+                  { done: true, label: "Redutor RD-04 · Óleo ISO 220" },
+                  { done: false, label: "Mancal LE-02 · Graxa lítio EP2" },
+                  { done: false, label: "Corrente CT-03 · Óleo penetrante" },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-2.5 text-sm">
+                    <span
+                      className={
+                        "h-4.5 w-4.5 shrink-0 rounded-full border-2 " +
+                        (item.done ? "border-brand-lime-dark bg-brand-lime/20" : "border-graphite-300")
+                      }
+                    />
+                    <span className={item.done ? "text-graphite-400 line-through" : "text-graphite-700"}>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 flex items-center justify-between rounded-lg bg-graphite-50 px-3.5 py-3 text-xs">
+                <span className="font-medium text-graphite-500">Consumo previsto no mês</span>
+                <span className="font-semibold text-navy-900">4,2 kg graxa · 8 L óleo</span>
+              </div>
             </div>
           </div>
         </div>

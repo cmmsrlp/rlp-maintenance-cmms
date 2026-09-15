@@ -78,12 +78,30 @@ export default function TechnicalWarehouse() {
           </div>
 
           <div className="relative mx-auto w-full max-w-md lg:mx-0">
-            <div className="overflow-hidden rounded-xl bg-white shadow-2xl">
-              <img
-                src="/screenshots/almoxarifado.png"
-                alt="Tela de almoxarifado técnico do RLP Maintenance CMMS"
-                className="block h-[300px] w-full object-cover object-top"
-              />
+            <div className="rounded-xl bg-white p-5 shadow-2xl">
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-graphite-400">Almoxarifado técnico</p>
+              <div className="space-y-2.5">
+                {[
+                  { nome: "Rolamento 6205-2RS", saldo: "14 un.", status: "OK" },
+                  { nome: "Correia V A-42", saldo: "3 un.", status: "Baixo" },
+                  { nome: "Retentor 35x50x7", saldo: "22 un.", status: "OK" },
+                ].map((p) => (
+                  <div key={p.nome} className="flex items-center justify-between rounded-lg bg-graphite-50 px-3.5 py-3 text-sm">
+                    <span className="font-semibold text-navy-900">{p.nome}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-graphite-500">{p.saldo}</span>
+                      <span
+                        className={
+                          "rounded-full px-2 py-0.5 text-[11px] font-bold " +
+                          (p.status === "OK" ? "bg-brand-lime/15 text-brand-lime-dark" : "bg-red-100 text-red-700")
+                        }
+                      >
+                        {p.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
