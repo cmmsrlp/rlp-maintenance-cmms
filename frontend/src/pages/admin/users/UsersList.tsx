@@ -17,7 +17,7 @@ import { ConfirmDialog } from "../../../components/ConfirmDialog";
 
 const ROLE_OPTIONS: { value: Role; label: string }[] = [
   { value: "ADMIN", label: "Administrador" },
-  { value: "TECHNICIAN", label: "Tecnico" },
+  { value: "TECHNICIAN", label: "Técnico" },
   { value: "COMMERCIAL", label: "Comercial" },
   { value: "CLIENT", label: "Cliente" },
 ];
@@ -69,15 +69,15 @@ export default function UsersList() {
   return (
     <div>
       <PageHeader
-        title="Usuarios e perfis"
-        description="Contas de acesso a gestao interna e ao portal do cliente"
+        title="Usuários e perfis"
+        description="Contas de acesso à gestão interna e ao portal do cliente"
         actions={
           <>
             <button className="btn-outline" onClick={() => setRolesOpen(true)}>
-              <Info className="h-4 w-4" /> Perfis e permissoes
+              <Info className="h-4 w-4" /> Perfis e permissões
             </button>
             <button className="btn-primary" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4" /> Novo usuario
+              <Plus className="h-4 w-4" /> Novo usuário
             </button>
           </>
         }
@@ -99,13 +99,13 @@ export default function UsersList() {
         pagination={data}
         onPageChange={setPage}
         onRowClick={(u) => setEditingUser(u)}
-        emptyTitle="Nenhum usuario cadastrado"
+        emptyTitle="Nenhum usuário cadastrado"
         columns={[
           { header: "Nome", accessor: (u) => <span className="font-medium text-navy-900">{u.name}</span> },
           { header: "E-mail", accessor: (u) => u.email },
           { header: "Perfil", accessor: (u) => formatRole(u.role) },
           { header: "Empresa", accessor: (u) => u.client?.tradeName || u.client?.companyName || "-" },
-          { header: "Ultimo acesso", accessor: (u) => formatDateTime(u.lastLoginAt) },
+          { header: "Último acesso", accessor: (u) => formatDateTime(u.lastLoginAt) },
           {
             header: "Ativo",
             accessor: (u) => (
@@ -121,16 +121,16 @@ export default function UsersList() {
                 <button
                   onClick={(e) => { e.stopPropagation(); setPasswordUser(u); }}
                   className="btn-outline btn-sm whitespace-nowrap"
-                  title="Voce digita a nova senha"
+                  title="Você digita a nova senha"
                 >
                   <KeyRound className="h-3.5 w-3.5" /> Definir senha
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); setResetUser(u); }}
                   className="btn-ghost btn-sm whitespace-nowrap text-graphite-500"
-                  title="Substitui a senha atual por uma aleatoria"
+                  title="Substitui a senha atual por uma aleatória"
                 >
-                  <RefreshCw className="h-3.5 w-3.5" /> Gerar aleatoria
+                  <RefreshCw className="h-3.5 w-3.5" /> Gerar aleatória
                 </button>
               </div>
             ),
@@ -160,25 +160,25 @@ export default function UsersList() {
 
       <ConfirmDialog
         open={!!resetUser}
-        title="Gerar senha aleatoria"
+        title="Gerar senha aleatória"
         description={
-          `A senha atual de ${resetUser?.name ?? ""} sera descartada e substituida por uma senha aleatoria, ` +
-          `exibida uma unica vez. Use isto so quando a senha foi esquecida. Para escolher a senha voce mesmo, ` +
+          `A senha atual de ${resetUser?.name ?? ""} será descartada e substituída por uma senha aleatória, ` +
+          `exibida uma única vez. Use isto só quando a senha foi esquecida. Para escolher a senha você mesmo, ` +
           `use "Definir senha".`
         }
-        confirmLabel="Gerar senha aleatoria"
+        confirmLabel="Gerar senha aleatória"
         danger
         loading={resetting}
         onConfirm={handleResetPassword}
         onCancel={() => setResetUser(undefined)}
       />
 
-      <Modal open={!!tempPassword} onClose={() => setTempPassword(null)} title="Senha temporaria gerada" size="sm">
+      <Modal open={!!tempPassword} onClose={() => setTempPassword(null)} title="Senha temporária gerada" size="sm">
         <p className="text-sm font-medium text-safety-red">
-          Anote agora: esta senha nao sera exibida novamente.
+          Anote agora: esta senha não será exibida novamente.
         </p>
         <p className="mt-2 text-sm text-graphite-600">
-          A senha anterior deixou de funcionar. Repasse esta ao usuario por um canal seguro.
+          A senha anterior deixou de funcionar. Repasse esta ao usuário por um canal seguro.
         </p>
         <p className="mt-3 select-all rounded-md bg-navy-50 px-3 py-2 text-center font-mono text-lg font-bold text-navy-900">
           {tempPassword}

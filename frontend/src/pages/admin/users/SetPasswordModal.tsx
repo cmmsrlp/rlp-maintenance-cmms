@@ -15,7 +15,7 @@ const schema = z
     confirmPassword: z.string().min(1, "Repita a senha."),
   })
   .refine((v) => v.password === v.confirmPassword, {
-    message: "As senhas nao conferem.",
+    message: "As senhas não conferem.",
     path: ["confirmPassword"],
   });
 
@@ -77,7 +77,7 @@ export function SetPasswordModal({
           type="password"
           autoComplete="new-password"
           required
-          hint="Minimo de 8 caracteres."
+          hint="Mínimo de 8 caracteres."
           error={errors.password?.message}
           {...register("password")}
         />

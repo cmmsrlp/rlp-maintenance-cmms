@@ -7,7 +7,7 @@ export function RolesInfoModal({ open, onClose }: { open: boolean; onClose: () =
   const { data, isLoading } = useQuery({ queryKey: ["role-definitions"], queryFn: listRoleDefinitions, enabled: open });
 
   return (
-    <Modal open={open} onClose={onClose} title="Perfis e permissoes" size="lg">
+    <Modal open={open} onClose={onClose} title="Perfis e permissões" size="lg">
       {isLoading && <InlineSpinner />}
       <div className="space-y-4">
         {data?.map((role) => (
