@@ -33,6 +33,12 @@ const schema = z.object({
   parentId: z.string().uuid().optional().or(z.literal("")),
   plantId: z.string().uuid().optional().or(z.literal("")),
   areaId: z.string().uuid().optional().or(z.literal("")),
+}).superRefine((values, ctx) => {
+  // Sem ativo pai, a area e' a unica fonte do centro de custo - deixar em branco aqui
+  // deixaria o ativo (e tudo que nasce abaixo dele) sem rateio nenhum.
+  if (!values.parentId && !values.areaId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Selecione a área.", path: ["areaId"] });
+  }
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -200,19 +206,12 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
           />
         </div>
 
-        <InstrumentPicker
-          label="Faz parte de (ativo pai)"
-          hint="A estrutura é uma árvore: Planta > Linha > Máquina > Componente. Vazio = ativo no topo."
-          excludeId={instrument?.id}
-          error={errors.parentId?.message}
-          {...register("parentId")}
-        />
         {/* Planta, area e centro de custo sao definidos uma vez no ativo raiz e herdados por
             todo o galho abaixo. Num ativo filho eles nao se editam - antes o formulario
             pedia esses campos e o backend os descartava em seguida, substituindo pelo
             contexto do pai: o usuario preenchia e nao entendia por que mudava sozinho. */}
         {parentId ? (
-          <div className="rounded-lg border border-gray-200 p-4">
+          <div>
             <p className="text-xs font-medium uppercase tracking-wide text-graphite-400">Onde fica</p>
             <p className="mt-0.5 text-xs text-graphite-500">
               A planta vem do ativo pai - um componente não muda de fábrica.
@@ -242,13 +241,21 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
             </div>
           </div>
         ) : (
-          <div className="rounded-lg border border-gray-200 p-4">
+          <div>
             <p className="text-sm font-medium text-graphite-700">Onde fica</p>
             <p className="mt-0.5 text-xs text-graphite-500">
               Como este ativo não tem pai, é aqui que planta e área são definidas - todo ativo abaixo dele herda.
             </p>
             <div className="mt-3">
-              <LocationPicker clientId={user?.clientId ?? undefined} register={register} watch={watch} setValue={setValue} hideCostCenter />
+              <LocationPicker
+                clientId={user?.clientId ?? undefined}
+                register={register}
+                watch={watch}
+                setValue={setValue}
+                hideCostCenter
+                areaRequired
+                areaError={errors.areaId?.message}
+              />
             </div>
             {areaId && (
               <p className="mt-3 text-xs text-graphite-500">
@@ -261,6 +268,14 @@ export function PortalInstrumentFormModal({ open, onClose, onSaved, instrument, 
             )}
           </div>
         )}
+
+        <InstrumentPicker
+          label="Faz parte de (ativo pai)"
+          hint="A estrutura é uma árvore: Planta > Linha > Máquina > Componente. Vazio = ativo no topo."
+          excludeId={instrument?.id}
+          error={errors.parentId?.message}
+          {...register("parentId")}
+        />
         <div className="grid gap-4 sm:grid-cols-3">
           <TextInput label="Fabricante" {...register("manufacturer")} />
           <TextInput label="Modelo" {...register("model")} />

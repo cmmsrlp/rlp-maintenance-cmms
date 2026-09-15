@@ -47,6 +47,12 @@ const schema = z.object({
   // Contexto so e' escolhido no ativo raiz (a planta). Nos filhos vem herdado do pai.
   plantId: z.string().uuid().optional().or(z.literal("")),
   areaId: z.string().uuid().optional().or(z.literal("")),
+}).superRefine((values, ctx) => {
+  // Sem ativo pai, a area e' a unica fonte do centro de custo - deixar em branco aqui
+  // deixaria o ativo (e tudo que nasce abaixo dele) sem rateio nenhum.
+  if (!values.parentId && !values.areaId) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Selecione a área.", path: ["areaId"] });
+  }
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -243,6 +249,33 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
           </div>
         </div>
 
+        {!parentId && (
+          <div>
+            <p className="text-sm font-medium text-graphite-700">Onde fica</p>
+            <p className="mt-0.5 text-xs text-graphite-500">
+              Sem ativo pai, é aqui que a planta e a área são definidas - e todo ativo abaixo deste na árvore
+              herda esse contexto.
+            </p>
+            <div className="mt-3">
+              <LocationPicker
+                clientId={clientId}
+                register={register}
+                watch={watch}
+                setValue={setValue}
+                hideCostCenter
+                areaRequired
+                areaError={errors.areaId?.message}
+              />
+            </div>
+            {areaId && (
+              <p className="mt-3 text-xs text-graphite-500">
+                Centro de custo: <span className="font-medium text-graphite-800">{centroDeCustoDaArea ?? "a área escolhida ainda não tem um número"}</span>
+                {" "}- vem da área, não se digita aqui.
+              </p>
+            )}
+          </div>
+        )}
+
         <InstrumentPicker
           label="Faz parte de (ativo pai)"
           required={!modoRapido && !isRoot}
@@ -352,25 +385,6 @@ export function InstrumentFormModal({ open, onClose, onSaved, instrument, initia
           </div>
         </SecaoRecolhivel>
         </>
-        )}
-
-        {!parentId && (
-          <div className="rounded-lg border border-gray-200 p-4">
-            <p className="text-sm font-medium text-graphite-700">Onde fica</p>
-            <p className="mt-0.5 text-xs text-graphite-500">
-              Sem ativo pai, é aqui que a planta e a área são definidas - e todo ativo abaixo deste na árvore
-              herda esse contexto.
-            </p>
-            <div className="mt-3">
-              <LocationPicker clientId={clientId} register={register} watch={watch} setValue={setValue} hideCostCenter />
-            </div>
-            {areaId && (
-              <p className="mt-3 text-xs text-graphite-500">
-                Centro de custo: <span className="font-medium text-graphite-800">{centroDeCustoDaArea ?? "a área escolhida ainda não tem um número"}</span>
-                {" "}- vem da área, não se digita aqui.
-              </p>
-            )}
-          </div>
         )}
 
         {user?.role === "ADMIN" && !modoRapido && (

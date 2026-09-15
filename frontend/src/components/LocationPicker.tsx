@@ -16,6 +16,9 @@ interface Props<T extends FieldValues> {
   onlyCostCenter?: boolean;
   /** Planta/area/sistema sem o centro de custo, que aparece em outro lugar. */
   hideCostCenter?: boolean;
+  /** Area obrigatoria - so faz sentido no ativo raiz, onde ela nao vem herdada de ninguem. */
+  areaRequired?: boolean;
+  areaError?: string;
 }
 
 /** Planta -> Area em cascata + Centro de custo - o contexto do ativo RAIZ, de onde todo o
@@ -26,7 +29,7 @@ interface Props<T extends FieldValues> {
  * "Sistema" saiu daqui: ele repetia um nivel da propria arvore de ativos (Linha > Sistema >
  * Equipamento), entao a mesma informacao existia em dois lugares que podiam divergir. A
  * arvore e' a verdade tecnica. */
-export function LocationPicker<T extends FieldValues>({ clientId, register, watch, setValue, onlyCostCenter, hideCostCenter }: Props<T>) {
+export function LocationPicker<T extends FieldValues>({ clientId, register, watch, setValue, onlyCostCenter, hideCostCenter, areaRequired, areaError }: Props<T>) {
   const plantId = watch("plantId" as Path<T>) as string | undefined;
 
   const { data: plants } = useQuery({
@@ -68,6 +71,8 @@ export function LocationPicker<T extends FieldValues>({ clientId, register, watc
       />
       <SelectInput
         label="Area / Centro de custo"
+        required={areaRequired}
+        error={areaError}
         placeholder={plantId ? "Nenhuma" : "Selecione a planta primeiro"}
         hint="O centro de custo vem junto da area escolhida."
         options={(areas ?? []).map((a) => ({ value: a.id, label: a.name }))}
