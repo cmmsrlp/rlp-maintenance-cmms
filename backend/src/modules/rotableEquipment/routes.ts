@@ -19,6 +19,7 @@ import {
   returnFromRepair,
   getNextRotableCode,
   getRotableInstallationHistory,
+  getRotableSummary,
 } from "./controller";
 import { baixarModeloRotable, simularImportacaoRotable, confirmarImportacaoRotable, exportarRotable } from "./importExport";
 
@@ -46,6 +47,7 @@ rotableEquipmentRouter.use(requireAuth, requireRole(...CMMS_ROLES));
 rotableEquipmentRouter.post("/substituir", substituteRotableEquipment);
 rotableEquipmentRouter.get("/proximo-codigo", getNextRotableCode);
 rotableEquipmentRouter.get("/historico-do-ativo/:instrumentId", getRotableInstallationHistory);
+rotableEquipmentRouter.get("/resumo", getRotableSummary);
 rotableEquipmentRouter.get("/importar/modelo", baixarModeloRotable);
 rotableEquipmentRouter.post("/importar/simular", requireRole(...CMMS_ADMIN_ROLES), uploadPlanilha.single("file"), simularImportacaoRotable);
 rotableEquipmentRouter.post("/importar/confirmar", requireRole(...CMMS_ADMIN_ROLES), uploadPlanilha.single("file"), confirmarImportacaoRotable);

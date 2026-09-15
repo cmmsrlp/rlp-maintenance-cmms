@@ -41,6 +41,18 @@ export async function getNextRotableCode(params: { type: string; clientId?: stri
   return data;
 }
 
+export interface RotableSummary {
+  porStatus: Partial<Record<RotableEquipmentStatus, number>>;
+  total: number;
+}
+
+/** Contagem por status (em estoque, instalado, em reparo...) para os indicadores no topo da
+ * lista - sempre do total da empresa, sem levar em conta busca/filtro da tabela. */
+export async function getRotableSummary(clientId?: string): Promise<RotableSummary> {
+  const { data } = await api.get<RotableSummary>("/rotable-equipment/resumo", { params: { clientId } });
+  return data;
+}
+
 /** Historico de equipamentos que ja ocuparam esta posicao/ativo - do mais recente pro mais
  * antigo, incluindo o que esta instalado agora (removedAt nulo). */
 export async function getRotableInstallationHistory(instrumentId: string): Promise<RotableInstallation[]> {

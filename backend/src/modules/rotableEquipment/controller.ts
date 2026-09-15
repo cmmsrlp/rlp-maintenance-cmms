@@ -85,6 +85,25 @@ export const getNextRotableCode = asyncHandler(async (req: Request, res: Respons
   res.json({ code: await sugerirCodigoDeEquipamento(clientId, type) });
 });
 
+/** Contagem por status, para os indicadores no topo da lista - sempre do total da empresa,
+ * sem levar em conta busca/filtro da tabela (senao o indicador mudaria de numero ao digitar
+ * na busca, o que confunde mais do que ajuda). */
+export const getRotableSummary = asyncHandler(async (req: Request, res: Response) => {
+  const { clientId } = req.query as { clientId?: string };
+  const resolvedClientId = clientScopeFilter(req).clientId ?? clientId;
+  if (!resolvedClientId) throw new ValidationError("Informe o cliente.");
+
+  const grupos = await prisma.rotableEquipment.groupBy({
+    by: ["status"],
+    where: { clientId: resolvedClientId, deletedAt: null },
+    _count: { _all: true },
+  });
+
+  const porStatus: Partial<Record<RotableEquipmentStatus, number>> = {};
+  for (const g of grupos) porStatus[g.status] = g._count._all;
+  res.json({ porStatus, total: grupos.reduce((soma, g) => soma + g._count._all, 0) });
+});
+
 export const listRotableEquipment = asyncHandler(async (req: Request, res: Response) => {
   const pageParams = parsePageParams(req.query as Record<string, unknown>);
   const { clientId, status, type, search, instrumentId, active } = req.query as {

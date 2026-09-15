@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Upload, Download } from "lucide-react";
+import { Plus, Search, Upload, Download, Boxes, Wrench, CheckCircle2, type LucideIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { listRotableEquipment, createRotableEquipment, getNextRotableCode, exportarRotable } from "../../../api/rotableEquipment";
+import { listRotableEquipment, createRotableEquipment, getNextRotableCode, exportarRotable, getRotableSummary } from "../../../api/rotableEquipment";
 import type { RotableEquipmentStatus } from "../../../api/types";
 import { ClientFilterSelect } from "../../../components/ClientFilterSelect";
 import { PageHeader } from "../../../components/PageHeader";
@@ -67,6 +67,19 @@ export default function RotableEquipmentList() {
     enabled: !!clientId,
   });
 
+  const { data: resumo } = useQuery({
+    queryKey: ["rotable-equipment-resumo", clientId],
+    queryFn: () => getRotableSummary(clientId),
+    enabled: !!clientId,
+  });
+
+  /** Clicar de novo no indicador ja ativo limpa o filtro - senao a unica forma de "ver
+   * tudo" de novo seria mexer no select. */
+  function alternarStatus(valor: RotableEquipmentStatus) {
+    setStatus((atual) => (atual === valor ? "" : valor));
+    setPage(1);
+  }
+
   const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting, dirtyFields } } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   const tipoEscolhido = watch("type");
@@ -98,6 +111,7 @@ export default function RotableEquipmentList() {
       reset();
       setCreateOpen(false);
       queryClient.invalidateQueries({ queryKey: ["rotable-equipment"] });
+      queryClient.invalidateQueries({ queryKey: ["rotable-equipment-resumo"] });
       navigate(`${base}/equipamentos-recondicionaveis/${created.id}`);
     } catch (error) {
       notify("error", getApiErrorMessage(error));
@@ -143,6 +157,35 @@ export default function RotableEquipmentList() {
           )
         }
       />
+
+      {clientId && (
+        <div className="mb-4 grid gap-4 sm:grid-cols-3">
+          <IndicadorDeStatus
+            label="Em estoque"
+            value={resumo?.porStatus.IN_STOCK ?? 0}
+            icon={Boxes}
+            tone="navy"
+            ativo={status === "IN_STOCK"}
+            onClick={() => alternarStatus("IN_STOCK")}
+          />
+          <IndicadorDeStatus
+            label="Instalados"
+            value={resumo?.porStatus.INSTALLED ?? 0}
+            icon={CheckCircle2}
+            tone="green"
+            ativo={status === "INSTALLED"}
+            onClick={() => alternarStatus("INSTALLED")}
+          />
+          <IndicadorDeStatus
+            label="Em reparo"
+            value={resumo?.porStatus.IN_RECONDITIONING ?? 0}
+            icon={Wrench}
+            tone="yellow"
+            ativo={status === "IN_RECONDITIONING"}
+            onClick={() => alternarStatus("IN_RECONDITIONING")}
+          />
+        </div>
+      )}
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
         {!isClient && (
@@ -282,8 +325,50 @@ export default function RotableEquipmentList() {
         open={importOpen}
         onClose={() => setImportOpen(false)}
         clientId={clientId}
-        onImported={() => queryClient.invalidateQueries({ queryKey: ["rotable-equipment"] })}
+        onImported={() => {
+          queryClient.invalidateQueries({ queryKey: ["rotable-equipment"] });
+          queryClient.invalidateQueries({ queryKey: ["rotable-equipment-resumo"] });
+        }}
       />
     </div>
+  );
+}
+
+function IndicadorDeStatus({
+  label,
+  value,
+  icon: Icon,
+  tone,
+  ativo,
+  onClick,
+}: {
+  label: string;
+  value: number;
+  icon: LucideIcon;
+  tone: "navy" | "green" | "yellow";
+  ativo: boolean;
+  onClick: () => void;
+}) {
+  const TONE_CLASSES: Record<typeof tone, string> = {
+    navy: "bg-navy-50 text-navy-700",
+    green: "bg-green-50 text-safety-green-dark",
+    yellow: "bg-amber-50 text-safety-yellow-dark",
+  };
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`card flex items-center gap-4 p-5 text-left transition-shadow hover:shadow-md ${
+        ativo ? "ring-2 ring-navy-500" : ""
+      }`}
+    >
+      <div className={`rounded-lg p-3 ${TONE_CLASSES[tone]}`}>
+        <Icon className="h-6 w-6" aria-hidden="true" />
+      </div>
+      <div>
+        <p className="text-2xl font-bold text-navy-900">{value}</p>
+        <p className="text-sm text-graphite-500">{label}{ativo && " - filtrado"}</p>
+      </div>
+    </button>
   );
 }
