@@ -56,9 +56,9 @@ export default function PortalProfile() {
             )}
           </div>
 
-          <Info label="Razao social" value={client.companyName} />
+          <Info label="Razão social" value={client.companyName} />
           <Info label="CNPJ" value={client.cnpj ?? "-"} />
-          <Info label="Endereco" value={[client.addressStreet, client.addressNumber, client.addressCity, client.addressState].filter(Boolean).join(", ") || "-"} />
+          <Info label="Endereço" value={[client.addressStreet, client.addressNumber, client.addressCity, client.addressState].filter(Boolean).join(", ") || "-"} />
           <Info label="Telefone" value={client.phone ?? "-"} />
           <Info label="E-mail" value={client.email ?? "-"} />
         </div>

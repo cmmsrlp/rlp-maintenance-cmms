@@ -56,7 +56,7 @@ function Uso({
     faixa === "cheio"
       ? `Limite atingido - contrate um plano superior para incluir mais ${unidade}.`
       : faixa === "critico"
-        ? `Ainda cabem ${restantes} ${unidade} - o limite esta perto.`
+        ? `Ainda cabem ${restantes} ${unidade} - o limite está perto.`
         : faixa === "atencao"
           ? `Ainda cabem ${restantes} ${unidade} (${pct}% do plano em uso).`
           : `Ainda cabem ${restantes} ${unidade}.`;
@@ -176,7 +176,7 @@ export default function PortalContract() {
   }
 
   if (isLoading) return <FullPageSpinner />;
-  if (!empresa) return <EmptyState title="Empresa nao encontrada" description="Nao foi possivel carregar os dados do seu contrato." />;
+  if (!empresa) return <EmptyState title="Empresa não encontrada" description="Não foi possível carregar os dados do seu contrato." />;
 
   const plano = empresa.plan;
   const uso = empresa.planUsage;
@@ -204,7 +204,7 @@ export default function PortalContract() {
           <div>
             <p className="text-xs uppercase tracking-wide text-graphite-400">Plano contratado</p>
             <div className="mt-0.5 flex flex-wrap items-center gap-2">
-              <p className="text-xl font-bold text-navy-900">{plano?.name ?? "Sem plano atribuido"}</p>
+              <p className="text-xl font-bold text-navy-900">{plano?.name ?? "Sem plano atribuído"}</p>
               {empresa.contractStatus && SITUACAO_DO_CONTRATO[empresa.contractStatus] && (
                 <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${SITUACAO_DO_CONTRATO[empresa.contractStatus].classe}`}>
                   {SITUACAO_DO_CONTRATO[empresa.contractStatus].rotulo}
@@ -214,7 +214,7 @@ export default function PortalContract() {
             {plano?.description && <p className="mt-1 text-sm text-graphite-600">{plano.description}</p>}
             {!plano && (
               <p className="mt-1 text-sm text-graphite-500">
-                Sua empresa esta sem plano definido no sistema - nao ha limite de acessos nem de ativos aplicado.
+                Sua empresa está sem plano definido no sistema - não há limite de acessos nem de ativos aplicado.
                 Para contratar ou ajustar, fale com a OptiProcess.
               </p>
             )}
@@ -239,14 +239,14 @@ export default function PortalContract() {
 
         {empresa.contractedServices?.length > 0 && (
           <p className="mt-4 text-xs text-graphite-500">
-            Servicos contratados: {empresa.contractedServices.length} area(s) liberada(s) no seu portal.
+            Serviços contratados: {empresa.contractedServices.length} área(s) liberada(s) no seu portal.
           </p>
         )}
       </div>
 
       {uso && (
         <div className="mb-8 grid gap-4 sm:grid-cols-2">
-          <Uso rotulo="Acessos (usuarios)" atual={uso.users.current} limite={uso.users.limit} unidade="acessos" semPlano={!plano} icone={Users} />
+          <Uso rotulo="Acessos (usuários)" atual={uso.users.current} limite={uso.users.limit} unidade="acessos" semPlano={!plano} icone={Users} />
           <Uso rotulo="Ativos cadastrados" atual={uso.instruments.current} limite={uso.instruments.limit} unidade="ativos" semPlano={!plano} icone={Gauge} />
         </div>
       )}
@@ -255,7 +255,7 @@ export default function PortalContract() {
         <div className="mb-8 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
           <p className="text-sm text-graphite-700">
             <span className="font-semibold text-navy-900">{uso.requesters}</span> solicitante(s) cadastrado(s) - eles
-            abrem e acompanham as proprias solicitacoes de servico e <span className="font-medium">nao consomem vaga</span>{" "}
+            abrem e acompanham as próprias solicitações de serviço e <span className="font-medium">não consomem vaga</span>{" "}
             do plano, em qualquer plano.
           </p>
         </div>
@@ -266,8 +266,8 @@ export default function PortalContract() {
           <div>
             <h2 className="font-semibold text-navy-900">Acessos da sua empresa</h2>
             <p className="text-xs text-graphite-500">
-              Gestor usa o CMMS inteiro e ocupa vaga do plano. Solicitante so abre e acompanha as proprias
-              solicitacoes - e nao ocupa vaga, em nenhum plano.
+              Gestor usa o CMMS inteiro e ocupa vaga do plano. Solicitante só abre e acompanha as próprias
+              solicitações - e não ocupa vaga, em nenhum plano.
             </p>
           </div>
           <button className="btn-primary shrink-0" onClick={abrirNovo}>
@@ -304,7 +304,7 @@ export default function PortalContract() {
             className="btn-ghost ml-auto text-sm"
             onClick={() => setHistoricoAberto((v) => !v)}
           >
-            <History className="h-4 w-4" /> {historicoAberto ? "Ocultar historico" : "Ver historico"}
+            <History className="h-4 w-4" /> {historicoAberto ? "Ocultar histórico" : "Ver histórico"}
           </button>
         </div>
 
@@ -324,7 +324,7 @@ export default function PortalContract() {
                 <div className="min-w-0">
                   <p className="font-medium text-navy-900">
                     {u.name}
-                    {u.id === eu?.id && <span className="ml-2 text-xs font-normal text-graphite-400">(voce)</span>}
+                    {u.id === eu?.id && <span className="ml-2 text-xs font-normal text-graphite-400">(você)</span>}
                   </p>
                   <p className="text-xs text-graphite-500">
                     {u.email} - {u.role ? ROTULO_DO_PERFIL[u.role] : "-"}
@@ -368,7 +368,7 @@ export default function PortalContract() {
                   <p className="mt-1 text-xs text-graphite-400">
                     {/* "Nunca acessou" e' informacao util: acesso liberado e nao usado
                         ocupa uma vaga do contrato sem entregar nada. */}
-                    {u.lastLoginAt ? `Ultimo acesso: ${formatDate(u.lastLoginAt)}` : "Nunca acessou"}
+                    {u.lastLoginAt ? `Último acesso: ${formatDate(u.lastLoginAt)}` : "Nunca acessou"}
                   </p>
                   {u.createdAt && (
                     <p className="text-xs text-graphite-400">Criado em {formatDate(u.createdAt)}</p>
@@ -384,7 +384,7 @@ export default function PortalContract() {
       {historicoAberto && (
         <div className="card mt-4 p-5">
           <h3 className="flex items-center gap-2 font-semibold text-navy-900">
-            <History className="h-4 w-4 text-navy-600" /> Historico de acessos
+            <History className="h-4 w-4 text-navy-600" /> Histórico de acessos
           </h3>
           <p className="mt-0.5 text-xs text-graphite-500">
             Quem criou, mudou perfil, desativou, reativou ou gerou senha - e quando.
@@ -440,7 +440,7 @@ export default function PortalContract() {
             label="E-mail"
             required
             type="email"
-            hint="E' com ele que a pessoa entra no portal."
+            hint="É com ele que a pessoa entra no portal."
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
@@ -448,7 +448,7 @@ export default function PortalContract() {
               Um Tecnico so cadastra Solicitante; oferecer mais so geraria um 403. */}
           <SelectInput
             label="Perfil"
-            hint="Solicitante nao ocupa vaga do plano; os demais ocupam."
+            hint="Solicitante não ocupa vaga do plano; os demais ocupam."
             options={perfisQuePodeGerenciar(eu?.role).map((r) => ({
               value: r,
               label: `${ROTULO_DO_PERFIL[r]} - ${DESCRICAO_DO_PERFIL[r] ?? ""}`,
@@ -458,8 +458,8 @@ export default function PortalContract() {
           />
           {PERFIS_QUE_OCUPAM_VAGA.includes(form.role) && semVaga && (
             <p className="rounded-lg border border-safety-red/30 bg-red-50/50 px-3 py-2 text-xs text-safety-red">
-              O limite de acessos do plano foi atingido. Contrate um plano superior, ou desative um acesso que nao
-              esteja em uso - Solicitante continua liberado, porque nao ocupa vaga.
+              O limite de acessos do plano foi atingido. Contrate um plano superior, ou desative um acesso que não
+              esteja em uso - Solicitante continua liberado, porque não ocupa vaga.
             </p>
           )}
           <div>
@@ -484,11 +484,11 @@ export default function PortalContract() {
         onClose={() => setSenhaGerada(null)}
         title="Anote a senha agora"
         size="sm"
-        footer={<button type="button" className="btn-primary" onClick={() => setSenhaGerada(null)}>Ja anotei</button>}
+        footer={<button type="button" className="btn-primary" onClick={() => setSenhaGerada(null)}>Já anotei</button>}
       >
         <p className="text-sm text-graphite-700">
-          Passe estes dados para <span className="font-medium text-navy-900">{senhaGerada?.email}</span>. Esta senha nao
-          sera mostrada de novo - se perder, gere outra pelo icone da chave.
+          Passe estes dados para <span className="font-medium text-navy-900">{senhaGerada?.email}</span>. Esta senha não
+          será mostrada de novo - se perder, gere outra pelo ícone da chave.
         </p>
         <p className="mt-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 font-mono text-lg text-navy-900">
           {senhaGerada?.senha}
@@ -498,7 +498,7 @@ export default function PortalContract() {
       <ConfirmDialog
         open={!!desativando}
         title="Desativar este acesso"
-        description={`${desativando?.name ?? ""} deixa de entrar no portal. O historico do que ela fez continua guardado, e o acesso pode ser reativado depois.`}
+        description={`${desativando?.name ?? ""} deixa de entrar no portal. O histórico do que ela fez continua guardado, e o acesso pode ser reativado depois.`}
         confirmLabel="Desativar"
         danger
         onConfirm={() => {

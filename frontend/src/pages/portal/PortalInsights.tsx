@@ -9,8 +9,8 @@ import { getApiErrorMessage } from "../../api/client";
 import { formatDateTime } from "../../lib/format";
 
 const SEVERITY_META: Record<InsightSeverity, { label: string; icon: typeof CheckCircle2; className: string }> = {
-  CRITICAL: { label: "Critico", icon: AlertOctagon, className: "bg-red-50 text-safety-red ring-1 ring-red-200" },
-  ATTENTION: { label: "Atencao", icon: AlertTriangle, className: "bg-amber-50 text-amber-700 ring-1 ring-amber-200" },
+  CRITICAL: { label: "Crítico", icon: AlertOctagon, className: "bg-red-50 text-safety-red ring-1 ring-red-200" },
+  ATTENTION: { label: "Atenção", icon: AlertTriangle, className: "bg-amber-50 text-amber-700 ring-1 ring-amber-200" },
   OK: { label: "Ok", icon: CheckCircle2, className: "bg-green-50 text-green-700 ring-1 ring-green-200" },
 };
 
@@ -29,7 +29,7 @@ export default function PortalInsights() {
     mutationFn: generateMyInsight,
     onSuccess: (data) => {
       queryClient.setQueryData(["my-insight"], data);
-      notify("success", "Analise atualizada.");
+      notify("success", "Análise atualizada.");
     },
     onError: (error) => notify("error", getApiErrorMessage(error)),
   });
@@ -41,11 +41,11 @@ export default function PortalInsights() {
     <div>
       <PageHeader
         title="Insights"
-        description="Uma analise da sua operacao gerada por IA - planos atrasados, ordens abertas, estoque e uso do plano. Revise antes de agir, nada aqui e' automatico."
+        description="Uma análise da sua operação gerada por IA - planos atrasados, ordens abertas, estoque e uso do plano. Revise antes de agir, nada aqui é automático."
         breadcrumbs={[{ label: "Insights" }]}
         actions={
           <button className="btn-primary" onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending}>
-            <Sparkles className="h-4 w-4" /> {generateMutation.isPending ? "Analisando..." : "Analisar minha operacao"}
+            <Sparkles className="h-4 w-4" /> {generateMutation.isPending ? "Analisando..." : "Analisar minha operação"}
           </button>
         }
       />
@@ -55,8 +55,8 @@ export default function PortalInsights() {
       ) : !insight ? (
         <EmptyState
           icon={Sparkles}
-          title="Nenhuma analise gerada ainda"
-          description='Clique em "Analisar minha operacao" para ver como a IA avalia a sua operacao agora.'
+          title="Nenhuma análise gerada ainda"
+          description='Clique em "Analisar minha operação" para ver como a IA avalia a sua operação agora.'
         />
       ) : (
         <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">

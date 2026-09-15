@@ -38,32 +38,32 @@ export default function PortalDashboard() {
     return (
       <div>
         <h1 className="text-2xl font-bold text-navy-900">RLP Maintenance CMMS</h1>
-        <p className="mt-1 text-graphite-500">Gestao de manutencao de {clientDisplayName(user?.client)}</p>
+        <p className="mt-1 text-graphite-500">Gestão de manutenção de {clientDisplayName(user?.client)}</p>
 
         <div className="mt-4 flex flex-wrap gap-3">
           <Link to="/portal/ativos" className="btn-outline">
             <Gauge className="h-4 w-4" /> Meus ativos
           </Link>
           <Link to="/portal/manutencao/arvore" className="btn-outline">
-            <GitBranch className="h-4 w-4" /> Arvore de ativos
+            <GitBranch className="h-4 w-4" /> Árvore de ativos
           </Link>
           <Link to="/portal/manutencao/ordens" className="btn-outline">
-            <ClipboardList className="h-4 w-4" /> Ordem de manutencao
+            <ClipboardList className="h-4 w-4" /> Ordem de manutenção
           </Link>
           <Link to="/portal/manutencao/planos" className="btn-outline">
-            <ShieldCheck className="h-4 w-4" /> Planos de manutencao
+            <ShieldCheck className="h-4 w-4" /> Planos de manutenção
           </Link>
           <Link to="/portal/manutencao/ordens?type=PREDICTIVE" className="btn-outline">
-            <Radar className="h-4 w-4" /> Manutencao preditiva
+            <Radar className="h-4 w-4" /> Manutenção preditiva
           </Link>
           <Link to="/portal/manutencao/falhas" className="btn-outline">
-            <ListChecks className="h-4 w-4" /> Codigos de falha
+            <ListChecks className="h-4 w-4" /> Códigos de falha
           </Link>
           <Link to="/portal/almoxarifado" className="btn-outline">
             <Boxes className="h-4 w-4" /> Meu almoxarifado
           </Link>
           <Link to="/portal/manutencao/mao-de-obra" className="btn-outline">
-            <HardHat className="h-4 w-4" /> Mao de obra
+            <HardHat className="h-4 w-4" /> Mão de obra
           </Link>
         </div>
 
@@ -76,11 +76,11 @@ export default function PortalDashboard() {
 
         <div className="mt-6 card p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-semibold text-navy-900">Ordens de manutencao recentes</h2>
+            <h2 className="font-semibold text-navy-900">Ordens de manutenção recentes</h2>
             <Link to="/portal/manutencao/ordens" className="text-sm text-navy-700 hover:underline">Ver todas</Link>
           </div>
           {!workOrders || workOrders.items.length === 0 ? (
-            <EmptyState title="Nenhuma ordem de manutencao" description="Ainda nao ha ordens de manutencao registradas." />
+            <EmptyState title="Nenhuma ordem de manutenção" description="Ainda não há ordens de manutenção registradas." />
           ) : (
             <ul className="divide-y divide-gray-100">
               {workOrders.items.map((w) => (
@@ -103,11 +103,11 @@ export default function PortalDashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-navy-900">Ola, {clientDisplayName(user?.client)}</h1>
-      <p className="mt-1 text-graphite-500">Sua empresa ainda nao tem o CMMS ativado.</p>
+      <h1 className="text-2xl font-bold text-navy-900">Olá, {clientDisplayName(user?.client)}</h1>
+      <p className="mt-1 text-graphite-500">Sua empresa ainda não tem o CMMS ativado.</p>
       <div className="mt-6">
         <EmptyState
-          title="Nenhum servico contratado"
+          title="Nenhum serviço contratado"
           description="Fale com o RLP Maintenance para ativar o CMMS na sua empresa."
         />
       </div>
