@@ -1,6 +1,5 @@
 import type { Request, Response } from "express";
 import ExcelJS from "exceljs";
-import type { RotableEquipmentStatus } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { asyncHandler } from "../../utils/asyncHandler";
 import { NotFoundError, ValidationError } from "../../utils/errors";
@@ -461,19 +460,14 @@ export const confirmarImportacaoRotable = asyncHandler(async (req: Request, res:
 // Exportacao
 // ---------------------------------------------------------------------------
 
-const STATUS_LABELS_ARQUIVO: Record<RotableEquipmentStatus, string> = {
-  IN_STOCK: "em-estoque", INSTALLED: "instalados", QUARANTINE: "quarentena", IN_RECONDITIONING: "em-reparo", SCRAPPED: "sucateados",
-};
-
 export const exportarRotable = asyncHandler(async (req: Request, res: Response) => {
   await assertServiceAccess(req, ["CMMS_MAINTENANCE"]);
-  const { clientId: clientIdQuery, status } = req.query as { clientId?: string; status?: RotableEquipmentStatus };
-  const clientId = resolveClientId(req, clientIdQuery);
+  const clientId = resolveClientId(req, (req.query as { clientId?: string })?.clientId);
   const cliente = await prisma.client.findFirst({ where: { id: clientId, deletedAt: null }, select: { id: true, companyName: true } });
   if (!cliente) throw new NotFoundError("Cliente");
 
   const equipamentos = await prisma.rotableEquipment.findMany({
-    where: { clientId, deletedAt: null, ...(status ? { status } : {}) },
+    where: { clientId, deletedAt: null },
     include: { currentInstrument: { select: { tag: true, description: true } } },
     orderBy: [{ type: "asc" }, { code: "asc" }],
   });
@@ -543,8 +537,7 @@ export const exportarRotable = asyncHandler(async (req: Request, res: Response) 
   }
 
   const arquivo = await wb.xlsx.writeBuffer();
-  const sufixoDeStatus = status ? `-${STATUS_LABELS_ARQUIVO[status]}` : "";
   res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-  res.setHeader("Content-Disposition", `attachment; filename="equipamentos-recondicionaveis-${cliente.companyName.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}${sufixoDeStatus}.xlsx"`);
+  res.setHeader("Content-Disposition", `attachment; filename="equipamentos-recondicionaveis-${cliente.companyName.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.xlsx"`);
   res.end(Buffer.from(arquivo as ArrayBuffer));
 });
