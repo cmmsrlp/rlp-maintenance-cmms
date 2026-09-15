@@ -27,6 +27,7 @@ import { Tabs } from "../../../components/Tabs";
 import { TextInput, SelectInput, TextareaInput } from "../../../components/form/Field";
 import { InstrumentPicker } from "../../../components/InstrumentPicker";
 import { RotableTypeInput } from "../../../components/RotableTypeInput";
+import { RotablePhoto } from "../../../components/RotablePhoto";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
 import { useCmms } from "../../../lib/cmms";
@@ -127,6 +128,10 @@ export default function RotableEquipmentDetail() {
           )
         }
       />
+
+      <div className="mb-4">
+        <RotablePhoto rotableId={rotable.id} code={rotable.code} photoUrl={rotable.photoUrl} podeEditar={!!canManage} aoMudar={invalidar} />
+      </div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <div className="card p-5">

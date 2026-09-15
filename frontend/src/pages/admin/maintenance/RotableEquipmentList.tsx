@@ -235,7 +235,8 @@ export default function RotableEquipmentList() {
             {
               header: "Equipamento",
               accessor: (r) => (
-                <Link to={`${base}/equipamentos-recondicionaveis/${r.id}`} className="font-medium text-navy-900 hover:underline">
+                <Link to={`${base}/equipamentos-recondicionaveis/${r.id}`} className="flex items-center gap-2 font-medium text-navy-900 hover:underline">
+                  {r.photoUrl && <img src={r.photoUrl} alt="" className="h-9 w-9 shrink-0 rounded-md border border-gray-200 object-cover" />}
                   {r.code}
                 </Link>
               ),

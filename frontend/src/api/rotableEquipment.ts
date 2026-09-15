@@ -114,6 +114,18 @@ export async function deleteRotableEquipment(id: string): Promise<void> {
   await api.delete(`/rotable-equipment/${id}`);
 }
 
+/** Envia (ou substitui) a foto principal do equipamento recondicionavel. */
+export async function uploadRotablePhoto(id: string, file: File): Promise<RotableEquipment> {
+  const form = new FormData();
+  form.append("file", file);
+  const { data } = await api.post<RotableEquipment>(`/rotable-equipment/${id}/foto`, form);
+  return data;
+}
+
+export async function deleteRotablePhoto(id: string): Promise<void> {
+  await api.delete(`/rotable-equipment/${id}/foto`);
+}
+
 export async function installRotableEquipment(
   id: string,
   input: { instrumentId: string; meterReading?: number | null; notes?: string | null },

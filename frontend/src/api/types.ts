@@ -467,6 +467,7 @@ export interface RotableEquipment {
   weightKg: number | null;
   photoKey: string | null;
   photoFileName: string | null;
+  photoUrl: string | null;
   notes: string | null;
   active: boolean;
   createdAt: string;

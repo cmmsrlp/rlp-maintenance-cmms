@@ -2,7 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import { requireAuth } from "../../middleware/auth";
 import { requireRole, CMMS_ROLES, CMMS_ADMIN_ROLES } from "../../middleware/rbac";
-import { uploadAny } from "../../middleware/upload";
+import { uploadAny, uploadImage } from "../../middleware/upload";
 import {
   listRotableEquipment,
   getRotableEquipment,
@@ -26,6 +26,8 @@ import {
   listRepairOrderAttachments,
   getRepairOrderAttachmentUrl,
   deleteRepairOrderAttachment,
+  uploadRotablePhoto,
+  deleteRotablePhoto,
 } from "./controller";
 import { baixarModeloRotable, simularImportacaoRotable, confirmarImportacaoRotable, exportarRotable } from "./importExport";
 
@@ -67,6 +69,8 @@ rotableEquipmentRouter.delete("/:id", requireRole(...CMMS_ADMIN_ROLES), deleteRo
 
 rotableEquipmentRouter.post("/:id/instalar", installRotableEquipment);
 rotableEquipmentRouter.post("/:id/remover", removeRotableEquipment);
+rotableEquipmentRouter.post("/:id/foto", uploadImage.single("file"), uploadRotablePhoto);
+rotableEquipmentRouter.delete("/:id/foto", deleteRotablePhoto);
 
 rotableEquipmentRouter.get("/:id/reparos", listRepairOrders);
 rotableEquipmentRouter.post("/:id/reparos", createRepairOrder);

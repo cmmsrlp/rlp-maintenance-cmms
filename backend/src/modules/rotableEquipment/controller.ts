@@ -17,6 +17,21 @@ function paraJson(valor: Record<string, string> | null | undefined): Prisma.Inpu
   return valor === null ? Prisma.JsonNull : valor;
 }
 
+/** Troca a chave de armazenamento por um link temporario que a tela consegue exibir -
+ * mesmo padrao ja usado em instruments/controller.ts. Assinar e' local (nao vai na rede),
+ * entao da pra fazer item a item tanto na listagem quanto na ficha. */
+async function attachPhotoUrl<T extends { photoKey: string | null; photoFileName: string | null }>(
+  itens: T[],
+): Promise<(T & { photoUrl: string | null })[]> {
+  const storage = getStorageProvider();
+  return Promise.all(
+    itens.map(async (i) => ({
+      ...i,
+      photoUrl: i.photoKey ? await storage.getSignedDownloadUrl(i.photoKey, i.photoFileName ?? "foto", 3600) : null,
+    })),
+  );
+}
+
 /**
  * Equipamento recondicionavel (motor, redutor, rolo...): unidade fisica com identidade
  * propria (numero de serie, historico de falha/reparo), separada do Ativo/local onde esta
@@ -167,7 +182,8 @@ export const listRotableEquipment = asyncHandler(async (req: Request, res: Respo
     prisma.rotableEquipment.count({ where }),
   ]);
 
-  res.json(buildPagedResult(items.map(mapOpenRepairOrder), total, pageParams));
+  const comFoto = await attachPhotoUrl(items.map(mapOpenRepairOrder));
+  res.json(buildPagedResult(comFoto, total, pageParams));
 });
 
 export const getRotableEquipment = asyncHandler(async (req: Request, res: Response) => {
@@ -190,7 +206,8 @@ export const getRotableEquipment = asyncHandler(async (req: Request, res: Respon
   });
   if (!rotable) throw new NotFoundError("Equipamento recondicionavel");
   const openRepairOrder = rotable.repairOrders.find((o) => !o.returnedAt) ?? null;
-  res.json({ ...rotable, openRepairOrder: openRepairOrder ? { id: openRepairOrder.id, budgetValue: openRepairOrder.budgetValue } : null });
+  const [comFoto] = await attachPhotoUrl([rotable]);
+  res.json({ ...comFoto, openRepairOrder: openRepairOrder ? { id: openRepairOrder.id, budgetValue: openRepairOrder.budgetValue } : null });
 });
 
 const rotableSchema = z.object({
@@ -227,7 +244,7 @@ export const createRotableEquipment = asyncHandler(async (req: Request, res: Res
     description: `Equipamento recondicionavel ${rotable.code} cadastrado`,
   });
 
-  res.status(201).json(rotable);
+  res.status(201).json({ ...rotable, photoUrl: null });
 });
 
 export const updateRotableEquipment = asyncHandler(async (req: Request, res: Response) => {
@@ -245,7 +262,43 @@ export const updateRotableEquipment = asyncHandler(async (req: Request, res: Res
     data: { ...data, specificAttributes: paraJson(data.specificAttributes) },
     select: rotableSelect,
   });
-  res.json(rotable);
+  const [comFoto] = await attachPhotoUrl([rotable]);
+  res.json(comFoto);
+});
+
+/** Foto principal do equipamento. Substituir apaga a anterior do armazenamento - mesmo
+ * padrao ja usado no ativo (uploadInstrumentPhoto). */
+export const uploadRotablePhoto = asyncHandler(async (req: Request, res: Response) => {
+  const existing = await prisma.rotableEquipment.findFirst({ where: { id: req.params.id, deletedAt: null, ...clientScopeFilter(req) } });
+  if (!existing) throw new NotFoundError("Equipamento recondicionavel");
+
+  const file = req.file;
+  if (!file) throw new ValidationError("Selecione uma imagem.");
+  if (!file.mimetype.startsWith("image/")) throw new ValidationError("A foto do equipamento precisa ser uma imagem.");
+
+  const storage = getStorageProvider();
+  const key = `rotable-equipment/${existing.id}/foto-${Date.now()}-${file.originalname}`;
+  await storage.upload(key, file.buffer, file.mimetype);
+
+  const anterior = existing.photoKey;
+  const rotable = await prisma.rotableEquipment.update({
+    where: { id: existing.id },
+    data: { photoKey: key, photoFileName: file.originalname },
+    select: rotableSelect,
+  });
+  if (anterior) await storage.delete(anterior).catch(() => undefined);
+
+  const [comFoto] = await attachPhotoUrl([rotable]);
+  res.status(201).json(comFoto);
+});
+
+export const deleteRotablePhoto = asyncHandler(async (req: Request, res: Response) => {
+  const existing = await prisma.rotableEquipment.findFirst({ where: { id: req.params.id, deletedAt: null, ...clientScopeFilter(req) } });
+  if (!existing) throw new NotFoundError("Equipamento recondicionavel");
+
+  if (existing.photoKey) await getStorageProvider().delete(existing.photoKey).catch(() => undefined);
+  await prisma.rotableEquipment.update({ where: { id: existing.id }, data: { photoKey: null, photoFileName: null } });
+  res.status(204).send();
 });
 
 export const deleteRotableEquipment = asyncHandler(async (req: Request, res: Response) => {
