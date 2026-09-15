@@ -12,6 +12,7 @@ import {
   Boxes,
 } from "lucide-react";
 import { buildWhatsAppLink } from "../../lib/publicContact";
+import { Seo } from "../../components/Seo";
 
 const CAPACIDADES = [
   {
@@ -55,6 +56,11 @@ const CAPACIDADES = [
 export default function AssetManagement() {
   return (
     <div>
+      <Seo
+        title="Gestão de ativos industriais"
+        description="Árvore de ativos com estrutura pai/filho, ficha técnica por tipo, criticidade e localização herdada - a base do CMMS RLP Maintenance."
+        path="/gestao-de-ativos"
+      />
       <section className="relative overflow-hidden bg-navy-900">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.07]"

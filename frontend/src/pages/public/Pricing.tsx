@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Check, MessageCircle, HelpCircle } from "lucide-react";
 import { buildWhatsAppLink } from "../../lib/publicContact";
+import { Seo } from "../../components/Seo";
 
 const PLANOS = [
   {
@@ -63,6 +64,11 @@ const PERGUNTAS = [
 export default function Pricing() {
   return (
     <div>
+      <Seo
+        title="Planos"
+        description="Um plano para cada tamanho de fábrica - Starter, Profissional e Enterprise, sem cobrança escondida. Fale com a equipe e monte o plano certo."
+        path="/planos"
+      />
       <section className="relative overflow-hidden bg-navy-900">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.07]"

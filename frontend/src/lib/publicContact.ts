@@ -2,7 +2,7 @@
 export const CONTACT = {
   whatsappNumber: "5515991114373",
   whatsappDisplay: "(15) 99111-4373",
-  email: "cmmsrlp@gmail.com",
+  email: "cmma.rlp@outlook.com",
 };
 
 export function buildWhatsAppLink(message: string): string {

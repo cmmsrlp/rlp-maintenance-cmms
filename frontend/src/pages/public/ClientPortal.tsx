@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Users, ShieldCheck, Smartphone, MessageSquare, KeyRound, MessageCircle } from "lucide-react";
 import { buildWhatsAppLink } from "../../lib/publicContact";
+import { Seo } from "../../components/Seo";
 
 const PERFIS = [
   { nome: "Administrador", descricao: "Gerencia contrato, usuários e todos os cadastros da empresa." },
@@ -39,6 +40,11 @@ const CAPACIDADES = [
 export default function ClientPortal() {
   return (
     <div>
+      <Seo
+        title="Portal do cliente"
+        description="Cada empresa no próprio painel, cada pessoa no seu perfil - administrador, planejador, técnico e solicitante no CMMS RLP Maintenance."
+        path="/portal-do-cliente"
+      />
       <section className="relative overflow-hidden bg-navy-900">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.07]"

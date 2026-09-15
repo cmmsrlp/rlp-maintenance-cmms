@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Radar, Gauge, TrendingUp, AlertTriangle, Repeat, MessageCircle } from "lucide-react";
 import { buildWhatsAppLink } from "../../lib/publicContact";
+import { Seo } from "../../components/Seo";
 
 const CAPACIDADES = [
   {
@@ -32,6 +33,11 @@ const CAPACIDADES = [
 export default function PredictiveMaintenance() {
   return (
     <div>
+      <Seo
+        title="Manutenção preditiva industrial"
+        description="Medidores de condição com zonas de severidade disparam ordens automaticamente antes da quebra - manutenção preditiva no CMMS RLP Maintenance."
+        path="/manutencao-preditiva"
+      />
       <section className="relative overflow-hidden bg-navy-900">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.07]"

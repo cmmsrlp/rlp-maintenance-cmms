@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /gestao
+Disallow: /portal
+Disallow: /entrar
+
+Sitemap: https://rlpmaintenance.com.br/sitemap.xml

@@ -22,6 +22,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { buildWhatsAppLink } from "../../lib/publicContact";
+import { Seo } from "../../components/Seo";
 
 const FEATURES = [
   {
@@ -103,6 +104,11 @@ const INDICADORES = [
 export default function Home() {
   return (
     <div>
+      <Seo
+        title="RLP Maintenance CMMS - Sistema de Gestão da Manutenção"
+        description="CMMS para manutenção industrial: ativos, planos preventivos, ordens de serviço, almoxarifado, lubrificação e indicadores num só lugar."
+        path="/"
+      />
       {/* Hero - faixa navy cheia de largura, com textura de grade sutil */}
       <section className="relative overflow-hidden bg-navy-900">
         <div

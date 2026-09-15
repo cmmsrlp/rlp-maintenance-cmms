@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, ListChecks, Tag, BarChart3, Target, FileText, MessageCircle } from "lucide-react";
 import { buildWhatsAppLink } from "../../lib/publicContact";
+import { Seo } from "../../components/Seo";
 
 const CAPACIDADES = [
   {
@@ -32,6 +33,11 @@ const CAPACIDADES = [
 export default function FailuresRca() {
   return (
     <div>
+      <Seo
+        title="Falhas e análise de causa raiz"
+        description="Códigos de falha padronizados, Pareto de quebras e RCA para tratar a causa, não só o sintoma - módulo de falhas do CMMS RLP Maintenance."
+        path="/falhas-e-causa-raiz"
+      />
       <section className="relative overflow-hidden bg-navy-900">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.07]"

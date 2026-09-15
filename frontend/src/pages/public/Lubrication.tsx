@@ -11,6 +11,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { buildWhatsAppLink } from "../../lib/publicContact";
+import { Seo } from "../../components/Seo";
 
 const CAPACIDADES = [
   {
@@ -48,6 +49,11 @@ const CAPACIDADES = [
 export default function Lubrication() {
   return (
     <div>
+      <Seo
+        title="Lubrificação industrial"
+        description="Pontos de lubrificação, rotas por área e previsão de consumo ligados ao almoxarifado - módulo de lubrificação do CMMS RLP Maintenance."
+        path="/lubrificacao"
+      />
       <section className="relative overflow-hidden bg-navy-900">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.07]"

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Boxes, PackageSearch, ClipboardList, Bell, DollarSign, MessageCircle } from "lucide-react";
 import { buildWhatsAppLink } from "../../lib/publicContact";
+import { Seo } from "../../components/Seo";
 
 const CAPACIDADES = [
   {
@@ -32,6 +33,11 @@ const CAPACIDADES = [
 export default function TechnicalWarehouse() {
   return (
     <div>
+      <Seo
+        title="Almoxarifado técnico"
+        description="Estoque técnico por empresa, lista de materiais por ativo (BOM), reserva automática e alerta de estoque baixo - almoxarifado do CMMS RLP Maintenance."
+        path="/almoxarifado-tecnico"
+      />
       <section className="relative overflow-hidden bg-navy-900">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.07]"
