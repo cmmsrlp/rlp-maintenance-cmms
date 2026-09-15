@@ -202,12 +202,16 @@ export default function App() {
               {/* Equipe de manutencao: consulta o parque e trabalha nas ordens. */}
               <Route element={<ProtectedRoute roles={["CLIENT", "CLIENT_PLANNER", "CLIENT_TECHNICIAN"]} />}>
                 <Route index element={<PortalDashboard />} />
-                <Route path="ativos" element={<PortalInstruments />} />
+                {/* A arvore e' a entrada padrao ao clicar em "Meus ativos" no menu - a lista
+                    (antes a entrada padrao) fica um clique adiante, em /ativos/lista. */}
+                <Route path="ativos" element={<PortalInstrumentsTree />} />
+                <Route path="ativos/lista" element={<PortalInstruments />} />
                 <Route path="ativos/:id" element={<PortalInstrumentDetail />} />
                 {/* Compatibilidade com links/QR codes gerados antes do rename "instrumentos" -> "ativos". */}
                 <Route path="instrumentos" element={<Navigate to="/portal/ativos" replace />} />
                 <Route path="instrumentos/:id" element={<RedirectAtivoAntigo base="/portal" />} />
-                <Route path="manutencao/arvore" element={<PortalInstrumentsTree />} />
+                {/* "Meus ativos" ja abre na arvore agora - mantido so' para links antigos. */}
+                <Route path="manutencao/arvore" element={<Navigate to="/portal/ativos" replace />} />
                 <Route path="manutencao" element={<MaintenanceDashboard />} />
                 <Route path="manutencao/ordens" element={<WorkOrdersList />} />
                 <Route path="manutencao/ordens/:id" element={<WorkOrderDetail />} />

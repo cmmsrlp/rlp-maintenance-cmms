@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, GitBranch, Tags } from "lucide-react";
+import { Plus, Tags } from "lucide-react";
 import { listInstruments } from "../../api/instruments";
 import type { MaintenancePriority } from "../../api/types";
 import { PageHeader } from "../../components/PageHeader";
@@ -29,9 +29,6 @@ export default function PortalInstruments() {
         description="Equipamentos cadastrados sob sua responsabilidade"
         actions={
           <>
-            <button className="btn-outline" onClick={() => navigate("/portal/manutencao/arvore")}>
-              <GitBranch className="h-4 w-4" /> Ver árvore
-            </button>
             <button className="btn-outline" onClick={() => navigate("/portal/ativos/cadastros")}>
               <Tags className="h-4 w-4" /> Cadastros técnicos
             </button>
