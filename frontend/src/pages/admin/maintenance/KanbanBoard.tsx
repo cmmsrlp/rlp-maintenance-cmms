@@ -27,11 +27,11 @@ const COLUMNS: { status: MaintenanceOrderStatus; label: string; tone: keyof type
   { status: "PLANNED", label: "Planejada", tone: "navy" },
   { status: "PROGRAMMED", label: "Programada", tone: "navy" },
   { status: "RELEASED", label: "Liberada", tone: "navy" },
-  { status: "IN_PROGRESS", label: "Em execucao", tone: "yellow" },
+  { status: "IN_PROGRESS", label: "Em execução", tone: "yellow" },
   { status: "AWAITING_MATERIAL", label: "Aguardando material", tone: "yellow" },
-  { status: "AWAITING_RELEASE", label: "Aguardando liberacao", tone: "yellow" },
+  { status: "AWAITING_RELEASE", label: "Aguardando liberação", tone: "yellow" },
   { status: "AWAITING_STOPPAGE", label: "Aguardando parada", tone: "yellow" },
-  { status: "COMPLETED", label: "Concluida", tone: "green" },
+  { status: "COMPLETED", label: "Concluída", tone: "green" },
 ];
 
 // "Concluida" fica de fora do seletor rapido do cartao - so pela ficha da OS (botao
@@ -70,7 +70,7 @@ export default function KanbanBoard() {
   return (
     <div>
       <PageHeader
-        title="Kanban de manutencao"
+        title="Kanban de manutenção"
         description="OS agrupadas por estagio do fluxo"
         breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Kanban" }]}
       />
@@ -137,7 +137,7 @@ function KanbanCard({
       <div className="flex flex-wrap items-center gap-1.5">
         {critical && (
           <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-safety-red">
-            <AlertTriangle className="h-3 w-3" /> Critica
+            <AlertTriangle className="h-3 w-3" /> Crítica
           </span>
         )}
         {overdue && (

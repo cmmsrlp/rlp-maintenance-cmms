@@ -28,7 +28,7 @@ const PRIORITY_DOT: Record<string, string> = {
 
 // Mesmo rotulo usado no resto do modulo (WorkOrderForm, WorkOrderDetail...) - aqui vira
 // opcao de filtro, e nao so legenda do cartao.
-const PRIORITY_LABELS: Record<string, string> = { LOW: "Baixa", MEDIUM: "Media", HIGH: "Alta", CRITICAL: "Critica" };
+const PRIORITY_LABELS: Record<string, string> = { LOW: "Baixa", MEDIUM: "Média", HIGH: "Alta", CRITICAL: "Crítica" };
 
 const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
 
@@ -175,9 +175,9 @@ export default function SchedulingBoard() {
   return (
     <div>
       <PageHeader
-        title="Programacao da manutencao"
+        title="Programação da manutenção"
         description="Arraste as OS da fila para o dia e a pessoa que vai executar"
-        breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Programacao" }]}
+        breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Programação" }]}
         actions={
           <div className="flex items-center gap-2">
             <button className="btn-outline" onClick={() => setWeekStart(addDays(weekStart, -7))} aria-label="Semana anterior">
@@ -208,11 +208,11 @@ export default function SchedulingBoard() {
         )}
         {(data?.resources.length ?? 0) > 0 && (
           <select className="input sm:w-64" value={resourceId} onChange={(e) => setResourceId(e.target.value)}>
-            <option value="">Todos os tecnicos</option>
+            <option value="">Todos os técnicos</option>
             {(data?.resources ?? []).map((r) => (
               <option key={r.id} value={r.id}>{r.name} ({r.type})</option>
             ))}
-            <option value="unassigned">Sem responsavel definido</option>
+            <option value="unassigned">Sem responsável definido</option>
           </select>
         )}
         {!needsClient && (
@@ -231,7 +231,7 @@ export default function SchedulingBoard() {
             </select>
             {areasDisponiveis.length > 0 && (
               <select className="input sm:w-48" value={filtroArea} onChange={(e) => setFiltroArea(e.target.value)}>
-                <option value="">Toda area</option>
+                <option value="">Toda área</option>
                 {areasDisponiveis.map((a) => (
                   <option key={a.id} value={a.id}>{a.name}</option>
                 ))}
@@ -241,7 +241,7 @@ export default function SchedulingBoard() {
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-graphite-400" />
               <input
                 className="input w-56 pl-8"
-                placeholder="Buscar OS, ativo ou servico..."
+                placeholder="Buscar OS, ativo ou serviço..."
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
               />
@@ -266,7 +266,7 @@ export default function SchedulingBoard() {
       </div>
 
       {needsClient ? (
-        <EmptyState title="Selecione a empresa" description="A programacao e' por empresa - escolha acima para montar o quadro." />
+        <EmptyState title="Selecione a empresa" description="A programação é por empresa - escolha acima para montar o quadro." />
       ) : isLoading || !data ? (
         <FullPageSpinner />
       ) : (
@@ -289,7 +289,7 @@ export default function SchedulingBoard() {
             </h2>
             <p className="mb-3 text-xs text-graphite-500">
               Arraste para um dia no quadro. Solte aqui para desprogramar.
-              {filtrosAtivos && " Os filtros tambem se aplicam as OS ja programadas no quadro."}
+              {filtrosAtivos && " Os filtros também se aplicam às OS já programadas no quadro."}
             </p>
             <div className="max-h-[70vh] space-y-2 overflow-y-auto pr-1">
               {filaFiltrada.length === 0 ? (
@@ -308,11 +308,11 @@ export default function SchedulingBoard() {
           <div className="min-w-0 flex-1 overflow-x-auto">
             {data.resources.length === 0 ? (
               <EmptyState
-                title="Nenhuma mao de obra cadastrada"
-                description="Cadastre a equipe de manutencao para distribuir as OS por pessoa."
+                title="Nenhuma mão de obra cadastrada"
+                description="Cadastre a equipe de manutenção para distribuir as OS por pessoa."
                 action={
                   <button className="btn-primary" onClick={() => navigate(laborBase)}>
-                    <HardHat className="h-4 w-4" /> Cadastrar mao de obra
+                    <HardHat className="h-4 w-4" /> Cadastrar mão de obra
                   </button>
                 }
               />
@@ -333,7 +333,7 @@ export default function SchedulingBoard() {
 
                   {[
                     ...data.resources.map((r) => ({ id: r.id as string | null, name: r.name, type: r.type, photoUrl: r.photoUrl ?? null })),
-                    { id: null as string | null, name: "Sem responsavel", type: "definir depois", photoUrl: null },
+                    { id: null as string | null, name: "Sem responsável", type: "definir depois", photoUrl: null },
                   ]
                     .filter((r) => !resourceId || (resourceId === "unassigned" ? r.id === null : r.id === resourceId))
                     .map(
