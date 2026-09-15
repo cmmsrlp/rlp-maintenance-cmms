@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search, AlertTriangle, ClipboardList } from "lucide-react";
+import { Plus, Search, AlertTriangle, ClipboardList, User } from "lucide-react";
 import { listServiceRequests } from "../../../api/serviceRequests";
 import type { ServiceRequest, ServiceRequestStatus } from "../../../api/types";
 import { PageHeader } from "../../../components/PageHeader";
@@ -104,7 +104,10 @@ function ServiceRequestCard({ request, isClient, onOpen }: { request: ServiceReq
       {!isClient && <p className="text-xs text-graphite-500">{clientDisplayName(request.client)}</p>}
       <p className="text-xs text-graphite-600">{request.instrument?.tag ?? "-"}</p>
       <p className="line-clamp-2 text-xs text-graphite-700">{request.description}</p>
-      <p className="text-[11px] text-graphite-400">{formatDateTime(request.createdAt)}</p>
+      <p className="flex items-center gap-1 text-[11px] text-graphite-400">
+        <User className="h-3 w-3 shrink-0" /> {request.requestedBy?.name ?? "-"}
+        <span className="text-graphite-300">·</span> {formatDateTime(request.createdAt)}
+      </p>
       <div className="flex flex-wrap items-center gap-1.5">
         <StatusBadge status={request.status} label={rotuloDoStatusSS(request.status)} />
         {request.workOrder && (
