@@ -17,6 +17,7 @@ import {
   rejectRepairBudget,
   returnFromRepair,
   getNextRotableCode,
+  getRotableInstallationHistory,
 } from "./controller";
 
 export const rotableEquipmentRouter = Router();
@@ -26,6 +27,7 @@ rotableEquipmentRouter.use(requireAuth, requireRole(...CMMS_ROLES));
 // Antes de "/:id" para essas rotas nao serem lidas como um id de equipamento.
 rotableEquipmentRouter.post("/substituir", substituteRotableEquipment);
 rotableEquipmentRouter.get("/proximo-codigo", getNextRotableCode);
+rotableEquipmentRouter.get("/historico-do-ativo/:instrumentId", getRotableInstallationHistory);
 
 rotableEquipmentRouter.get("/", listRotableEquipment);
 rotableEquipmentRouter.get("/:id", getRotableEquipment);

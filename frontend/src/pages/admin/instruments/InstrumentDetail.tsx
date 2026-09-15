@@ -20,6 +20,7 @@ import { AssetPhoto } from "../../../components/AssetPhoto";
 import { AssetSetupAlerts } from "../../../components/AssetSetupAlerts";
 import { AssetLubricationCard } from "../../../components/AssetLubricationCard";
 import { AssetRotableCard } from "../../../components/AssetRotableCard";
+import { AssetRotableHistory } from "../../../components/AssetRotableHistory";
 import { InstrumentAttachments } from "../../../components/InstrumentAttachments";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { AssetQrModal } from "../../../components/AssetQrModal";
@@ -35,6 +36,7 @@ const TABS = [
   { id: "overview", label: "Visão geral" },
   { id: "structure", label: "Estrutura" },
   { id: "maintenance", label: "Manutenção" },
+  { id: "rotable", label: "Equipamento recondicionável" },
   { id: "costs", label: "Custos" },
   { id: "documents", label: "Documentos" },
   { id: "history", label: "Histórico" },
@@ -455,6 +457,13 @@ export default function InstrumentDetail() {
               </ul>
             )}
           </div>
+        </div>
+      )}
+
+      {tab === "rotable" && (
+        <div className="space-y-6">
+          <AssetRotableCard instrumentId={instrument.id} clientId={instrument.clientId} base="/gestao/manutencao" />
+          <AssetRotableHistory instrumentId={instrument.id} base="/gestao/manutencao" />
         </div>
       )}
 

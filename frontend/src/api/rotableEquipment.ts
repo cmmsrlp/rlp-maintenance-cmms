@@ -41,6 +41,13 @@ export async function getNextRotableCode(params: { type: string; clientId?: stri
   return data;
 }
 
+/** Historico de equipamentos que ja ocuparam esta posicao/ativo - do mais recente pro mais
+ * antigo, incluindo o que esta instalado agora (removedAt nulo). */
+export async function getRotableInstallationHistory(instrumentId: string): Promise<RotableInstallation[]> {
+  const { data } = await api.get<RotableInstallation[]>(`/rotable-equipment/historico-do-ativo/${instrumentId}`);
+  return data;
+}
+
 export async function getRotableEquipment(id: string): Promise<RotableEquipment> {
   const { data } = await api.get<RotableEquipment>(`/rotable-equipment/${id}`);
   return data;

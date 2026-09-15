@@ -475,6 +475,7 @@ export interface RotableEquipment {
 export interface RotableInstallation {
   id: string;
   rotableId: string;
+  rotable?: { id: string; code: string; type: string; manufacturer: string | null; model: string | null; serialNumber: string | null; status: RotableEquipmentStatus };
   instrumentId: string;
   instrument?: { id: string; tag: string | null; description: string | null };
   installedAt: string;

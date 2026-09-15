@@ -221,6 +221,31 @@ export const deleteRotableEquipment = asyncHandler(async (req: Request, res: Res
   res.status(204).send();
 });
 
+/**
+ * Historico de equipamentos recondicionaveis que passaram por este ativo/posicao - o
+ * inverso da aba "Instalacoes" da ficha do equipamento (que mostra os ativos por onde ele
+ * passou). O ativo e' o local; aqui mostra quem ja ocupou esse local, do mais recente pro
+ * mais antigo, incluindo o que esta instalado agora (removedAt nulo).
+ */
+export const getRotableInstallationHistory = asyncHandler(async (req: Request, res: Response) => {
+  const instrument = await prisma.instrument.findFirst({
+    where: { id: req.params.instrumentId, deletedAt: null, ...clientScopeFilter(req) },
+    select: { id: true },
+  });
+  if (!instrument) throw new NotFoundError("Ativo");
+
+  const installations = await prisma.rotableInstallation.findMany({
+    where: { instrumentId: instrument.id },
+    orderBy: { installedAt: "desc" },
+    include: {
+      rotable: { select: { id: true, code: true, type: true, manufacturer: true, model: true, serialNumber: true, status: true } },
+      workOrder: { select: { id: true, number: true } },
+    },
+  });
+
+  res.json(installations);
+});
+
 // ---------------------------------------------------------------------------
 // Instalar / remover avulso (fora do fluxo de substituicao numa OS)
 // ---------------------------------------------------------------------------

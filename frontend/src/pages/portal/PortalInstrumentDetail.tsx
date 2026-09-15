@@ -25,6 +25,7 @@ import { AssetPhoto } from "../../components/AssetPhoto";
 import { AssetSetupAlerts } from "../../components/AssetSetupAlerts";
 import { AssetLubricationCard } from "../../components/AssetLubricationCard";
 import { AssetRotableCard } from "../../components/AssetRotableCard";
+import { AssetRotableHistory } from "../../components/AssetRotableHistory";
 import { useAuth } from "../../auth/AuthContext";
 import { useToast } from "../../components/Toast";
 import { getApiErrorMessage } from "../../api/client";
@@ -167,7 +168,13 @@ export default function PortalInstrumentDetail() {
   const tabs = [
     { id: "overview", label: "Visão geral" },
     { id: "structure", label: "Estrutura" },
-    ...(hasCmms ? [{ id: "maintenance", label: "Manutenção" }, { id: "costs", label: "Custos" }] : []),
+    ...(hasCmms
+      ? [
+          { id: "maintenance", label: "Manutenção" },
+          { id: "rotable", label: "Equipamento recondicionável" },
+          { id: "costs", label: "Custos" },
+        ]
+      : []),
     { id: "documents", label: "Documentos" },
   ];
 
@@ -442,6 +449,13 @@ export default function PortalInstrumentDetail() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {tab === "rotable" && hasCmms && (
+        <div className="space-y-6">
+          <AssetRotableCard instrumentId={instrument.id} clientId={instrument.clientId} base="/portal/manutencao" />
+          <AssetRotableHistory instrumentId={instrument.id} base="/portal/manutencao" />
         </div>
       )}
 
