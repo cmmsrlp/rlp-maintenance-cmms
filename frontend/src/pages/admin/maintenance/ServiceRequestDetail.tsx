@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Trash2, CheckCircle2, HelpCircle, XCircle, Wrench, AlertTriangle } from "lucide-react";
+import { Ban, Pencil, CheckCircle2, HelpCircle, XCircle, Wrench, AlertTriangle } from "lucide-react";
 import {
   getServiceRequest,
-  deleteServiceRequest,
+  cancelServiceRequest,
   triageServiceRequest,
   convertServiceRequest,
 } from "../../../api/serviceRequests";
@@ -19,6 +19,7 @@ import { useAuth } from "../../../auth/AuthContext";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
 import { clientDisplayName, formatDateTime } from "../../../lib/format";
+import { rotuloDoStatusSS } from "../../../lib/serviceRequestStatus";
 import { useCmms } from "../../../lib/cmms";
 
 const PRIORITY_LABELS: Record<string, string> = { LOW: "Baixa", MEDIUM: "Média", HIGH: "Alta", CRITICAL: "Crítica" };
@@ -38,8 +39,8 @@ export default function ServiceRequestDetail() {
   const canTriageOrConvert =
     user?.role === "ADMIN" || user?.role === "CLIENT" || user?.role === "CLIENT_PLANNER" || user?.role === "CLIENT_TECHNICIAN";
 
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [canceling, setCanceling] = useState(false);
   const [conversaoAberta, setConversaoAberta] = useState(false);
   const [busy, setBusy] = useState(false);
   const [triageNotes, setTriageNotes] = useState("");
@@ -88,16 +89,18 @@ export default function ServiceRequestDetail() {
     }
   }
 
-  async function handleDelete() {
-    setDeleting(true);
+  async function handleCancel() {
+    setCanceling(true);
     try {
-      await deleteServiceRequest(id);
-      notify("success", "Solicitação removida.");
-      navigate(`${base}/solicitacoes`);
+      await cancelServiceRequest(id);
+      notify("success", "Solicitação cancelada.");
+      setConfirmCancel(false);
+      queryClient.invalidateQueries({ queryKey: ["service-request", id] });
+      queryClient.invalidateQueries({ queryKey: ["service-requests"] });
     } catch (error) {
       notify("error", getApiErrorMessage(error));
     } finally {
-      setDeleting(false);
+      setCanceling(false);
     }
   }
 
@@ -105,8 +108,13 @@ export default function ServiceRequestDetail() {
 
   const canTriage = canTriageOrConvert && ["OPEN", "IN_TRIAGE", "AWAITING_INFO"].includes(request.status);
   const canConvert = canTriageOrConvert && request.status === "PLANNED";
-  const isConverted = request.status === "CONVERTED";
-  const canDelete = !isConverted || user?.role === "ADMIN";
+  // Mesma regra do backend: so a equipe interna (STAFF_ROLES) edita/cancela a qualquer
+  // momento - todo o resto (inclusive quem abriu) so enquanto nao houve nenhuma decisao de
+  // triagem (Aberta ou Aguardando informação).
+  const isPlatformStaff = user?.role === "ADMIN" || user?.role === "TECHNICIAN" || user?.role === "COMMERCIAL";
+  const semTratativaAinda = ["OPEN", "AWAITING_INFO"].includes(request.status);
+  const canEdit = isPlatformStaff || semTratativaAinda;
+  const canCancel = !["CONVERTED", "REJECTED", "CLOSED", "CANCELED"].includes(request.status);
 
   return (
     <div>
@@ -119,16 +127,23 @@ export default function ServiceRequestDetail() {
           { label: request.number },
         ]}
         actions={
-          canDelete && (
-            <button className="btn-danger" onClick={() => setConfirmDelete(true)}>
-              <Trash2 className="h-4 w-4" /> Remover
-            </button>
-          )
+          <div className="flex gap-2">
+            {canEdit && (
+              <button className="btn-outline" onClick={() => navigate(`${base}/solicitacoes/${id}/editar`)}>
+                <Pencil className="h-4 w-4" /> Editar
+              </button>
+            )}
+            {canCancel && (
+              <button className="btn-danger" onClick={() => setConfirmCancel(true)}>
+                <Ban className="h-4 w-4" /> Cancelar
+              </button>
+            )}
+          </div>
         }
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <StatusBadge status={request.status} label={request.status === "REJECTED" ? "Rejeitada" : undefined} />
+        <StatusBadge status={request.status} label={rotuloDoStatusSS(request.status)} />
         <StatusBadge status={request.suggestedPriority} label={`Prioridade sugerida: ${PRIORITY_LABELS[request.suggestedPriority]}`} />
         {(request.safetyImpact || request.qualityImpact || request.productionImpact) && (
           <span className="inline-flex items-center gap-1 text-xs font-medium text-safety-yellow-dark">
@@ -230,18 +245,14 @@ export default function ServiceRequestDetail() {
       </div>
 
       <ConfirmDialog
-        open={confirmDelete}
-        title="Remover solicitação"
-        description={
-          isConverted
-            ? "Esta solicitação já foi convertida em OS. Removê-la apaga só o registro da solicitação (a OS gerada continua existindo normalmente, sem vínculo com ela). Tem certeza?"
-            : "Tem certeza que deseja remover esta solicitação de serviço?"
-        }
-        confirmLabel="Remover"
+        open={confirmCancel}
+        title="Cancelar solicitação"
+        description="A solicitação não será apagada - ela muda de status e passa para a coluna de concluídas/canceladas, mantendo o histórico. Tem certeza?"
+        confirmLabel="Cancelar solicitação"
         danger
-        loading={deleting}
-        onConfirm={handleDelete}
-        onCancel={() => setConfirmDelete(false)}
+        loading={canceling}
+        onConfirm={handleCancel}
+        onCancel={() => setConfirmCancel(false)}
       />
 
       <ConvertRequestModal

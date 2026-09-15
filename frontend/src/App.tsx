@@ -160,6 +160,7 @@ export default function App() {
               <Route path="manutencao/ordens/:id" element={<WorkOrderDetail />} />
               <Route path="manutencao/solicitacoes" element={<ServiceRequestsList />} />
               <Route path="manutencao/solicitacoes/novo" element={<ServiceRequestForm />} />
+              <Route path="manutencao/solicitacoes/:id/editar" element={<ServiceRequestForm />} />
               <Route path="manutencao/solicitacoes/:id" element={<ServiceRequestDetail />} />
               <Route path="manutencao/categorias-solicitacao" element={<ServiceRequestCategoriesList />} />
               <Route path="manutencao/falhas" element={<FailureCodesList />} />
@@ -198,6 +199,7 @@ export default function App() {
               {/* Solicitante: so as proprias solicitacoes e o proprio perfil. */}
               <Route path="manutencao/solicitacoes" element={<ServiceRequestsList />} />
               <Route path="manutencao/solicitacoes/novo" element={<ServiceRequestForm />} />
+              <Route path="manutencao/solicitacoes/:id/editar" element={<ServiceRequestForm />} />
               <Route path="manutencao/solicitacoes/:id" element={<ServiceRequestDetail />} />
               <Route path="perfil" element={<PortalProfile />} />
 

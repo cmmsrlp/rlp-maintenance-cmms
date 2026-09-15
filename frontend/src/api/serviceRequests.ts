@@ -49,6 +49,13 @@ export async function deleteServiceRequest(id: string): Promise<void> {
   await api.delete(`/service-requests/${id}`);
 }
 
+/** Cancela sem apagar o registro - a solicitacao continua visivel, so muda de status e cai
+ * na coluna de encerradas do quadro. */
+export async function cancelServiceRequest(id: string): Promise<ServiceRequest> {
+  const { data } = await api.post<ServiceRequest>(`/service-requests/${id}/cancel`);
+  return data;
+}
+
 export async function triageServiceRequest(
   id: string,
   input: { decision: "approve" | "request_info" | "reject"; notes?: string; rejectionReason?: string },

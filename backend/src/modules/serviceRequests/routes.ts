@@ -8,6 +8,7 @@ import {
   createServiceRequest,
   updateServiceRequest,
   deleteServiceRequest,
+  cancelServiceRequest,
   triageServiceRequest,
   convertServiceRequest,
   listServiceRequestAttachmentsRoute,
@@ -26,8 +27,14 @@ serviceRequestsRouter.use(requireAuth, requireRole(...SERVICE_REQUEST_ROLES));
 serviceRequestsRouter.get("/", listServiceRequests);
 serviceRequestsRouter.get("/:id", getServiceRequest);
 serviceRequestsRouter.post("/", requireRole(...SERVICE_REQUEST_ROLES), createServiceRequest);
-serviceRequestsRouter.patch("/:id", requireRole(...CMMS_ROLES), updateServiceRequest);
+// O controller ja restringe edicao pos-triagem a equipe interna (STAFF_ROLES) - o
+// Solicitante precisa alcancar a rota para corrigir a propria solicitacao enquanto ela
+// ainda esta Aberta ou Aguardando informacao.
+serviceRequestsRouter.patch("/:id", requireRole(...SERVICE_REQUEST_ROLES), updateServiceRequest);
 serviceRequestsRouter.delete("/:id", requireRole(...CMMS_ROLES), deleteServiceRequest);
+// Cancelar substitui o "remover" no fluxo normal: mantem o historico, so muda o status.
+// Disponivel para quem pode abrir solicitacao (inclui o Solicitante, so na propria).
+serviceRequestsRouter.post("/:id/cancel", requireRole(...SERVICE_REQUEST_ROLES), cancelServiceRequest);
 
 // Triagem e conversao em OS sao do proprio cliente, igual ao resto do modulo (plano, OS,
 // checklist, almoxarifado). O ADMIN da OptiProcess alcanca por acesso master de suporte.

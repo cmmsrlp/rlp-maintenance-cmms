@@ -337,7 +337,7 @@ export interface PredictivePanelData {
 
 export type AssetHierarchyLevel = "PLANT" | "AREA" | "MACHINE" | "SUBASSEMBLY" | "PART";
 
-export type ServiceRequestStatus = "OPEN" | "IN_TRIAGE" | "AWAITING_INFO" | "PLANNED" | "CONVERTED" | "REJECTED" | "CLOSED";
+export type ServiceRequestStatus = "OPEN" | "IN_TRIAGE" | "AWAITING_INFO" | "PLANNED" | "CONVERTED" | "REJECTED" | "CLOSED" | "CANCELED";
 
 export interface ServiceRequestCategory {
   id: string;

@@ -1,17 +1,18 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import type { FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { PageHeader } from "../../../components/PageHeader";
+import { FullPageSpinner } from "../../../components/Spinner";
 import { TextInput, TextareaInput, SelectInput, CheckboxInput } from "../../../components/form/Field";
 import { ClientPicker } from "../../../components/ClientPicker";
 import { InstrumentPicker } from "../../../components/InstrumentPicker";
 import { listAreas } from "../../../api/areas";
 import { listServiceRequestCategories } from "../../../api/serviceRequestCategories";
-import { createServiceRequest } from "../../../api/serviceRequests";
+import { createServiceRequest, getServiceRequest, updateServiceRequest } from "../../../api/serviceRequests";
 import { useToast } from "../../../components/Toast";
 import { getApiErrorMessage } from "../../../api/client";
 import { useCmms } from "../../../lib/cmms";
@@ -42,11 +43,19 @@ const ROTULO_DO_CAMPO: Partial<Record<keyof FormValues, string>> = {
  * relata uma necessidade de manutencao, sem precisar montar uma OS completa - isso
  * fica com a equipe na triagem. */
 export default function ServiceRequestForm() {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { notify } = useToast();
   const { isClient, ownClientId, base } = useCmms();
+  const isEdit = !!id;
 
-  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<FormValues>({
+  const { data: existing, isLoading } = useQuery({
+    queryKey: ["service-request", id],
+    queryFn: () => getServiceRequest(id!),
+    enabled: isEdit,
+  });
+
+  const { register, handleSubmit, watch, reset, setValue, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { clientId: ownClientId ?? "", suggestedPriority: "MEDIUM" },
   });
@@ -58,8 +67,25 @@ export default function ServiceRequestForm() {
   // campo aqui e' um <input hidden> sem erro visivel do lado - sem isso, a solicitacao
   // falharia calada se o valor inicial nao tivesse pego a tempo.
   useEffect(() => {
-    if (isClient && ownClientId) setValue("clientId", ownClientId);
-  }, [isClient, ownClientId, setValue]);
+    if (isClient && ownClientId && !isEdit) setValue("clientId", ownClientId);
+  }, [isClient, ownClientId, isEdit, setValue]);
+
+  useEffect(() => {
+    if (existing) {
+      reset({
+        clientId: existing.clientId,
+        areaId: existing.area?.id ?? "",
+        instrumentId: existing.instrument?.id ?? "",
+        location: existing.location ?? "",
+        categoryId: existing.category?.id ?? "",
+        description: existing.description,
+        safetyImpact: existing.safetyImpact,
+        qualityImpact: existing.qualityImpact,
+        productionImpact: existing.productionImpact,
+        suggestedPriority: existing.suggestedPriority,
+      });
+    }
+  }, [existing, reset]);
 
   const { data: areas } = useQuery({
     queryKey: ["areas-picker", clientId],
@@ -79,9 +105,15 @@ export default function ServiceRequestForm() {
         instrumentId: values.instrumentId || null,
         categoryId: values.categoryId || null,
       };
-      const saved = await createServiceRequest(payload);
-      notify("success", `Solicitação ${saved.number} aberta.`);
-      navigate(`${base}/solicitacoes/${saved.id}`);
+      if (isEdit) {
+        const saved = await updateServiceRequest(id!, payload);
+        notify("success", `Solicitação ${saved.number} atualizada.`);
+        navigate(`${base}/solicitacoes/${saved.id}`);
+      } else {
+        const saved = await createServiceRequest(payload);
+        notify("success", `Solicitação ${saved.number} aberta.`);
+        navigate(`${base}/solicitacoes/${saved.id}`);
+      }
     } catch (error) {
       notify("error", getApiErrorMessage(error));
     }
@@ -94,15 +126,17 @@ export default function ServiceRequestForm() {
     notify("error", campos.length ? `Falta preencher: ${campos.join(", ")}.` : "Há campos obrigatórios não preenchidos.");
   }
 
+  if (isEdit && isLoading) return <FullPageSpinner />;
+
   return (
     <div>
       <PageHeader
-        title="Nova solicitação de serviço"
+        title={isEdit ? `Editar solicitação ${existing?.number ?? ""}` : "Nova solicitação de serviço"}
         description="Relate uma necessidade de manutenção - a equipe faz a triagem e gera a OS quando aprovada."
         breadcrumbs={[
           { label: "RLP Maintenance CMMS", to: base },
           { label: "Solicitações de serviço", to: `${base}/solicitacoes` },
-          { label: "Nova" },
+          { label: isEdit ? "Editar" : "Nova" },
         ]}
       />
 
@@ -173,7 +207,7 @@ export default function ServiceRequestForm() {
         <div className="flex justify-end gap-3">
           <button type="button" className="btn-outline" onClick={() => navigate(-1)}>Cancelar</button>
           <button type="submit" className="btn-primary" disabled={isSubmitting}>
-            {isSubmitting ? "Enviando..." : "Abrir solicitação"}
+            {isSubmitting ? "Salvando..." : isEdit ? "Salvar alterações" : "Abrir solicitação"}
           </button>
         </div>
       </form>

@@ -8,6 +8,7 @@ import { PageHeader } from "../../../components/PageHeader";
 import { FullPageSpinner } from "../../../components/Spinner";
 import { StatusBadge } from "../../../components/StatusBadge";
 import { clientDisplayName, formatDateTime } from "../../../lib/format";
+import { rotuloDoStatusSS } from "../../../lib/serviceRequestStatus";
 import { useCmms } from "../../../lib/cmms";
 
 // Mesma paleta semantica do StatusBadge - agrupa visualmente o estagio da solicitacao:
@@ -22,7 +23,7 @@ const COLUMN_TONE_CLASSES = {
 const COLUMNS: { key: string; label: string; statuses: ServiceRequestStatus[]; tone: keyof typeof COLUMN_TONE_CLASSES }[] = [
   { key: "aberta", label: "Aberta - sem parecer", statuses: ["OPEN"], tone: "graphite" },
   { key: "tratativa", label: "Em tratativa", statuses: ["IN_TRIAGE", "AWAITING_INFO", "PLANNED", "CONVERTED"], tone: "navy" },
-  { key: "encerrada", label: "Concluída / cancelada", statuses: ["CLOSED", "REJECTED"], tone: "graphite" },
+  { key: "encerrada", label: "Concluída / cancelada", statuses: ["CLOSED", "REJECTED", "CANCELED"], tone: "graphite" },
 ];
 
 export default function ServiceRequestsList() {
@@ -105,7 +106,7 @@ function ServiceRequestCard({ request, isClient, onOpen }: { request: ServiceReq
       <p className="line-clamp-2 text-xs text-graphite-700">{request.description}</p>
       <p className="text-[11px] text-graphite-400">{formatDateTime(request.createdAt)}</p>
       <div className="flex flex-wrap items-center gap-1.5">
-        <StatusBadge status={request.status} label={request.status === "REJECTED" ? "Rejeitada" : undefined} />
+        <StatusBadge status={request.status} label={rotuloDoStatusSS(request.status)} />
         {request.workOrder && (
           <span className="inline-flex items-center gap-1 rounded-full bg-navy-50 px-2 py-0.5 text-xs font-medium text-navy-700">
             <ClipboardList className="h-3 w-3" /> {request.workOrder.number}

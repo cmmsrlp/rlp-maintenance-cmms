@@ -33,6 +33,8 @@ const STATUS_MAP: Record<string, { label: string; tone: Tone }> = {
   PLANNED: { label: "Planejada", tone: "navy" },
   CONVERTED: { label: "Convertida em OS", tone: "green" },
   CLOSED: { label: "Encerrada", tone: "graphite" },
+  // CANCELED (SS) reaproveita a entrada generica "Cancelado" acima; a tela troca o rotulo
+  // para "Cancelada" via prop `label`, mesmo padrao ja usado com REJECTED/"Rejeitada".
   // ordem de manutencao (OS do CMMS) - IN_TRIAGE e PLANNED ja definidos acima (SS)
   PROGRAMMED: { label: "Programada", tone: "navy" },
   RELEASED: { label: "Liberada", tone: "navy" },

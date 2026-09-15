@@ -209,6 +209,40 @@ export const deleteServiceRequest = asyncHandler(async (req: Request, res: Respo
   res.status(204).send();
 });
 
+/** Cancela a solicitacao sem apagar o registro - substitui a exclusao para o fluxo normal
+ * (quem abriu, ou a equipe, desiste antes de qualquer decisao de triagem). Ao contrario do
+ * "remover", isto preserva rastreabilidade: a solicitacao continua visivel, so muda de
+ * status e cai na coluna de encerradas do quadro. */
+export const cancelServiceRequest = asyncHandler(async (req: Request, res: Response) => {
+  await assertServiceAccess(req, ["CMMS_MAINTENANCE"]);
+  // Mesmo escopo de leitura do Solicitante (so enxerga/mexe no que ele mesmo abriu) - sem
+  // isso, um Solicitante poderia cancelar a solicitacao de outro colega da mesma empresa.
+  const existing = await prisma.serviceRequest.findFirst({
+    where: { id: req.params.id, deletedAt: null, ...escopoDoSolicitante(req) },
+  });
+  if (!existing) throw new NotFoundError("Solicitacao de servico");
+  assertOwnClient(req, existing.clientId);
+  if (["CONVERTED", "REJECTED", "CLOSED", "CANCELED"].includes(existing.status)) {
+    throw new ValidationError("Esta solicitacao ja foi encerrada e nao pode mais ser cancelada.");
+  }
+
+  const request = await prisma.serviceRequest.update({
+    where: { id: existing.id },
+    data: { status: "CANCELED" },
+    include: detailInclude,
+  });
+
+  await writeAuditLog({
+    userId: req.user?.sub,
+    action: "UPDATE",
+    entityType: "ServiceRequest",
+    entityId: request.id,
+    description: `Solicitacao de servico ${request.number} cancelada`,
+  });
+
+  res.json(request);
+});
+
 const triageSchema = z.object({
   decision: z.enum(["approve", "request_info", "reject"]),
   notes: z.string().nullish(),
@@ -223,7 +257,7 @@ export const triageServiceRequest = asyncHandler(async (req: Request, res: Respo
   const existing = await prisma.serviceRequest.findFirst({ where: { id: req.params.id, deletedAt: null } });
   if (!existing) throw new NotFoundError("Solicitacao de servico");
   assertOwnClient(req, existing.clientId);
-  if (["CONVERTED", "REJECTED", "CLOSED"].includes(existing.status)) {
+  if (["CONVERTED", "REJECTED", "CLOSED", "CANCELED"].includes(existing.status)) {
     throw new ValidationError("Esta solicitacao ja foi decidida.");
   }
   if (data.decision === "reject" && !data.rejectionReason) {

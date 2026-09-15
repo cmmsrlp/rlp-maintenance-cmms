@@ -278,6 +278,10 @@ enum ServiceRequestStatus {
   CONVERTED
   REJECTED
   CLOSED
+  // Cancelada por quem abriu (ou pela equipe) antes de qualquer decisao de triagem - troca
+  // o antigo "excluir" (que apagava o registro) por um encerramento que mantem o historico
+  // e a rastreabilidade, so movendo a solicitacao para a coluna de encerradas.
+  CANCELED
 }
 
 // O que o executante preenche em cada item do checklist. YES_NO_NA e' o padrao (o que
