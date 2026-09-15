@@ -65,7 +65,7 @@ export default function RotableEquipmentDetail() {
   const { base, canManage } = useCmms();
   const { notify } = useToast();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<"instalacoes" | "reparos">("instalacoes");
+  const [tab, setTab] = useState<"instalacoes" | "reparos" | "historico-reparos">("instalacoes");
   const [editOpen, setEditOpen] = useState(false);
   const [installOpen, setInstallOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
@@ -82,6 +82,11 @@ export default function RotableEquipmentDetail() {
   }
 
   if (isLoading || !rotable) return <FullPageSpinner />;
+
+  // Depois que o equipamento volta (retornou), o reparo sai de "em andamento" e vira
+  // historico - senao a aba Reparos ficaria acumulando ordens ja fechadas para sempre.
+  const reparosAbertos = (rotable.repairOrders ?? []).filter((o) => !o.returnedAt);
+  const reparosFechados = (rotable.repairOrders ?? []).filter((o) => o.returnedAt);
 
   return (
     <div>
@@ -139,7 +144,7 @@ export default function RotableEquipmentDetail() {
           <p className="mt-1 font-medium text-navy-900">{rotable.serialNumber ?? "-"}</p>
         </div>
         <div className="card p-5">
-          <p className="text-xs uppercase tracking-wide text-graphite-400">Custo de aquisicao</p>
+          <p className="text-xs uppercase tracking-wide text-graphite-400">Custo de aquisição</p>
           <p className="mt-1 font-medium text-navy-900">{rotable.acquisitionCost != null ? formatCurrency(rotable.acquisitionCost) : "-"}</p>
         </div>
         <div className="card p-5">
@@ -150,15 +155,16 @@ export default function RotableEquipmentDetail() {
 
       {rotable.notes && (
         <div className="card mb-6 p-5">
-          <p className="text-xs uppercase tracking-wide text-graphite-400">Observacoes</p>
+          <p className="text-xs uppercase tracking-wide text-graphite-400">Observações</p>
           <p className="mt-1 whitespace-pre-wrap text-sm text-graphite-700">{rotable.notes}</p>
         </div>
       )}
 
       <Tabs
         tabs={[
-          { id: "instalacoes", label: `Instalacoes (${rotable.installations?.length ?? 0})` },
-          { id: "reparos", label: `Reparos (${rotable.repairOrders?.length ?? 0})` },
+          { id: "instalacoes", label: `Instalações (${rotable.installations?.length ?? 0})` },
+          { id: "reparos", label: `Reparos (${reparosAbertos.length})` },
+          { id: "historico-reparos", label: `Histórico de reparos (${reparosFechados.length})` },
         ]}
         active={tab}
         onChange={(t) => setTab(t as typeof tab)}
@@ -209,10 +215,10 @@ export default function RotableEquipmentDetail() {
 
       {tab === "reparos" && (
         <div className="space-y-3">
-          {!rotable.repairOrders || rotable.repairOrders.length === 0 ? (
-            <div className="card p-5"><p className="text-sm text-graphite-500">Nenhuma ordem de reparo registrada ainda.</p></div>
+          {reparosAbertos.length === 0 ? (
+            <div className="card p-5"><p className="text-sm text-graphite-500">Nenhum reparo em andamento agora.</p></div>
           ) : (
-            rotable.repairOrders.map((order) => (
+            reparosAbertos.map((order) => (
               <div key={order.id} className="card space-y-3 p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
@@ -229,7 +235,6 @@ export default function RotableEquipmentDetail() {
                       <FileDown className="h-4 w-4" /> Ficha de envio
                     </button>
                     <StatusBadge status={order.budgetStatus} />
-                    {order.outcome && <StatusBadge status={order.outcome} />}
                   </div>
                 </div>
 
@@ -239,19 +244,7 @@ export default function RotableEquipmentDetail() {
                 {order.budgetValue != null && <p className="text-sm text-graphite-700"><span className="font-medium">Valor orçado:</span> {formatCurrency(order.budgetValue)}</p>}
                 {order.promisedReturnAt && <p className="text-sm text-graphite-700"><span className="font-medium">Prazo prometido:</span> {formatDate(order.promisedReturnAt)}</p>}
 
-                {order.returnedAt ? (
-                  <div className="rounded-lg bg-gray-50 p-3 text-sm text-graphite-700">
-                    <p className="font-medium text-navy-900">Retornou em {formatDate(order.returnedAt)}</p>
-                    {order.serviceDone && <p className="mt-1"><span className="font-medium">Serviço executado:</span> {order.serviceDone}</p>}
-                    {order.partsReplacedNotes && <p><span className="font-medium">Peças substituídas:</span> {order.partsReplacedNotes}</p>}
-                    {order.laborNotes && <p><span className="font-medium">Mão de obra:</span> {order.laborNotes}</p>}
-                    {order.testsPerformed && <p><span className="font-medium">Ensaios:</span> {order.testsPerformed}</p>}
-                    {order.finalReport && <p><span className="font-medium">Laudo final:</span> {order.finalReport}</p>}
-                    {order.conditionAfterRepair && <p><span className="font-medium">Condição após reparo:</span> {order.conditionAfterRepair}</p>}
-                    {order.warrantyMonths != null && <p><span className="font-medium">Garantia:</span> {order.warrantyMonths} mes(es){order.warrantyNotes ? ` - ${order.warrantyNotes}` : ""}</p>}
-                    {order.finalCost != null && <p><span className="font-medium">Valor final:</span> {formatCurrency(order.finalCost)}</p>}
-                  </div>
-                ) : canManage ? (
+                {canManage && (
                   <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-3">
                     {order.budgetValue == null ? (
                       <button className="btn-outline btn-sm" onClick={() => setBudgetOpen(order.id)}>
@@ -283,7 +276,57 @@ export default function RotableEquipmentDetail() {
                       <PackageCheck className="h-4 w-4" /> Registrar retorno
                     </button>
                   </div>
-                ) : null}
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {tab === "historico-reparos" && (
+        <div className="space-y-3">
+          {/* Assim que o equipamento retorna, a ordem sai da aba Reparos (em andamento) e
+              vira historico aqui - do mais recente pro mais antigo. */}
+          {reparosFechados.length === 0 ? (
+            <div className="card p-5"><p className="text-sm text-graphite-500">Nenhum reparo concluído ainda.</p></div>
+          ) : (
+            reparosFechados.map((order) => (
+              <div key={order.id} className="card space-y-3 p-5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="font-medium text-navy-900">
+                      {order.vendor ?? "Fornecedor não informado"}
+                      {order.budgetNumber && ` - orçamento ${order.budgetNumber}`}
+                    </p>
+                    <p className="text-xs text-graphite-500">
+                      {OPCOES_DE_MOTIVO.find((o) => o.value === order.purpose)?.label ?? order.purpose} - enviado em {formatDate(order.sentAt)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button className="btn-outline btn-sm" onClick={() => void abrirFichaDeEnvio(order.id, rotable.code, notify)}>
+                      <FileDown className="h-4 w-4" /> Ficha de envio
+                    </button>
+                    <StatusBadge status={order.budgetStatus} />
+                    {order.outcome && <StatusBadge status={order.outcome} />}
+                  </div>
+                </div>
+
+                {order.defectReported && <p className="text-sm text-graphite-700"><span className="font-medium">Defeito informado:</span> {order.defectReported}</p>}
+                {order.diagnosis && <p className="text-sm text-graphite-700"><span className="font-medium">Diagnóstico:</span> {order.diagnosis}</p>}
+                {order.failureCode && <p className="text-sm text-graphite-700"><span className="font-medium">Código de falha:</span> {order.failureCode.code} - {order.failureCode.description}</p>}
+                {order.budgetValue != null && <p className="text-sm text-graphite-700"><span className="font-medium">Valor orçado:</span> {formatCurrency(order.budgetValue)}</p>}
+
+                <div className="rounded-lg bg-gray-50 p-3 text-sm text-graphite-700">
+                  <p className="font-medium text-navy-900">Retornou em {formatDate(order.returnedAt)}</p>
+                  {order.serviceDone && <p className="mt-1"><span className="font-medium">Serviço executado:</span> {order.serviceDone}</p>}
+                  {order.partsReplacedNotes && <p><span className="font-medium">Peças substituídas:</span> {order.partsReplacedNotes}</p>}
+                  {order.laborNotes && <p><span className="font-medium">Mão de obra:</span> {order.laborNotes}</p>}
+                  {order.testsPerformed && <p><span className="font-medium">Ensaios:</span> {order.testsPerformed}</p>}
+                  {order.finalReport && <p><span className="font-medium">Laudo final:</span> {order.finalReport}</p>}
+                  {order.conditionAfterRepair && <p><span className="font-medium">Condição após reparo:</span> {order.conditionAfterRepair}</p>}
+                  {order.warrantyMonths != null && <p><span className="font-medium">Garantia:</span> {order.warrantyMonths} mes(es){order.warrantyNotes ? ` - ${order.warrantyNotes}` : ""}</p>}
+                  {order.finalCost != null && <p><span className="font-medium">Valor final:</span> {formatCurrency(order.finalCost)}</p>}
+                </div>
               </div>
             ))
           )}
