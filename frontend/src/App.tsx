@@ -13,6 +13,7 @@ import AssetManagement from "./pages/public/AssetManagement";
 import PredictiveMaintenance from "./pages/public/PredictiveMaintenance";
 import TechnicalWarehouse from "./pages/public/TechnicalWarehouse";
 import FailuresRca from "./pages/public/FailuresRca";
+import RotableEquipmentPublic from "./pages/public/RotableEquipment";
 import ClientPortal from "./pages/public/ClientPortal";
 import Pricing from "./pages/public/Pricing";
 import Login from "./pages/auth/Login";
@@ -110,6 +111,7 @@ export default function App() {
             <Route path="/manutencao-preditiva" element={<PredictiveMaintenance />} />
             <Route path="/almoxarifado-tecnico" element={<TechnicalWarehouse />} />
             <Route path="/falhas-e-causa-raiz" element={<FailuresRca />} />
+            <Route path="/equipamentos-recondicionaveis" element={<RotableEquipmentPublic />} />
             <Route path="/portal-do-cliente" element={<ClientPortal />} />
             <Route path="/planos" element={<Pricing />} />
           </Route>

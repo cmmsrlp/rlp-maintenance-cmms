@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   Radar,
   Droplets,
+  Recycle,
   ListChecks,
   Users,
   CheckCircle2,
@@ -48,6 +49,12 @@ const FEATURES = [
     title: "Lubrificação",
     description: "Pontos de lubrificação, rotas por área e previsão de consumo - o lubrificante certo, no ativo certo.",
     to: "/lubrificacao",
+  },
+  {
+    icon: Recycle,
+    title: "Equipamentos recondicionáveis",
+    description: "Motor, redutor, bomba ou rolo - rastreados entre estoque, instalação e reparo, com orçamento e nota fiscal de retorno.",
+    to: "/equipamentos-recondicionaveis",
   },
   {
     icon: ListChecks,

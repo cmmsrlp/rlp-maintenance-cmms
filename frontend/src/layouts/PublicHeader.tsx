@@ -15,6 +15,7 @@ const RECURSOS_LINKS = [
   { to: "/gestao-de-ativos", label: "Gestão de ativos" },
   { to: "/manutencao-preditiva", label: "Manutenção preditiva" },
   { to: "/almoxarifado-tecnico", label: "Almoxarifado técnico" },
+  { to: "/equipamentos-recondicionaveis", label: "Equipamentos recondicionáveis" },
   { to: "/lubrificacao", label: "Lubrificação" },
   { to: "/falhas-e-causa-raiz", label: "Falhas e causa raiz" },
   { to: "/portal-do-cliente", label: "Portal do cliente" },
