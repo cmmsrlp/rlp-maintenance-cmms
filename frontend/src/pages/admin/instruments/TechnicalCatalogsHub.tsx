@@ -12,33 +12,33 @@ export default function TechnicalCatalogsHub() {
   const groups = [
     {
       title: "Estrutura de ativos",
-      description: "Como a fabrica e' organizada - preencha antes de cadastrar os equipamentos.",
+      description: "Como a fábrica é organizada - preencha antes de cadastrar os equipamentos.",
       items: [
-        { to: `${assetsBase}/tipos`, icon: Tags, title: "Tipos de ativo", description: "Nivel na hierarquia (Planta, Maquina, Subconjunto, Parte...)" },
-        { to: `${assetsBase}/plantas`, icon: Factory, title: "Plantas", description: "Unidades/fabricas da empresa" },
+        { to: `${assetsBase}/tipos`, icon: Tags, title: "Tipos de ativo", description: "Nível na hierarquia (Planta, Máquina, Subconjunto, Parte...)" },
+        { to: `${assetsBase}/plantas`, icon: Factory, title: "Plantas", description: "Unidades/fábricas da empresa" },
         // Um cadastro so: o centro de custo existe por causa da area, e mante-los em
         // telas separadas obrigava a cadastrar o centro antes para so entao voltar aqui.
-        { to: `${assetsBase}/areas`, icon: Workflow, title: "Areas / Centros de custo", description: "Areas da planta e o centro de custo em que cada uma rateia" },
+        { to: `${assetsBase}/areas`, icon: Workflow, title: "Áreas / Centros de custo", description: "Áreas da planta e o centro de custo em que cada uma rateia" },
       ],
     },
     {
-      title: "Manutencao",
-      description: "Padroes que a operacao usa no dia a dia ao abrir e executar ordens.",
+      title: "Manutenção",
+      description: "Padrões que a operação usa no dia a dia ao abrir e executar ordens.",
       items: [
-        { to: `${base}/modelos-de-plano`, icon: LayoutTemplate, title: "Modelos de plano", description: "Planos reutilizaveis por familia de ativo" },
-        { to: `${base}/equipamentos-recondicionaveis`, icon: RefreshCw, title: "Equipamentos recondicionaveis", description: "Motor, redutor, rolo... unidades fisicas que se movem entre ativos, estoque e reparo" },
-        { to: `${base}/falhas`, icon: ListChecks, title: "Codigos de falha", description: "Causas usadas nas ordens corretivas e no Pareto" },
-        { to: `${base}/paradas`, icon: OctagonPause, title: "Motivos de parada", description: "Por que a maquina ficou parada durante o servico" },
-        { to: `${base}/categorias-solicitacao`, icon: FolderKanban, title: "Categorias de solicitacao", description: "Classificacao usada ao abrir uma solicitacao de servico" },
+        { to: `${base}/modelos-de-plano`, icon: LayoutTemplate, title: "Modelos de plano", description: "Planos reutilizáveis por família de ativo" },
+        { to: `${base}/equipamentos-recondicionaveis`, icon: RefreshCw, title: "Equipamentos recondicionáveis", description: "Motor, redutor, rolo... unidades físicas que se movem entre ativos, estoque e reparo" },
+        { to: `${base}/falhas`, icon: ListChecks, title: "Códigos de falha", description: "Causas usadas nas ordens corretivas e no Pareto" },
+        { to: `${base}/paradas`, icon: OctagonPause, title: "Motivos de parada", description: "Por que a máquina ficou parada durante o serviço" },
+        { to: `${base}/categorias-solicitacao`, icon: FolderKanban, title: "Categorias de solicitação", description: "Classificação usada ao abrir uma solicitação de serviço" },
       ],
     },
     {
       title: "Equipe",
-      description: "Quem executa a manutencao - alimenta a programacao e o custo de mao de obra.",
+      description: "Quem executa a manutenção - alimenta a programação e o custo de mão de obra.",
       items: [
-        { to: laborBase, icon: HardHat, title: "Mao de obra", description: "Equipe de manutencao, funcao e valor/hora" },
-        { to: `${base}/tipos-mao-de-obra`, icon: IdCard, title: "Tipos de mao de obra", description: "Funcoes da equipe (Tecnico mecanico, Eletricista, Lubrificador...)" },
-        { to: `${base}/solicitacoes`, icon: ClipboardPlus, title: "Solicitacoes de servico", description: "Fila de pedidos abertos pela operacao" },
+        { to: laborBase, icon: HardHat, title: "Mão de obra", description: "Equipe de manutenção, função e valor/hora" },
+        { to: `${base}/tipos-mao-de-obra`, icon: IdCard, title: "Tipos de mão de obra", description: "Funções da equipe (Técnico mecânico, Eletricista, Lubrificador...)" },
+        { to: `${base}/solicitacoes`, icon: ClipboardPlus, title: "Solicitações de serviço", description: "Fila de pedidos abertos pela operação" },
       ],
     },
   ];
@@ -46,9 +46,9 @@ export default function TechnicalCatalogsHub() {
   return (
     <div>
       <PageHeader
-        title="Cadastros tecnicos"
-        description="Configure uma vez e use sempre - estrutura de ativos, padroes de manutencao e equipe"
-        breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Cadastros tecnicos" }]}
+        title="Cadastros técnicos"
+        description="Configure uma vez e use sempre - estrutura de ativos, padrões de manutenção e equipe"
+        breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Cadastros técnicos" }]}
       />
 
       <div className="space-y-8">

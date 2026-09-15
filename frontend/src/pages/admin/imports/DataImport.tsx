@@ -75,7 +75,7 @@ export default function DataImport() {
       setConcluida(r);
       setConferencia(null);
       setArquivo(null);
-      notify("success", "Importacao concluida.");
+      notify("success", "Importação concluída.");
     } catch (error) {
       notify("error", getApiErrorMessage(error));
     } finally {
@@ -91,7 +91,7 @@ export default function DataImport() {
     <div>
       <PageHeader
         title="Importar dados por planilha"
-        description="Suba ativos, mao de obra, almoxarifado e a estrutura da fabrica de uma vez"
+        description="Suba ativos, mão de obra, almoxarifado e a estrutura da fábrica de uma vez"
         breadcrumbs={[{ label: "RLP Maintenance CMMS", to: base }, { label: "Importar dados" }]}
       />
 
@@ -108,7 +108,7 @@ export default function DataImport() {
       )}
 
       {!pronto ? (
-        <EmptyState title="Selecione a empresa" description="A importacao entra na base da empresa escolhida." />
+        <EmptyState title="Selecione a empresa" description="A importação entra na base da empresa escolhida." />
       ) : (
         <div className="space-y-6">
           <div className="card p-5">
@@ -118,7 +118,7 @@ export default function DataImport() {
                   <FileSpreadsheet className="h-5 w-5 text-navy-600" /> 1. Baixe o modelo
                 </h2>
                 <p className="mt-1 text-sm text-graphite-600">
-                  Uma aba por cadastro, na ordem certa de preenchimento, com as colunas obrigatorias marcadas e
+                  Uma aba por cadastro, na ordem certa de preenchimento, com as colunas obrigatórias marcadas e
                   um exemplo em cada uma. A primeira aba explica como preencher.
                 </p>
               </div>
@@ -133,7 +133,7 @@ export default function DataImport() {
               <Upload className="h-5 w-5 text-navy-600" /> 2. Envie a planilha preenchida
             </h2>
             <p className="mt-1 text-sm text-graphite-600">
-              O arquivo e' conferido inteiro antes de qualquer coisa ser gravada. Nada entra sem a sua confirmacao.
+              O arquivo é conferido inteiro antes de qualquer coisa ser gravada. Nada entra sem a sua confirmação.
             </p>
             <label className="btn-primary mt-3 inline-flex cursor-pointer items-center gap-2">
               <Upload className="h-4 w-4" />
@@ -162,9 +162,9 @@ export default function DataImport() {
                   <thead className="border-b border-gray-200 bg-gray-50 text-left text-xs uppercase tracking-wide text-graphite-500">
                     <tr>
                       <th className="px-3 py-2">Aba</th>
-                      <th className="px-3 py-2 text-right">Sera criado</th>
-                      <th className="px-3 py-2 text-right">Sera completado</th>
-                      <th className="px-3 py-2 text-right">Ja existe (ignorado)</th>
+                      <th className="px-3 py-2 text-right">Será criado</th>
+                      <th className="px-3 py-2 text-right">Será completado</th>
+                      <th className="px-3 py-2 text-right">Já existe (ignorado)</th>
                       <th className="px-3 py-2 text-right">Com erro</th>
                     </tr>
                   </thead>
@@ -183,7 +183,7 @@ export default function DataImport() {
                     {Object.keys(conferencia.resumo).length === 0 && (
                       <tr>
                         <td colSpan={5} className="px-3 py-4 text-center text-graphite-500">
-                          A planilha nao tem nenhuma linha preenchida.
+                          A planilha não tem nenhuma linha preenchida.
                         </td>
                       </tr>
                     )}
@@ -214,10 +214,10 @@ export default function DataImport() {
               {(conferencia.ignorados.length > 0 || conferencia.completados.length > 0) && (
                 <div className="mt-4 rounded-lg border border-gray-200 p-4">
                   <p className="text-sm font-medium text-graphite-700">
-                    {conferencia.ignorados.length + conferencia.completados.length} linha(s) ja estao cadastradas
+                    {conferencia.ignorados.length + conferencia.completados.length} linha(s) já estão cadastradas
                   </p>
                   <p className="mt-0.5 text-xs text-graphite-500">
-                    O TAG e' a identidade do ativo - maiuscula, minuscula e espaco sobrando nao contam. O que fazer com elas:
+                    O TAG é a identidade do ativo - maiúscula, minúscula e espaço sobrando não contam. O que fazer com elas:
                   </p>
 
                   <div className="mt-3 space-y-2">
@@ -232,7 +232,7 @@ export default function DataImport() {
                       <span>
                         <span className="font-medium text-navy-900">Ignorar</span>
                         <span className="block text-xs text-graphite-500">
-                          Nao encosta em nada do que ja esta cadastrado. A lista abaixo mostra o que ficaria diferente.
+                          Não encosta em nada do que já está cadastrado. A lista abaixo mostra o que ficaria diferente.
                         </span>
                       </span>
                     </label>
@@ -247,8 +247,8 @@ export default function DataImport() {
                       <span>
                         <span className="font-medium text-navy-900">Completar campos vazios</span>
                         <span className="block text-xs text-graphite-500">
-                          Preenche so o que esta em branco no sistema (fabricante, modelo, nivel...). Um valor ja
-                          gravado nunca e' trocado pelo da planilha.
+                          Preenche só o que está em branco no sistema (fabricante, modelo, nível...). Um valor já
+                          gravado nunca é trocado pelo da planilha.
                         </span>
                       </span>
                     </label>
@@ -294,9 +294,9 @@ export default function DataImport() {
                       ? `Importar ${totalCriar} novo(s) e completar ${totalCompletar}`
                       : `Importar ${totalCriar} registro(s)`}
                 </button>
-                {temErro && <span className="text-sm text-graphite-500">Corrija os erros acima para liberar a importacao.</span>}
+                {temErro && <span className="text-sm text-graphite-500">Corrija os erros acima para liberar a importação.</span>}
                 {!temErro && totalCriar === 0 && totalCompletar === 0 && (
-                  <span className="text-sm text-graphite-500">Nao ha nada novo para importar.</span>
+                  <span className="text-sm text-graphite-500">Não há nada novo para importar.</span>
                 )}
               </div>
             </div>
@@ -305,14 +305,14 @@ export default function DataImport() {
           {concluida && (
             <div className="card border-safety-green/40 bg-green-50/40 p-5">
               <p className="flex items-center gap-2 font-semibold text-safety-green-dark">
-                <CheckCircle2 className="h-5 w-5" /> Importacao concluida
+                <CheckCircle2 className="h-5 w-5" /> Importação concluída
               </p>
               <ul className="mt-2 space-y-0.5 text-sm text-graphite-700">
                 {Object.entries(concluida.resumo).map(([aba, r]) => (
                   <li key={aba}>
                     {aba}: <span className="font-semibold text-navy-900">{r.criados}</span> criado(s)
                     {r.completados > 0 && <span className="text-navy-700"> - {r.completados} completado(s)</span>}
-                    {r.ignorados > 0 && <span className="text-graphite-500"> - {r.ignorados} ja existia(m)</span>}
+                    {r.ignorados > 0 && <span className="text-graphite-500"> - {r.ignorados} já existia(m)</span>}
                   </li>
                 ))}
               </ul>
