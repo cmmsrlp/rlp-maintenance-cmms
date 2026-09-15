@@ -46,14 +46,14 @@ export const AssetTypeInput = forwardRef<HTMLSelectElement, Props>(function Asse
   // tipo especifico - nao e' um tipo do catalogo, entao nao vale como opcao extra aqui.
   const rotuloDoNivel = ASSET_LEVEL_LABELS[nivel];
   if (currentValue && currentValue !== rotuloDoNivel && !options.some((o) => o.value === currentValue)) {
-    options.unshift({ value: currentValue, label: `${currentValue} (fora da lista deste nivel)` });
+    options.unshift({ value: currentValue, label: `${currentValue} (fora da lista deste nível)` });
   }
 
   return (
     <SelectInput
       ref={ref}
       label={label ?? `Tipo de ${rotuloDoNivel.toLowerCase()}`}
-      placeholder="Nao especificar"
+      placeholder="Não especificar"
       hint="Opcional. Novos tipos em Cadastros > Tipos de ativo."
       options={options}
       {...rest}

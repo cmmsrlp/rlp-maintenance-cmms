@@ -5,7 +5,7 @@ import { getApiErrorMessage } from "../api/client";
 
 const MENSAGEM_INICIAL: ChatMessage = {
   role: "assistant",
-  content: "Oi! Sou o Assistente RLP. Posso ajudar com duvidas sobre como usar o CMMS - ordens, planos preventivos, lubrificacao, almoxarifado e mais. O que voce precisa?",
+  content: "Oi! Sou o Assistente RLP. Posso ajudar com dúvidas sobre como usar o CMMS - ordens, planos preventivos, lubrificação, almoxarifado e mais. O que você precisa?",
 };
 
 /**
@@ -45,7 +45,7 @@ export function AssistantWidget() {
       const reply = await sendAssistantMessage(historico.slice(1));
       setMessages((atual) => [...atual, { role: "assistant", content: reply }]);
     } catch (err) {
-      setError(getApiErrorMessage(err, "Nao consegui responder agora. Tente de novo em instantes."));
+      setError(getApiErrorMessage(err, "Não consegui responder agora. Tente de novo em instantes."));
     } finally {
       setSending(false);
     }
@@ -111,7 +111,7 @@ export function AssistantWidget() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Digite sua duvida..."
+              placeholder="Digite sua dúvida..."
               className="min-w-0 flex-1 rounded-full border border-gray-200 px-3.5 py-2 text-sm outline-none focus:border-navy-400"
               disabled={sending}
             />

@@ -50,7 +50,7 @@ export function AssetRotableCard({ instrumentId, clientId, base }: Props) {
     <div className="card p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 font-semibold text-navy-900">
-          <RefreshCw className="h-5 w-5 text-navy-600" /> Equipamento recondicionavel
+          <RefreshCw className="h-5 w-5 text-navy-600" /> Equipamento recondicionável
         </h2>
         <div className="flex items-center gap-2">
           {!isLoading && !instalado && (
@@ -64,7 +64,7 @@ export function AssetRotableCard({ instrumentId, clientId, base }: Props) {
             </button>
           )}
           <Link className="btn-outline text-sm" to={catalogo}>
-            <Plus className="h-4 w-4" /> Catalogo
+            <Plus className="h-4 w-4" /> Catálogo
           </Link>
         </div>
       </div>
@@ -73,7 +73,7 @@ export function AssetRotableCard({ instrumentId, clientId, base }: Props) {
         <div className="mt-3">
           <EmptyState
             title="Nenhum equipamento instalado"
-            description="Motor, redutor, rolo... cadastre no catalogo (se ainda nao existir) e instale aqui."
+            description="Motor, redutor, rolo... cadastre no catálogo (se ainda não existir) e instale aqui."
           />
         </div>
       ) : (
@@ -187,10 +187,10 @@ function InstallFromAssetModal({
         />
         {!isLoading && opcoes.length === 0 && (
           <p className="text-xs text-graphite-500">
-            Nenhum equipamento em estoque - cadastre um no catalogo de Equipamentos recondicionaveis primeiro.
+            Nenhum equipamento em estoque - cadastre um no catálogo de Equipamentos recondicionáveis primeiro.
           </p>
         )}
-        <TextInput label="Horimetro na instalacao (opcional)" type="number" value={meterReading} onChange={(e) => setMeterReading(e.target.value)} />
+        <TextInput label="Horímetro na instalação (opcional)" type="number" value={meterReading} onChange={(e) => setMeterReading(e.target.value)} />
       </div>
     </Modal>
   );
@@ -249,11 +249,11 @@ function RemoveFromAssetModal({
     >
       <div className="space-y-4">
         <TextInput label="Motivo (opcional)" placeholder="Ex.: falha, preventiva, troca programada" value={reason} onChange={(e) => setReason(e.target.value)} />
-        <TextInput label="Condicao na retirada (opcional)" placeholder="Ex.: rolamento gripado" value={condition} onChange={(e) => setCondition(e.target.value)} />
-        <TextInput label="Horimetro na retirada (opcional)" type="number" value={meterReading} onChange={(e) => setMeterReading(e.target.value)} />
+        <TextInput label="Condição na retirada (opcional)" placeholder="Ex.: rolamento gripado" value={condition} onChange={(e) => setCondition(e.target.value)} />
+        <TextInput label="Horímetro na retirada (opcional)" type="number" value={meterReading} onChange={(e) => setMeterReading(e.target.value)} />
         <SelectInput
           label="Destino"
-          options={[{ value: "QUARANTINE", label: "Quarentena (vai avaliar/reparar)" }, { value: "IN_STOCK", label: "Estoque (peca boa, sem reparo)" }]}
+          options={[{ value: "QUARANTINE", label: "Quarentena (vai avaliar/reparar)" }, { value: "IN_STOCK", label: "Estoque (peça boa, sem reparo)" }]}
           value={destination}
           onChange={(e) => setDestination(e.target.value as "QUARANTINE" | "IN_STOCK")}
         />

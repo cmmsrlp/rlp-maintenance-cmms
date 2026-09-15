@@ -150,7 +150,7 @@ export const SparePartPicker = forwardRef<HTMLInputElement, SparePartPickerProps
           <input
             type="text"
             className="input pl-9"
-            placeholder={placeholder ?? "Buscar por nome, codigo ou categoria"}
+            placeholder={placeholder ?? "Buscar por nome, código ou categoria"}
             value={termo}
             onChange={(e) => { setTermo(e.target.value); setAberto(true); }}
             onFocus={() => setAberto(true)}
@@ -164,7 +164,7 @@ export const SparePartPicker = forwardRef<HTMLInputElement, SparePartPickerProps
             <p className="px-3 py-2 text-sm text-graphite-500">Buscando...</p>
           ) : opcoes.length === 0 ? (
             <p className="px-3 py-2 text-sm text-graphite-500">
-              {buscaAplicada ? `Nenhuma peca encontrada para "${buscaAplicada}".` : "Digite para buscar uma peca."}
+              {buscaAplicada ? `Nenhuma peça encontrada para "${buscaAplicada}".` : "Digite para buscar uma peça."}
             </p>
           ) : (
             <ul className="divide-y divide-gray-100">
@@ -178,7 +178,7 @@ export const SparePartPicker = forwardRef<HTMLInputElement, SparePartPickerProps
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-medium text-navy-900">{p.name}</span>
                       <span className="block truncate text-xs text-graphite-400">
-                        {[p.code, p.category].filter(Boolean).join(" - ") || "Sem codigo/categoria"}
+                        {[p.code, p.category].filter(Boolean).join(" - ") || "Sem código/categoria"}
                       </span>
                     </span>
                     <span className="shrink-0 text-xs text-graphite-400">{p.stockQty} {p.unit}</span>

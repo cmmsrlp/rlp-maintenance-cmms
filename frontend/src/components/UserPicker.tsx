@@ -15,7 +15,7 @@ interface UserPickerProps {
 }
 
 export const UserPicker = forwardRef<HTMLSelectElement, UserPickerProps>(function UserPicker(
-  { label = "Responsavel", error, required, roles, ...rest },
+  { label = "Responsável", error, required, roles, ...rest },
   ref,
 ) {
   const { data } = useQuery({

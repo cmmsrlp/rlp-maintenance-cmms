@@ -168,7 +168,7 @@ export const InstrumentPicker = forwardRef<HTMLInputElement, InstrumentPickerPro
             className="input pl-9"
             placeholder={
               pronto
-                ? "Buscar por TAG, descricao, modelo ou numero de serie"
+                ? "Buscar por TAG, descrição, modelo ou número de série"
                 : (bloqueadoMsg ?? "Selecione o cliente primeiro")
             }
             disabled={!pronto}
@@ -186,7 +186,7 @@ export const InstrumentPicker = forwardRef<HTMLInputElement, InstrumentPickerPro
           ) : opcoes.length === 0 ? (
             <>
               <p className="px-3 py-2 text-sm text-graphite-500">
-                {buscaAplicada ? `Nenhum ativo encontrado para "${buscaAplicada}" nesta area.` : "Digite para buscar um ativo."}
+                {buscaAplicada ? `Nenhum ativo encontrado para "${buscaAplicada}" nesta área.` : "Digite para buscar um ativo."}
               </p>
               {opcoesForaDaArea.length > 0 && (
                 <div className="border-t border-gray-100">

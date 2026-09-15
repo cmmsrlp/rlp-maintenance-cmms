@@ -61,7 +61,7 @@ export function LubricationPointPicker({ clientId, placeholder, excludeIds, onSe
         <input
           type="text"
           className="input pl-9"
-          placeholder={placeholder ?? "Buscar por codigo, nome ou componente"}
+          placeholder={placeholder ?? "Buscar por código, nome ou componente"}
           value={termo}
           onChange={(e) => { setTermo(e.target.value); setAberto(true); }}
           onFocus={() => setAberto(true)}

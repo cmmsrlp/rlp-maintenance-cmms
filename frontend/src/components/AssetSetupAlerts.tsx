@@ -26,14 +26,14 @@ export function AssetSetupAlerts({ instrument, base }: Props) {
         <div className="flex flex-wrap items-center gap-3 rounded-lg border border-safety-yellow/40 bg-safety-yellow/10 px-4 py-3">
           <Gauge className="h-4 w-4 shrink-0 text-safety-yellow-dark" />
           <p className="text-sm text-graphite-700">
-            Este ativo esta marcado como <strong>calibravel</strong>, mas ainda nao tem plano de calibracao -
-            e' o plano que diz de quanto em quanto tempo calibrar.
+            Este ativo está marcado como <strong>calibrável</strong>, mas ainda não tem plano de calibração -
+            é o plano que diz de quanto em quanto tempo calibrar.
           </p>
           <Link
             className="btn-outline ml-auto text-sm"
             to={`${base}/planos/novo?instrumentId=${instrument.id}&planType=CALIBRATION`}
           >
-            Criar plano de calibracao
+            Criar plano de calibração
           </Link>
         </div>
       )}
@@ -42,7 +42,7 @@ export function AssetSetupAlerts({ instrument, base }: Props) {
         <div className="flex flex-wrap items-center gap-3 rounded-lg border border-safety-yellow/40 bg-safety-yellow/10 px-4 py-3">
           <Droplets className="h-4 w-4 shrink-0 text-safety-yellow-dark" />
           <p className="text-sm text-graphite-700">
-            Este ativo esta marcado como <strong>lubrificavel</strong>, mas ainda nao tem ponto cadastrado -
+            Este ativo está marcado como <strong>lubrificável</strong>, mas ainda não tem ponto cadastrado -
             falta dizer qual lubrificante, quanto e de quanto em quanto tempo.
           </p>
           <Link

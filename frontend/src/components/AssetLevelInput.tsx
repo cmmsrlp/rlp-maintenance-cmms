@@ -6,10 +6,10 @@ import type { AssetHierarchyLevel } from "../api/types";
 /** O que cada nivel significa, dito na propria lista. */
 const DESCRICAO_DO_NIVEL: Record<AssetHierarchyLevel, string> = {
   PLANT: "Planta - a unidade inteira, fica na raiz",
-  AREA: "Area / Linha - um trecho da planta",
-  MACHINE: "Maquina - o equipamento em si",
-  SUBASSEMBLY: "Subconjunto - um conjunto dentro da maquina",
-  PART: "Parte - uma peca isolada",
+  AREA: "Área / Linha - um trecho da planta",
+  MACHINE: "Máquina - o equipamento em si",
+  SUBASSEMBLY: "Subconjunto - um conjunto dentro da máquina",
+  PART: "Parte - uma peça isolada",
 };
 
 interface Props {
@@ -29,15 +29,15 @@ interface Props {
  * escreve o que quiser.
  */
 export const AssetLevelInput = forwardRef<HTMLSelectElement, Props>(function AssetLevelInput(
-  { label = "Nivel na arvore", ...rest },
+  { label = "Nível na árvore", ...rest },
   ref,
 ) {
   return (
     <SelectInput
       ref={ref}
       label={label}
-      placeholder="Nao classificado"
-      hint="Decide o icone na arvore e quem pode ficar na raiz."
+      placeholder="Não classificado"
+      hint="Decide o ícone na árvore e quem pode ficar na raiz."
       options={(Object.keys(ASSET_LEVEL_LABELS) as AssetHierarchyLevel[]).map((value) => ({
         value,
         label: DESCRICAO_DO_NIVEL[value],

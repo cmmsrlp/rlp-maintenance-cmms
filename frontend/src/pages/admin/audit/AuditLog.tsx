@@ -6,12 +6,12 @@ import { DataTable } from "../../../components/DataTable";
 import { formatDateTime } from "../../../lib/format";
 
 const ACTION_LABELS: Record<string, string> = {
-  CREATE: "Criacao",
-  UPDATE: "Atualizacao",
-  DELETE: "Exclusao",
-  APPROVE: "Aprovacao",
-  PUBLISH: "Publicacao",
-  HIDE: "Ocultacao",
+  CREATE: "Criação",
+  UPDATE: "Atualização",
+  DELETE: "Exclusão",
+  APPROVE: "Aprovação",
+  PUBLISH: "Publicação",
+  HIDE: "Ocultação",
   LOGIN: "Login",
 };
 
@@ -45,7 +45,7 @@ export default function AuditLog({ own = false }: AuditLogProps) {
     <div>
       <PageHeader
         title="Auditoria"
-        description={own ? "Registro de acoes feitas pela sua equipe no sistema" : "Registro de acoes relevantes no sistema"}
+        description={own ? "Registro de ações feitas pela sua equipe no sistema" : "Registro de ações relevantes no sistema"}
       />
 
       <div className="mb-4 max-w-xs">
@@ -66,10 +66,10 @@ export default function AuditLog({ own = false }: AuditLogProps) {
         emptyTitle="Nenhum registro de auditoria"
         columns={[
           { header: "Data", accessor: (l) => formatDateTime(l.createdAt) },
-          { header: "Usuario", accessor: (l) => l.user?.name ?? "Sistema" },
-          { header: "Acao", accessor: (l) => ACTION_LABELS[l.action] ?? l.action },
+          { header: "Usuário", accessor: (l) => l.user?.name ?? "Sistema" },
+          { header: "Ação", accessor: (l) => ACTION_LABELS[l.action] ?? l.action },
           { header: "Entidade", accessor: (l) => l.entityType },
-          { header: "Descricao", accessor: (l) => l.description ?? "-" },
+          { header: "Descrição", accessor: (l) => l.description ?? "-" },
         ]}
       />
     </div>
